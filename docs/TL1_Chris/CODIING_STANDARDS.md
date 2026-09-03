@@ -13,7 +13,6 @@ Use names that are descriptive of the purpose/action of the Class, Methods, Vari
 - Attributes & Varibles: Camel Case
 
 ### Classes
-
 - Regions
 Utilizing regions allows you to collapse code blocks and keep your file clean and easy to read.
 
@@ -70,11 +69,6 @@ Public class Player
     #endregion
 }
 ```
-
-
-    
-
-### Functions
 
 ### Variables
 No use of var is allowed. Always use the correct type for your variable. This is to help ensure that the code is readable and understandable.
