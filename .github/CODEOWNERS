@@ -3,28 +3,28 @@
 # Only the listed owner may approve merges to their directory.
 
 Assets/src/TL1_Chris/ @cbalesohay
-#Assets/src/TL2_Caleb/ @
+Assets/src/TL2_Caleb/ @argitechno
 Assets/src/TL3_Joe/ @j-davitt
 Assets/src/TL4_Tyler/ @tylero07
 Assets/src/TL5_Will/ @vvilll
 Assets/src/TL6_Matteo/ @mattpola
 
 Assets/tst/TL1_Chris/ @cbalesohay
-#Assets/tst/TL2_Caleb/ @
+Assets/tst/TL2_Caleb/ @argitechno
 Assets/tst/TL3_Joe/ @j-davitt
 Assets/tst/TL4_Tyler/ @tylero07
 Assets/tst/TL5_Will/ @vvilll
 Assets/tst/TL6_Matteo/ @mattpola
 
 Assets/prefabs/TL1_Chris/ @cbalesohay
-#Assets/prefabs/TL2_Caleb/ @
+Assets/prefabs/TL2_Caleb/ @argitechno
 Assets/prefabs/TL3_Joe/ @j-davitt
 Assets/prefabs/TL4_Tyler/ @tylero07
 Assets/prefabs/TL5_Will/ @vvilll
 Assets/prefabs/TL6_Matteo/ @mattpola
 
 docs/TL1_Chris/ @cbalesohay
-#docs/TL2_Caleb/ @
+docs/TL2_Caleb/ @argitechno
 docs/TL3_Joe/ @j-davitt
 docs/TL4_Tyler/ @tylero07
 docs/TL5_Will/ @vvilll
