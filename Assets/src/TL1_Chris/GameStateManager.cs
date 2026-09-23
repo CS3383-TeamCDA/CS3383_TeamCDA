@@ -1,7 +1,34 @@
-public class GameStateManager
+using UnityEngine;
+
+namespace EscapeThe90s.GameStates : MonoBehaviour
 {
-    public void Start()
+    public class GameStateManager
     {
-        // Code here
+        public IGameState currentState { get; private set; }
+
+        public void Start()
+        {
+            // Code here
+        }
+
+        public void Update()
+        {
+            // Code here
+        }
+
+        public void RequestPause()
+        {
+            // Code here    
+        }
+
+        public void RequestResume()
+        {
+            // Code Here            
+        }
+
+        public void RequestRestart()
+        {
+            // Code here
+        }
     }
 }

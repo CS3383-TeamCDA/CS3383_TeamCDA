@@ -139,6 +139,48 @@ public class Player
 Keep fields private unless the design explicitly requires another access level.
 Expose state through appropriate properties or methods when needed.
 
+## Namespaces
+
+The project will utilize the namespace "EscapeThe90s". Try to subdivide the namspace the best you can based on you features. If you have the features of levels and power-ups. Use these following as an exxample:
+
+```csharp
+namespace EscapeThe90s.Levels
+{
+    public class LevelController
+    {
+        public void CurrentLevel()
+        {
+            // Code here
+        }
+
+        public void UpdateLevel()
+        {
+            // Code here
+        }
+    }
+}
+```
+
+or...
+
+```csharp
+namespace EscapeThe90s.PowerUps
+{
+    public class PowerUps
+    {
+        public void Update()
+        {
+            // Code here
+        }
+
+        public void Swap()
+        {
+            // Code here
+        }
+    }
+}
+```
+
 ## Comments
 
 Code should be understandable through clear names and simple structure. Do not
