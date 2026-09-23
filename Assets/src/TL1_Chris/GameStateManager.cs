@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace EscapeThe90s.GameStates : MonoBehaviour
+namespace EscapeThe90s.GameStates
 {
     public class GameStateManager
     {

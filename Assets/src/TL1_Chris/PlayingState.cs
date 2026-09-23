@@ -11,5 +11,10 @@ namespace EscapeThe90s.GameStates
         {
             // Code here
         }
+
+        public void Exit()
+        {
+            // Code here
+        }
     }
 }
