@@ -67,5 +67,5 @@
         "*.sln": "*.csproj",
         "*.slnx": "*.csproj"
     },
-    "dotnet.defaultSolution": "CS3383_TeamCDA.slnx"
+    "dotnet.defaultSolution": "EscapeThe90s.slnx"
 }

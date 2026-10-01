@@ -1,18 +1,20 @@
+using System.Diagnostics;
+
 namespace EscapeThe90s.GameStates
 {
-    public class PlayingState : IGameState
+    public class PlayingState : GameState
     {
-        public void Enter()
+        public override void Enter()
+        {
+            Debug.WriteLine("Playing State Enter Override");
+        }
+
+        public override void Update()
         {
             // Code here
         }
 
-        public void Update()
-        {
-            // Code here
-        }
-
-        public void Exit()
+        public override void Exit()
         {
             // Code here
         }

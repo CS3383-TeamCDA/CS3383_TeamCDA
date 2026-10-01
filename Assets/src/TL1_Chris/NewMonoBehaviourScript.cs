@@ -1,7 +1,7 @@
 using UnityEngine;
 using EscapeThe90s.GameStates;
 
-public class GameStateManager : MonoBehaviour
+public class NewMonoBehaviourScript : MonoBehaviour
 {
     public GameState currentState { get; private set; }
 
