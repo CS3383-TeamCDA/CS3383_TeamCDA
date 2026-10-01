@@ -2,11 +2,12 @@ using System.Diagnostics;
 
 namespace EscapeThe90s.GameStates
 {
-    public class MenuState : GameState
+    public class PlayingState : GameState
     {
-        public override void Enter()
+        public override string Enter()
         {
-            Debug.WriteLine("Menu State Enter Override");
+            //Debug.WriteLine("Playing State Enter Override");
+            return "Playing State Enter Override";
         }
 
         public override void Update()
