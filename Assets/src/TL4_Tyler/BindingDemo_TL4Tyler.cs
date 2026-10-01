@@ -19,13 +19,13 @@ public class BindingDemo : MonoBehaviour
         current = enemy1;
     }
 
-    private void OnGUI()
+    /* private void OnGUI()
     {
         GUI.Label(new Rect(20, 20, 300, 30), current.Attack());
         if (GUI.Button(new Rect(20, 60, 160, 30), "Swap"))
         {
             current = (current == enemy1) ? enemy2 : enemy1;
         }
-    }
+    } */
 
 }
