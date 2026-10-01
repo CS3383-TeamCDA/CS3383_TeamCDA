@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class BindingDemo : MonoBehaviour
+public class BindingDemoMatteo : MonoBehaviour
 {
     MovementState movement = new RunningState();
     
