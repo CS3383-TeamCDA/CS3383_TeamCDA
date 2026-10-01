@@ -1,7 +1,6 @@
-public class MetaProgressionManager 
+using UnityEngine;
+
+public class MetaProgressionManager
 {
-    public void ApplyStartingBonuses()
-    {
-        // Code here
-    }
+    
 }
