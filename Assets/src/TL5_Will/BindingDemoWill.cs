@@ -1,7 +1,6 @@
 using UnityEngine;
-using UnityEngine.Assemblies;
 
-public class BindingDemo : MonoBehaviour
+public class BindingDemoWill : MonoBehaviour
 {
     UpgradeEffect upgrd = new HealthEffect();
 
@@ -12,3 +11,4 @@ public class BindingDemo : MonoBehaviour
             upgrd = (upgrd is HealthEffect) ? new UpgradeEffect() : new HealthEffect();
     }
 }
+
