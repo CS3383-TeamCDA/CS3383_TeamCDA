@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class BindingDemo : MonoBehaviour
+public class BindingDemoJoe : MonoBehaviour
 {
     PowerUpEffect power = new SpeedBoostEffect();
 

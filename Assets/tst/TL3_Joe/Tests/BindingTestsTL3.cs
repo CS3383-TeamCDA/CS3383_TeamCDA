@@ -3,7 +3,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-public class BindingTests
+public class BindingTestsTL3
 {
     // A Test behaves as an ordinary method
     [Test]
