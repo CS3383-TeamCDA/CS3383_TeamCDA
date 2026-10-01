@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(EnemySpawner))]
-public class BindingDemo : MonoBehaviour
+public class BindingDemoTL4 : MonoBehaviour
 {
     private EnemySpawner spawner;
     private EnemyBase enemy1;
