@@ -67,5 +67,4 @@
         "*.sln": "*.csproj",
         "*.slnx": "*.csproj"
     },
-    "dotnet.defaultSolution": "escape_game_repo.slnx"
 }
