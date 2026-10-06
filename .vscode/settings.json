@@ -67,5 +67,5 @@
         "*.sln": "*.csproj",
         "*.slnx": "*.csproj"
     },
-    "dotnet.defaultSolution": "EscapeThe90s.slnx"
+    "dotnet.defaultSolution": "escape_game_repo.slnx"
 }

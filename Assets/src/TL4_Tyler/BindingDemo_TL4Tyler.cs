@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(EnemySpawner))]
-public class BindingDemoTL4 : MonoBehaviour
+public class BindingDemo_TL4Tyler : MonoBehaviour
 {
     private EnemySpawner spawner;
     private EnemyBase enemy1;
@@ -12,20 +12,25 @@ public class BindingDemoTL4 : MonoBehaviour
     {
         spawner = GetComponent<EnemySpawner>();
         spawner.SetSpawnRate(5.0f);
-        enemy1 = spawner.CreateEnemy(EnemyType.Basic);
+        enemy1 = spawner.CreateEnemy(EnemyType.Ground);
         enemy1.name = "Enemy 1";
-        enemy2 = spawner.CreateEnemy(EnemyType.Basic);
+        enemy2 = spawner.CreateEnemy(EnemyType.Flying);
         enemy2.name = "Enemy 2";
         current = enemy1;
     }
 
-    /* private void OnGUI()
+    private void OnGUI()
     {
-        GUI.Label(new Rect(20, 20, 300, 30), current.Attack());
+        GUI.Label(new Rect(20, 20, 300, 30), current.GetType().Name);
+        if (GUI.Button(new Rect(20, 100, 160, 30), "Move"))
+        {
+            current.Move();
+        }
+
         if (GUI.Button(new Rect(20, 60, 160, 30), "Swap"))
         {
             current = (current == enemy1) ? enemy2 : enemy1;
         }
-    } */
+    }
 
 }

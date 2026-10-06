@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.TestTools;
 
 public class TL4BindingTests
 {
@@ -14,9 +15,9 @@ public class TL4BindingTests
         EnemySpawner spawner = spawnerObject.AddComponent<EnemySpawner>();
         spawner.SetSpawnRate(5.0f);
 
-        enemy1 = spawner.CreateEnemy(EnemyType.Basic);
+        enemy1 = spawner.CreateEnemy(EnemyType.Ground);
         enemy1.name = "Enemy 1";
-        enemy2 = spawner.CreateEnemy(EnemyType.Basic);
+        enemy2 = spawner.CreateEnemy(EnemyType.Flying);
         enemy2.name = "Enemy 2";
     }
 
@@ -89,5 +90,55 @@ public class TL4BindingTests
 
         // Intentionally wrong: the runtime type selects the override, even through EnemyBase.
         Assert.AreEqual(spawnerObject.name + " attacks", current.Attack());
+    }
+    [TestCase(EnemyType.Ground, typeof(GroundEnemy), "Ground movement")]
+    [TestCase(EnemyType.Flying, typeof(FlyingEnemy), "Flying movement")]
+    [TestCase(EnemyType.Turret, typeof(TurretHazard), "Turret stationary")]
+    [TestCase(EnemyType.Aim, typeof(AimEnemy), "Aim targeting")]
+    public void Factory_CreatesSubtype_AndMoveUsesOverride(EnemyType type, System.Type expectedType, string message)
+    {
+        EnemyBase enemy = spawnerObject.GetComponent<EnemySpawner>().CreateEnemy(type);
+        try
+        {
+            Assert.AreEqual(expectedType, enemy.GetType());
+            LogAssert.Expect(LogType.Log, message);
+            enemy.Move();
+        }
+        finally
+        {
+            Object.DestroyImmediate(enemy.gameObject);
+        }
+    }
+
+    [Test]
+    public void TakeDamage_ReportsDefeatTypeAndPosition_OnlyOnce()
+    {
+        EnemySpawner spawner = spawnerObject.GetComponent<EnemySpawner>();
+        int notifications = 0;
+        EnemyType reportedType = EnemyType.Turret;
+        Vector3 reportedPosition = Vector3.zero;
+        enemy1.transform.position = new Vector3(2, 3, 0);
+        spawner.OnEnemyDefeated += (type, position) =>
+        {
+            notifications++;
+            reportedType = type;
+            reportedPosition = position;
+        };
+
+        Assert.IsFalse(enemy1.TakeDamage(-10));
+        Assert.IsFalse(enemy1.TakeDamage(99));
+        Assert.AreEqual(0, notifications);
+        Assert.IsTrue(enemy1.TakeDamage(1));
+        Assert.IsTrue(enemy1.TakeDamage(1));
+        Assert.AreEqual(1, notifications);
+        Assert.AreEqual(EnemyType.Ground, reportedType);
+        Assert.AreEqual(enemy1.transform.position, reportedPosition);
+    }
+
+    [Test]
+    public void Factory_RejectsUnknownEnemyType()
+    {
+        EnemySpawner spawner = spawnerObject.GetComponent<EnemySpawner>();
+        Assert.Throws<System.ArgumentOutOfRangeException>(() => spawner.CreateEnemy((EnemyType)999));
     }
 }
