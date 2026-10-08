@@ -26,6 +26,19 @@ namespace EscapeThe90s.PowerUps
         private readonly Dictionary<PowerUpType, ActiveEffect> activeEffects = new();
         private readonly Dictionary<PowerUpType, StatSnapshot> snapshots = new();   // the mementos
         private readonly List<PowerUpItem> activeItems = new();
+        private class ActiveEffect
+        {
+            public PowerUpEffect Effect { get; }
+            public int StackCount { get; set; }
+            public float RemainingSeconds { get; set; }
+
+            public ActiveEffect(PowerUpEffect effect, float remainingSeconds)
+            {
+                Effect = effect;
+                StackCount = 1;
+                RemainingSeconds = remainingSeconds;
+            }
+        }
 
         #endregion
 
@@ -40,20 +53,63 @@ namespace EscapeThe90s.PowerUps
 
         public void SpawnPowerUp(Vector3 position, PowerUpType type)
         {
-            // TODO: validate position (finite) and type (defined)
-            // TODO: reject with a warning if activeItems.Count >= MaxActiveItems
-            // TODO: Instantiate definitions[type].Prefab, call item.Initialize(type, this), add to activeItems
+            if (!IsFinite(position.x) || !IsFinite(position.y) || !IsFinite(position.z))
+            {
+                throw new ArgumentException("Position must be finite.", nameof(position));
+            }
+            if (!Enum.IsDefined(typeof(PowerUpType), type))
+            {
+                throw new ArgumentOutOfRangeException(nameof(type), type, "Undefined PowerUpType.");
+            }
+
+            if (activeItems.Count >= MaxActiveItems)
+            {
+                Debug.LogWarning($"[PowerUpManager] Spawn rejected: {MaxActiveItems} items already active.");
+                return;
+            }
+
+            if (!definitions.TryGetValue(type, out PowerUpDefinition def))
+            {
+                Debug.LogError($"[PowerUpManager] No PowerUpDefinition assigned for {type}.");
+                return;
+            }
+
+            PowerUpItem item = Instantiate(def.Prefab, position, Quaternion.identity);
+            item.Initialize(type, this);
+            activeItems.Add(item);
             Debug.Log($"[PowerUpManager] SpawnPowerUp {type} at {position}");
         }
 
         /// <summary>Called by PowerUpItem when the player touches it.</summary>
         public void HandlePickup(PowerUpItem item)
         {
-            // TODO: look up strategies[item.Type]; log error and destroy item if missing
-            // TODO: if permanent: Apply once, no snapshot
-            // TODO: else if not active: snapshot, Apply(stack 1), add ActiveEffect
-            // TODO: else: add a stack if below MaxStacks and Apply again; refresh timer either way
-            // TODO: raise OnPowerUpCollected, remove item from activeItems, Destroy it
+            PowerUpType type = item.Type;
+            Vector3 position = item.transform.position;
+
+            activeItems.Remove(item);
+            Destroy(item.gameObject);
+
+            if (!strategies.TryGetValue(type, out PowerUpEffect effect))
+            {
+                Debug.LogError($"[PowerUpManager] No strategy registered for {type}.");
+                return;
+            }
+
+            if (target == null)
+            {
+                Debug.LogError("[PowerUpManager] Pickup ignored: no IPowerUpTarget.");
+                return;
+            }
+
+            if (effect.IsPermanent)
+            {
+                effect.Apply(target, 1);
+                RaiseCollected(new PowerUpCollectedEventArgs(type, position, 1, 0f, true));
+                return;
+            }
+
+            // TODO: temporary effects (Speed Boost, Magnet)
+            Debug.Log($"[PowerUpManager] Temporary effect {type} not implemented yet.");
             Debug.Log($"[PowerUpManager] HandlePickup {item.Type}");
         }
 
@@ -69,8 +125,24 @@ namespace EscapeThe90s.PowerUps
 
         private void Awake()
         {
-            RegisterStrategies();
             LoadDefinitions();
+            RegisterStrategies();
+        }
+
+        private void Start()
+        {
+            if (target == null)
+            {
+                GameObject player = GameObject.FindWithTag("Player");
+                if (player != null)
+                {
+                    target = player.GetComponent<IPowerUpTarget>();
+                }
+                if (target == null)
+                {
+                    Debug.LogError("[PowerUpManager] No IPowerUpTarget found. Tag the player \"Player\" and add PlayerPowerUpTarget to it.");
+                }
+            }
         }
 
         private void Update()
@@ -88,7 +160,44 @@ namespace EscapeThe90s.PowerUps
 
         private void LoadDefinitions()
         {
-            // TODO: copy definitionAssets into definitions, validating each field
+            if (definitionAssets == null)
+            {
+                return;
+            }
+
+            foreach (PowerUpDefinition def in definitionAssets)
+            {
+                if (def == null)
+                {
+                    continue;
+                }
+
+                string bad = null;
+                if (def.Prefab == null)
+                {
+                    bad = "Prefab";
+                }
+                else if (def.Duration < 0f)
+                {
+                    bad = "Duration";
+                }
+                else if (def.MaxStacks < 1)
+                {
+                    bad = "MaxStacks";
+                }
+                else if (def.Magnitude <= 0f)
+                {
+                    bad = "Magnitude";
+                }
+
+                if (bad != null)
+                {
+                    Debug.LogError($"[PowerUpManager] Invalid PowerUpDefinition '{def.name}': bad {bad}.");
+                    continue;
+                }
+
+                definitions[def.Type] = def;
+            }
             Debug.Log("[PowerUpManager] LoadDefinitions");
         }
 
@@ -100,8 +209,29 @@ namespace EscapeThe90s.PowerUps
 
         private void RaiseCollected(PowerUpCollectedEventArgs args)
         {
-            // TODO: invoke each subscriber in a try/catch so one failure doesn't stop the rest
+            if (OnPowerUpCollected == null)
+            {
+                return;
+            }
+
+            foreach (Delegate handler in OnPowerUpCollected.GetInvocationList())
+            {
+                try
+                {
+                    ((Action<PowerUpCollectedEventArgs>)handler)(args);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                }
+            }
+            Debug.Log($"[PowerUpManager] OnPowerUpCollected raised for {args.Type}");
             Debug.Log($"[PowerUpManager] RaiseCollected {args.Type}");
+        }
+
+        private static bool IsFinite(float f)
+        {
+            return !float.IsNaN(f) && !float.IsInfinity(f);
         }
 
         #endregion
