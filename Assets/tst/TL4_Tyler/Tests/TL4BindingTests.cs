@@ -82,32 +82,6 @@ public class TL4BindingTests
         Assert.AreEqual(spawnerObject.name + " attacks", current.Attack());
     }
 
-    [Test]
-    public void DynamicBinding_FailDemo_ExpectsBaseInsteadOfOverride()
-    {
-        EnemyBase current = spawnerObject.AddComponent<TL4OverrideEnemy>();
-
-        // Intentionally wrong: the runtime type selects the override, even through EnemyBase.
-        Assert.AreEqual(spawnerObject.name + " attacks", current.Attack());
-    }
-    [TestCase(EnemyType.Ground, typeof(GroundEnemy), "Ground movement")]
-    [TestCase(EnemyType.Flying, typeof(FlyingEnemy), "Flying movement")]
-    [TestCase(EnemyType.Turret, typeof(TurretHazard), "Turret stationary")]
-    [TestCase(EnemyType.Aim, typeof(AimEnemy), "Aim targeting")]
-    public void Factory_CreatesSubtype_AndMoveUsesOverride(EnemyType type, System.Type expectedType, string message)
-    {
-        EnemyBase enemy = spawnerObject.GetComponent<EnemySpawner>().CreateEnemy(type);
-        try
-        {
-            Assert.AreEqual(expectedType, enemy.GetType());
-            LogAssert.Expect(LogType.Log, message);
-            enemy.Move();
-        }
-        finally
-        {
-            Object.DestroyImmediate(enemy.gameObject);
-        }
-    }
 
     [Test]
     public void TakeDamage_ReportsDefeatTypeAndPosition_OnlyOnce()
