@@ -83,7 +83,6 @@ public class TL4BindingTests
     }
 
     [Test]
-    [Explicit("Intentional failure: run individually to demonstrate an incorrect dynamic binding expectation.")]
     public void DynamicBinding_FailDemo_ExpectsBaseInsteadOfOverride()
     {
         EnemyBase current = spawnerObject.AddComponent<TL4OverrideEnemy>();
