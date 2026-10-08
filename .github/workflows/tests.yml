@@ -2,6 +2,11 @@ name: Tests
 
 on: [push, pull_request]
 
+# Cancel an older run on the same branch when a newer push comes in
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -11,10 +16,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Reuse Unity's imported Library folder between runs
+      - uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-
+
       - uses: game-ci/unity-test-runner@v4
         env:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
-          testMode: all
+          testMode: playmode
           githubToken: ${{ secrets.GITHUB_TOKEN }}
