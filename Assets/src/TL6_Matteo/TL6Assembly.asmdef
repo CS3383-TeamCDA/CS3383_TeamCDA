@@ -1,3 +1,16 @@
 {
-	"name": "TL6Assembly"
+    "name": "TL6Assembly",
+    "rootNamespace": "",
+    "references": [
+        "GUID:299c2a5e09b5da843aa30f77ba107074"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }
