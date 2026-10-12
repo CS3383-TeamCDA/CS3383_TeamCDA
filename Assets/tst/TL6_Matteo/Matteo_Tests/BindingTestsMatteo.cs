@@ -3,6 +3,8 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.TestTools;
 using static UnityEditor.Progress;
+using Assets.src.StateLogic;
+
 
 public class BindingTestsMatteo
 {

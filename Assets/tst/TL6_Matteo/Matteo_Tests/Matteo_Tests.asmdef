@@ -4,7 +4,8 @@
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
-        "TL6Assembly"
+        "TL6Assembly",
+        "GUID:299c2a5e09b5da843aa30f77ba107074"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
