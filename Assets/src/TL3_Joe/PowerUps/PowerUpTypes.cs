@@ -29,19 +29,4 @@ namespace EscapeThe90s.PowerUps
             IsPermanent = isPermanent;
         }
     }
-
-    /// <summary>One running temporary effect: the effect, its stack count, and its time left.</summary>
-    public class ActiveEffect
-    {
-        public PowerUpEffect Effect { get; }
-        public int StackCount { get; set; }
-        public float RemainingSeconds { get; set; }
-
-        public ActiveEffect(PowerUpEffect effect, float remainingSeconds)
-        {
-            Effect = effect;
-            StackCount = 1;
-            RemainingSeconds = remainingSeconds;
-        }
-    }
 }
