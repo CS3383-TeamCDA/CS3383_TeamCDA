@@ -6,6 +6,7 @@ namespace Assets.src.StateLogic
 
         public abstract string Start();
         public abstract string Update();
+        
         public void SwitchState(BaseState newState)
         {
             currentState?.ExitState(this);

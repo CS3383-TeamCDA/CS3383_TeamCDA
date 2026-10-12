@@ -1,9 +1,9 @@
-using Assets.src.StateLogic;
+using StateLogic = Assets.src.StateLogic;
 using UnityEditor.Experimental;
 using UnityEngine;
-public class MovementState : Assets.src.StateLogic.BaseState
+public class MovementState : StateLogic.BaseState
 {   //PlayerController controller;
-    public override void EnterState(StateManager stateManager)
+    public override void EnterState(StateLogic.StateManager stateManager)
     {
         throw new System.NotImplementedException();
     }
@@ -14,12 +14,12 @@ public class MovementState : Assets.src.StateLogic.BaseState
         return "MovementState: Execute";
     }
 
-    public override void ExitState(StateManager stateManager)
+    public override void ExitState(StateLogic.StateManager stateManager)
     {
         throw new System.NotImplementedException();
     }
 
-    public override void UpdateState(StateManager stateManager)
+    public override void UpdateState(StateLogic.StateManager stateManager)
     {
         Execute();
     }
