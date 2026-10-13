@@ -48,9 +48,21 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6608445238420986667, guid: d307be2c30152794d809266fc9e517dd, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 7408420190158862431, guid: d307be2c30152794d809266fc9e517dd, type: 3}
       propertyPath: m_Name
       value: EndRoom Variant
+      objectReference: {fileID: 0}
+    - target: {fileID: 7408420190158862431, guid: d307be2c30152794d809266fc9e517dd, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 7500285458926271082, guid: d307be2c30152794d809266fc9e517dd, type: 3}
+      propertyPath: m_Layer
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 7548267038336178250, guid: d307be2c30152794d809266fc9e517dd, type: 3}
       propertyPath: m_CompositePaths.m_Paths.Array.size

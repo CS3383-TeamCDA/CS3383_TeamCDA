@@ -52,6 +52,18 @@ PrefabInstance:
       propertyPath: m_Name
       value: EntranceRoom Variant
       objectReference: {fileID: 0}
+    - target: {fileID: 4636238119364506603, guid: e81a8b6b9def6424ba0ad416ab5c9d3e, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 5660630053617889758, guid: e81a8b6b9def6424ba0ad416ab5c9d3e, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 9019915133730476191, guid: e81a8b6b9def6424ba0ad416ab5c9d3e, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
