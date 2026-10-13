@@ -37,7 +37,6 @@ public class PlayerController : MonoBehaviour
         float inputX = Mathf.Clamp(_inputHandler.Movement.x, -1f, 1f);
         float targetSpeed = inputX * _maxSpeedX;
         float rate = Mathf.Approximately(inputX, 0f) ? _xDeceleration : _xAcceleration;
-
         float newX = Mathf.MoveTowards(_rb.linearVelocity.x, targetSpeed, rate * Time.fixedDeltaTime);
         _rb.linearVelocity = new Vector2(newX, _rb.linearVelocity.y);
     }
