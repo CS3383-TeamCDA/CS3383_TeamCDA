@@ -133,6 +133,20 @@ jobs:
           targetPlatform: StandaloneLinux64
           customParameters: -job-worker-count 1
 
+      - name: Locate Unity Build
+        run: |
+            echo "=== Current Directory ==="
+            pwd
+
+            echo "=== Root Directory ==="
+            ls -lah
+
+            echo "=== Searching for Build Files ==="
+            find . -maxdepth 5 -type f \( -name "*.x86_64" -o -name "*.exe" \) -print
+
+            echo "=== Build Directories ==="
+            find . -maxdepth 5 -type d -iname "*build*" -print
+
       - name: Upload build
         if: success()
         uses: actions/upload-artifact@v4
