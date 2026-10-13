@@ -37,7 +37,11 @@ namespace EscapeThe90s.HUD
             }
             else
             {
-                mainMenuPanel.Show();
+                if (mainMenuPanel != null)
+                {
+                    mainMenuPanel.Show();
+                }
+
                 hudPanel.Hide();
             }
         }
@@ -97,12 +101,19 @@ namespace EscapeThe90s.HUD
 
         private void OnStateChange(GameState state)
         {
-            mainMenuPanel.Hide();
+            if (mainMenuPanel != null)
+            {
+                mainMenuPanel.Hide();
+            }
+
             hudPanel.Hide();
 
             if (state == null || state is MenuState)
             {
-                mainMenuPanel.Show();
+                if (mainMenuPanel != null)
+                {
+                    mainMenuPanel.Show();
+                }
             }
             else if (state is PlayingState)
             {

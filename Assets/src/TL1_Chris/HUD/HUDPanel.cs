@@ -1,14 +1,14 @@
 using UnityEngine;
-using UnityEngine.Analytics;
+using TMPro;
 using UnityEngine.UI;
 
 namespace EscapeThe90s.HUD
 {
     public class HUDPanel : UIPanel
     {
-        [SerializeField] private Text healthText;
-        [SerializeField] private Text scoreText;
-        [SerializeField] private Text currencyText;
+        [SerializeField] private TMP_Text healthText;
+        [SerializeField] private TMP_Text scoreText;
+        [SerializeField] private TMP_Text currencyText;
         [SerializeField] private Slider healthBar;
         [SerializeField] private int maximumHealth = 100;
 
@@ -24,9 +24,6 @@ namespace EscapeThe90s.HUD
 
         public void UpdateHealthDisplay(int health)
         {
-            //healthText.text = $"Health: {hp}";
-            //healthBar.value = hp;
-
             if (healthText != null)
             {
                 healthText.text = $"Health: {health}";
@@ -42,7 +39,6 @@ namespace EscapeThe90s.HUD
 
         public void UpdateScoreDisplay(int score)
         {
-            //scoreText.text = $"Score: {score}";
             if (scoreText != null)
             {
                 scoreText.text = $"Score: {score}";
@@ -51,7 +47,6 @@ namespace EscapeThe90s.HUD
 
         public void UpdateCurrencyDisplay(int currency)
         {
-            //currencyText.text = $"Currency: {amount}";
             if (currencyText != null)
             {
                 currencyText.text = $"Currency: {currency}";
