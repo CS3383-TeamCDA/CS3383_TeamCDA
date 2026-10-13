@@ -1,50 +1,124 @@
 using EscapeThe90s.GameStates;
+using UnityEngine;
 
 namespace EscapeThe90s.HUD
 {
-    public class HUDController
+    public class HUDController : MonoBehaviour
     {
-        public int health { get; private set; }
-        public int score { get; private set; }
-        public int currency { get; private set; }
+        [SerializeField] private GameStateManager stateManager;
+        [SerializeField] private MainMenuPanel mainMenuPanel;
+        [SerializeField] private HUDPanel hudPanel;
+
+        [SerializeField] private int startingHealth = 100;
+        [SerializeField] private int startingScore = 0;
+        [SerializeField] private int startingCurrency = 0;
+
+        private int currentHealth;
+        private int currentScore;
+        private int currentCurrency;
+        private GameState displayedState;
+
+        private void Awake()
+        {
+            Initialize(startingHealth, startingScore, startingCurrency);
+        }
+
+        private void OnEnable()
+        {
+            if (stateManager == null)
+            {
+                return;
+            }
+
+            displayedState = stateManager.GetCurrentState();
+            if (displayedState != null)
+            {
+                OnStateChange(displayedState);
+            }
+            else
+            {
+                if (mainMenuPanel != null)
+                {
+                    mainMenuPanel.Show();
+                }
+
+                hudPanel.Hide();
+            }
+        }
+
+        private void Update()
+        {
+            if (stateManager == null)
+            {
+                return;
+            }
+
+            GameState activeState = stateManager.GetCurrentState();
+            if (activeState != displayedState)
+            {
+                displayedState = activeState;
+                OnStateChange(activeState);
+            }
+        }
 
         public void Initialize(int initialHealth = 100, int initialScore = 0, int initialCurrency = 0)
         {
-            // Code here
-            health = initialHealth;
-            score = initialScore;
-            currency = initialCurrency;
+            UpdateHealth(initialHealth);
+            UpdateScore(initialScore);
+            UpdateCurrency(initialCurrency);
         }
 
-        public void UpdateHealth(int hp)
+        public void UpdateHealth(int health)
         {
-            // Code here
-            this.health = hp;
+            currentHealth = Mathf.Max(0, health);
+            hudPanel.UpdateHealthDisplay(currentHealth);
         }
+
         public void UpdateScore(int score)
         {
-            // Code here
-            this.score = score;
+            currentScore = Mathf.Max(0, score);
+            hudPanel.UpdateScoreDisplay(currentScore);
         }
 
         public void UpdateCurrency(int currency)
         {
-            this.currency = currency;
+            currentCurrency = currency;
+            hudPanel.UpdateCurrencyDisplay(currentCurrency);
         }
 
         public void Show()
         {
-            // Code here
+            if (stateManager != null && stateManager.GetCurrentState() is PlayingState)
+            {
+                hudPanel.Show();
+            }
         }
 
         public void Hide()
         {
-            // Code here
+            hudPanel.Hide();
         }
 
-        public void OnStateChange(GameStateType newState)
+        private void OnStateChange(GameState state)
         {
-            // Code here
+            if (mainMenuPanel != null)
+            {
+                mainMenuPanel.Hide();
+            }
+
+            hudPanel.Hide();
+
+            if (state == null || state is MenuState)
+            {
+                if (mainMenuPanel != null)
+                {
+                    mainMenuPanel.Show();
+                }
+            }
+            else if (state is PlayingState)
+            {
+                hudPanel.Show();
+            }
         }
 
     }
