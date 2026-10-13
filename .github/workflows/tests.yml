@@ -2,35 +2,127 @@ name: Actions
 
 on: [push, pull_request]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: unity-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
-  build:
-    name: Build my project
+
+  # ==========================================
+  # UNITY TESTS
+  # ==========================================
+  test:
+    name: Unity Tests
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      checks: write
+
     steps:
-      # Checkout
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           lfs: true
 
-      # Cache
-      - uses: actions/cache@v3
+      - name: Cache Unity Library
+        uses: actions/cache@v4
         with:
           path: Library
-          key: Library-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          key: Library-tests-${{ runner.os }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
           restore-keys: |
-            Library-
+            Library-tests-${{ runner.os }}-
 
-      # Test
-      - name: Run tests
+      - name: Run Unity tests
+        id: unityTests
         uses: game-ci/unity-test-runner@v4
         env:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
+          testMode: all
           githubToken: ${{ secrets.GITHUB_TOKEN }}
+          customParameters: -job-worker-count 1
 
-      # Build
+      - name: Verify tests executed
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+
+          files = list(Path("artifacts").rglob("*-results.xml"))
+
+          if not files:
+              raise SystemExit("ERROR: No Unity test results found.")
+
+          total = 0
+          failed = 0
+          skipped = 0
+          inconclusive = 0
+
+          for file in files:
+              root = ET.parse(file).getroot()
+
+              count = int(root.get("total", "0"))
+              failures = int(root.get("failed", "0"))
+              skips = int(root.get("skipped", "0"))
+              inconclusives = int(root.get("inconclusive", "0"))
+
+              total += count
+              failed += failures
+              skipped += skips
+              inconclusive += inconclusives
+
+              print(f"{file}: {count} discovered, {failures} failed")
+
+          executed = total - skipped - inconclusive
+
+          print(f"Total discovered: {total}")
+          print(f"Total executed: {executed}")
+          print(f"Total failed: {failed}")
+
+          if executed <= 0:
+              raise SystemExit("ERROR: No Unity tests executed.")
+
+          if failed > 0:
+              raise SystemExit("ERROR: Unity tests failed.")
+
+          print("SUCCESS: Unity tests executed and passed.")
+          PY
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Unity-Test-Results
+          path: artifacts/
+          if-no-files-found: warn
+          retention-days: 14
+
+  # ==========================================
+  # UNITY BUILD
+  # ==========================================
+  build:
+    name: Build Unity Project
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-build-${{ runner.os }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-build-${{ runner.os }}-
+
       - name: Build project
         uses: game-ci/unity-builder@v4
         env:
@@ -38,9 +130,57 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
           targetPlatform: StandaloneLinux64
+          customParameters: -job-worker-count 1
 
-      # Output
-      - uses: actions/upload-artifact@v4
+      - name: Upload build
+        if: success()
+        uses: actions/upload-artifact@v4
         with:
-          name: Build
-          path: build
+          name: Unity-Linux-Build
+          path: build/
+          if-no-files-found: error
+          retention-days: 14
+
+  # ==========================================
+  # CODEOWNERS VALIDATION
+  # ==========================================
+  codeowners:
+    name: Validate CODEOWNERS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify CODEOWNERS exists
+        run: |
+          if [ -f ".github/CODEOWNERS" ] || \
+             [ -f "CODEOWNERS" ] || \
+             [ -f "docs/CODEOWNERS" ]; then
+            echo "CODEOWNERS found."
+          else
+            echo "ERROR: CODEOWNERS missing."
+            exit 1
+          fi
+
+      - name: Validate CODEOWNERS syntax
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          gh api \
+            --method GET \
+            "repos/$GH_REPO/codeowners/errors" \
+            -f ref="$COMMIT_SHA" \
+            > errors.json
+
+          ERROR_COUNT=$(jq '.errors | length' errors.json)
+
+          if [ "$ERROR_COUNT" -gt 0 ]; then
+            echo "CODEOWNERS validation failed."
+            jq '.errors' errors.json
+            exit 1
+          fi
+
+          echo "CODEOWNERS syntax is valid."
