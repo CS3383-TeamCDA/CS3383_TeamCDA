@@ -1,7 +1,5 @@
 # CODEOWNERS — CS3383 Team CDA
 
-# Only the listed owner may approve merges to their directory.
-
 Assets/src/TL1_Chris/ @cbalesohay
 Assets/src/TL2_Caleb/ @argitechno
 Assets/src/TL3_Joe/ @j-davitt
@@ -29,3 +27,6 @@ docs/TL3_Joe/ @j-davitt
 docs/TL4_Tyler/ @tylero07
 docs/TL5_Will/ @vvilll
 docs/TL6_Matteo/ @mattpola
+
+/.github/CODEOWNERS @cbalesohay
+/.github/workflows/ @cbalesohay
