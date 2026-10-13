@@ -35,7 +35,7 @@ jobs:
         with:
           testMode: editmode
           githubToken: ${{ secrets.GITHUB_TOKEN }}
-          customParameters: -job-worker-count 2
+          customParameters: -job-worker-count 1
 
       - name: Upload Test Results
         if: always()
