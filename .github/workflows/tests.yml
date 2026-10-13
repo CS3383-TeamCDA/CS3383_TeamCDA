@@ -30,4 +30,5 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
           testMode: playmode
+          coverageEnabled: false
           githubToken: ${{ secrets.GITHUB_TOKEN }}
