@@ -95,9 +95,9 @@ namespace EscapeThe90s.PowerUps
                 return;
             }
 
-            if (target == null)
+            if (!TryFindTarget())
             {
-                Debug.LogError("[PowerUpManager] Pickup ignored: no IPowerUpTarget.");
+                Debug.LogError("[PowerUpManager] Pickup ignored: no IPowerUpTarget. Tag the player \"Player\" and add PlayerPowerUpTarget to it.");
                 return;
             }
 
@@ -131,23 +131,28 @@ namespace EscapeThe90s.PowerUps
 
         private void Start()
         {
-            if (target == null)
-            {
-                GameObject player = GameObject.FindWithTag("Player");
-                if (player != null)
-                {
-                    target = player.GetComponent<IPowerUpTarget>();
-                }
-                if (target == null)
-                {
-                    Debug.LogError("[PowerUpManager] No IPowerUpTarget found. Tag the player \"Player\" and add PlayerPowerUpTarget to it.");
-                }
-            }
+            // The player may still be inactive here (it is enabled after the menu's start event),
+            // so a miss is normal. HandlePickup looks again when it actually needs the player.
+            TryFindTarget();
         }
 
         private void Update()
         {
             Tick(Time.deltaTime);
+        }
+
+        private bool TryFindTarget()
+        {
+            // A destroyed player (for example after a restart) still looks non-null through an
+            // interface reference, so check Unity's own null as well. Test mocks are not Unity objects.
+            if (target is UnityEngine.Object unityObject && unityObject == null)
+                target = null;
+
+            if (target != null) return true;
+
+            GameObject player = GameObject.FindWithTag("Player");
+            if (player != null) target = player.GetComponent<IPowerUpTarget>();
+            return target != null;
         }
 
         private void RegisterStrategies()
