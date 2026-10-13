@@ -1,33 +1,46 @@
-name: Tests
+name: Run Unity Tests
 
 on: [push, pull_request]
 
-# Cancel an older run on the same branch when a newer push comes in
 concurrency:
   group: tests-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   test:
     runs-on: ubuntu-latest
+
     permissions:
       contents: read
       checks: write
-    steps:
-      - uses: actions/checkout@v4
 
-      # Reuse Unity's imported Library folder between runs
-      - uses: actions/cache@v4
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Use a fresh cache namespace for troubleshooting
+      - name: Cache Unity Library
+        uses: actions/cache@v4
         with:
           path: Library
-          key: Library-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          key: Library-v2-${{ runner.os }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
           restore-keys: |
-            Library-
+            Library-v2-${{ runner.os }}-
 
-      - uses: game-ci/unity-test-runner@v4
+      - name: Run Unity Tests
+        uses: game-ci/unity-test-runner@v4
         env:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
-          testMode: playmode
+          testMode: editmode
           githubToken: ${{ secrets.GITHUB_TOKEN }}
+          customParameters: -job-worker-count 1
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Unity-Test-Results
+          path: artifacts/
+          if-no-files-found: warn

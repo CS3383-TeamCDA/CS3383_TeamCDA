@@ -2,21 +2,19 @@ using UnityEngine;
 
 namespace EscapeThe90s.HUD
 {
-    public class UIPanel
+    public class UIPanel : MonoBehaviour
     {
         public GameObject root;
         public bool isVisible { get; private set; }
 
         public virtual void Show()
         {
-            root.SetActive(true);
-            isVisible = true;
+            gameObject.SetActive(true);
         }
 
         public virtual void Hide()
         {
-            root.SetActive(false);
-            isVisible = false;
+            gameObject.SetActive(false);
         }
 
         public virtual void Update()

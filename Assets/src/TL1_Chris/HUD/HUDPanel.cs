@@ -1,15 +1,16 @@
 using UnityEngine;
-using UnityEngine.Analytics;
+using TMPro;
 using UnityEngine.UI;
 
 namespace EscapeThe90s.HUD
 {
     public class HUDPanel : UIPanel
     {
-        public Text healthText;
-        public Text scoreText;
-        public Text currencyText;
-        public Slider healthBar;
+        [SerializeField] private TMP_Text healthText;
+        [SerializeField] private TMP_Text scoreText;
+        [SerializeField] private TMP_Text currencyText;
+        [SerializeField] private Slider healthBar;
+        [SerializeField] private int maximumHealth = 100;
 
         public override void Show()
         {
@@ -21,20 +22,35 @@ namespace EscapeThe90s.HUD
             base.Hide();
         }
 
-        public void UpdateHealthDisplay(int hp)
+        public void UpdateHealthDisplay(int health)
         {
-            healthText.text = $"Health: {hp}";
-            healthBar.value = hp;
+            if (healthText != null)
+            {
+                healthText.text = $"Health: {health}";
+            }
+
+            if (healthBar != null)
+            {
+                healthBar.minValue = 0;
+                healthBar.maxValue = Mathf.Max(1, maximumHealth);
+                healthBar.value = health;
+            }
         }
 
         public void UpdateScoreDisplay(int score)
         {
-            scoreText.text = $"Score: {score}";
+            if (scoreText != null)
+            {
+                scoreText.text = $"Score: {score}";
+            }
         }
 
-        public void UpdateCurrencyDisplay(int amount)
+        public void UpdateCurrencyDisplay(int currency)
         {
-            currencyText.text = $"Currency: {amount}";
+            if (currencyText != null)
+            {
+                currencyText.text = $"Currency: {currency}";
+            }
         }
     }
 }
