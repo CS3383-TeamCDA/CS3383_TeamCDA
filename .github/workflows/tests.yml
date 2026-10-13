@@ -1,4 +1,4 @@
-name: Tests
+name: Run Unity Tests
 
 on: [push, pull_request]
 
@@ -31,3 +31,4 @@ jobs:
         with:
           testMode: editmode
           githubToken: ${{ secrets.GITHUB_TOKEN }}
+          customParameters: -logFile /dev/stdout
