@@ -19,9 +19,23 @@ public class PlayerInputHandler : MonoBehaviour
     }
 
     private void Update()
-    {
+    {   
         UpdateInputs();       
     }
+
+
+    //These two funcs may cause race conditions, we will see.
+    private void Pause()
+    {
+        _playerInput.DeactivateInput();
+    }
+
+    private void UnPause()
+    {
+        _playerInput.ActivateInput();
+    }
+
+
 
     private void SetupInputActions()
     {
