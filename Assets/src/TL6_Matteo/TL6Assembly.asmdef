@@ -2,7 +2,8 @@
     "name": "TL6Assembly",
     "rootNamespace": "",
     "references": [
-        "GUID:299c2a5e09b5da843aa30f77ba107074"
+        "GUID:299c2a5e09b5da843aa30f77ba107074",
+        "GUID:cdd7fa745682d84489f1cfd35765f73e"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
