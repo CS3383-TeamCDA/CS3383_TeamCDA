@@ -9,6 +9,7 @@ namespace EscapeThe90s.HUD
         [SerializeField] private TMP_Text healthText;
         [SerializeField] private TMP_Text scoreText;
         [SerializeField] private TMP_Text currencyText;
+        [SerializeField] private TMP_Text ammoCount;
         [SerializeField] private Slider healthBar;
         [SerializeField] private int maximumHealth = 100;
 
@@ -50,6 +51,14 @@ namespace EscapeThe90s.HUD
             if (currencyText != null)
             {
                 currencyText.text = $"Currency: {currency}";
+            }
+        }
+
+        public void UpdateAmmoDisplay(int ammoInMag, int maxAmmo)
+        {
+            if (ammoCount != null)
+            {
+                ammoCount.text = $"{ammoInMag}/{maxAmmo}";
             }
         }
     }

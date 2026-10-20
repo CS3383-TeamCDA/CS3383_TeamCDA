@@ -3,7 +3,7 @@ using UnityEngine;
 public class BindingDemoMatteo : MonoBehaviour
 {
     MovementState movement = new RunningState();
-    
+
     void OnGUI()
     {
         GUI.Label(new Rect(20, 20, 400, 30), movement.Execute());
