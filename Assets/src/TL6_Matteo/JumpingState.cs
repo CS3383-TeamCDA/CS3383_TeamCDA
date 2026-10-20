@@ -31,7 +31,6 @@ public class JumpingState : MovementState
         if (player.Rb.linearVelocity.y <= 0f &&
             player.IsGrounded())
         {
-            Debug.Log("Player landed: switching to RunningState");
             manager.ChangeState(new RunningState());
         }
     }
