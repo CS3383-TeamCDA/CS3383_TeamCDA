@@ -2,9 +2,9 @@ using UnityEngine;
 
 public class Coin3DSpin : MonoBehaviour
 {
-    [SerializeField] float spinSpeed = 120f;
-    [SerializeField] float bobHeight = 0.1f;
-    [SerializeField] float bobSpeed = 2f;
+    [SerializeField] private float spinSpeed = 120f;
+    [SerializeField] private float bobHeight = 0.1f;
+    [SerializeField] private float bobSpeed = 2f;
 
     Vector3 startPos;
 
