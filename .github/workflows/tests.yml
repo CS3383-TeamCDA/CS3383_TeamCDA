@@ -27,6 +27,22 @@ jobs:
           restore-keys: |
             Library-v2-${{ runner.os }}-
 
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: false
+          docker-images: false
+          swap-storage: false
+
+      - name: Add swap space
+        uses: pierotofy/set-swap-space@master
+        with:
+          swap-size-gb: 10
+
       - name: Run Unity Tests
         uses: game-ci/unity-test-runner@v4
         env:
