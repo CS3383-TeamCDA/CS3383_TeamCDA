@@ -4,12 +4,13 @@ namespace EscapeThe90s.HUD
 {
     public class MainMenuPanel : UIPanel
     {
-        [SerializeField] private GameStateManager _gameStateManager;
+        // [SerializeField] private GameStateManager _gameStateManager;
 
         public void StartGame()
         {
-            _gameStateManager.RequestStart();
-            Debug.Log(_gameStateManager.CurrentState);
+            GameStateManager.Instance.RequestStart();
+            // _gameStateManager.RequestStart();
+            // Debug.Log(_gameStateManager.CurrentState);
         }
 
         public override void Show()

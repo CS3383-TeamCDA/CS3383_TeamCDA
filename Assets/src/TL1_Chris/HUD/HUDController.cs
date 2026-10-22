@@ -5,7 +5,7 @@ namespace EscapeThe90s.HUD
 {
     public class HUDController : MonoBehaviour
     {
-        [SerializeField] private GameStateManager stateManager;
+        // [SerializeField] private GameStateManager stateManager;
         [SerializeField] private MainMenuPanel mainMenuPanel;
         [SerializeField] private HUDPanel hudPanel;
 
@@ -25,12 +25,14 @@ namespace EscapeThe90s.HUD
 
         private void OnEnable()
         {
-            if (stateManager == null)
+            // if (stateManager == null)
+            if (GameStateManager.Instance == null)
             {
                 return;
             }
 
-            displayedState = stateManager.CurrentState;
+            // displayedState = stateManager.CurrentState;
+            displayedState = GameStateManager.Instance.CurrentState;
             if (displayedState != null)
             {
                 OnStateChange(displayedState);
@@ -48,12 +50,14 @@ namespace EscapeThe90s.HUD
 
         private void Update()
         {
-            if (stateManager == null)
+            // if (stateManager == null)
+            if (GameStateManager.Instance == null)
             {
                 return;
             }
 
-            GameState activeState = stateManager.CurrentState;
+            // GameState activeState = stateManager.CurrentState;
+            GameState activeState = GameStateManager.Instance.CurrentState;
             if (activeState != displayedState)
             {
                 displayedState = activeState;
@@ -88,7 +92,8 @@ namespace EscapeThe90s.HUD
 
         public void Show()
         {
-            if (stateManager != null && stateManager.CurrentState is PlayingState)
+            // if (stateManager != null && stateManager.CurrentState is PlayingState)
+            if (GameStateManager.Instance != null && GameStateManager.Instance.CurrentState is PlayingState)
             {
                 hudPanel.Show();
             }

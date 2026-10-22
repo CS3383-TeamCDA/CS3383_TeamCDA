@@ -570,7 +570,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Chris.Game::EscapeThe90s.HUD.MainMenuPanel
   root: {fileID: 0}
-  _gameStateManager: {fileID: 388907272912689007}
+  _gameStateManager: {fileID: 0}
 --- !u!222 &3352802723728352617
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -609,50 +609,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!1 &5212143020954708089
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 655803791577257846}
-  - component: {fileID: 388907272912689007}
-  m_Layer: 0
-  m_Name: GameSystem
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &655803791577257846
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5212143020954708089}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 8.7582, y: 1.67527, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 5720255403052769770}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &388907272912689007
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5212143020954708089}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 790fea626ce2eb34fb262be6c3d22d0a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Chris.Game::EscapeThe90s.GameStateManager
 --- !u!1 &6627869569352318946
 GameObject:
   m_ObjectHideFlags: 0
@@ -817,6 +773,5 @@ Transform:
   m_Children:
   - {fileID: 315072539287243486}
   - {fileID: 4615388226297339092}
-  - {fileID: 655803791577257846}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

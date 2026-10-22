@@ -9,6 +9,7 @@ namespace EscapeThe90s
     {
         #region Properties
 
+        public static GameStateManager Instance { get; private set; }
         private StateMachine<GameState> machine = new StateMachine<GameState>();
         public GameState CurrentState => machine.CurrentState;
         public GameState PreviousState => machine.PreviousState;
@@ -26,6 +27,20 @@ namespace EscapeThe90s
         #endregion
 
         #region private Methods
+
+        private void Awake()
+        {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            Instance = this;
+
+            // This keeps the GameObject alive across scene changes
+            DontDestroyOnLoad(gameObject);
+        }
 
         private void Start()
         {
