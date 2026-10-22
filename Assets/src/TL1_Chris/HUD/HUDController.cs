@@ -30,7 +30,7 @@ namespace EscapeThe90s.HUD
                 return;
             }
 
-            displayedState = stateManager.GetCurrentState();
+            displayedState = stateManager.CurrentState;
             if (displayedState != null)
             {
                 OnStateChange(displayedState);
@@ -53,7 +53,7 @@ namespace EscapeThe90s.HUD
                 return;
             }
 
-            GameState activeState = stateManager.GetCurrentState();
+            GameState activeState = stateManager.CurrentState;
             if (activeState != displayedState)
             {
                 displayedState = activeState;
@@ -88,7 +88,7 @@ namespace EscapeThe90s.HUD
 
         public void Show()
         {
-            if (stateManager != null && stateManager.GetCurrentState() is PlayingState)
+            if (stateManager != null && stateManager.CurrentState is PlayingState)
             {
                 hudPanel.Show();
             }
