@@ -4,6 +4,12 @@ using StateLogic = Assets.src.StateLogic;
 
 public class RunningState : MovementState
 {
+
+    public override string Execute()
+    {
+        return "RunningState: Execute";
+    }
+
     public override void UpdateState(
         StateLogic.StateManager stateManager)
     {
