@@ -5,7 +5,9 @@
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "TL4Assembly",
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "Tl2_Caleb",
+        "Chris.Game"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

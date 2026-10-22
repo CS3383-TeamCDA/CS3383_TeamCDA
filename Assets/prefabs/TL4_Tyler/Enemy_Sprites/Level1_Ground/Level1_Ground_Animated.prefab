@@ -11,6 +11,8 @@ GameObject:
   - component: {fileID: 336385203433870742}
   - component: {fileID: 8876971054052155727}
   - component: {fileID: 7667172116839964565}
+  - component: {fileID: 7036625746818960747}
+  - component: {fileID: 5069441384107025636}
   m_Layer: 0
   m_Name: Level1_Ground_Animated
   m_TagString: Untagged
@@ -30,7 +32,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 2268943966382753163}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &8876971054052155727
@@ -110,8 +113,82 @@ Animator:
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
   m_AnimatePhysics: 0
-  m_WarningMessage: 
+  m_WarningMessage:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &7036625746818960747
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4311587290486528061}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60fb91be12f5426a9fe097cca139a7a2, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: TL4Assembly::GroundEnemy
+  attackMode: 2
+  level: 1
+  baseHealth: 100
+  baseCoins: 5
+  baseMeleeDamage: 10
+  baseRangedDamage: 8
+  healthPerLevel: 20
+  coinsPerLevel: 2
+  meleeDamagePerLevel: 2
+  rangedDamagePerLevel: 2
+  speed: 2
+  aggroRadius: 6
+  facingRight: 1
+--- !u!114 &5069441384107025636
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4311587290486528061}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7592fc9d3eda429db9c1bdc13a502249, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: TL4Assembly::EnemyRangedAttack
+  projectilePrefab: {fileID: 7095910485768529873, guid: 74abab95a9a9141d3a2d54214b64d029, type: 3}
+  muzzle: {fileID: 2268943966382753163}
+  target: {fileID: 0}
+  shotInterval: 1
+  projectileSpeed: 8
+  projectileLifetime: 4
+--- !u!1 &4894726654783550742
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2268943966382753163}
+  m_Layer: 0
+  m_Name: Muzzle
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2268943966382753163
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4894726654783550742}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.78, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 336385203433870742}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
