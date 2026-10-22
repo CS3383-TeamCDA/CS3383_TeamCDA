@@ -10,14 +10,17 @@ public class Stress_Test_Spawner : MonoBehaviour
     private int numItems = 0;
     int currentFPS = 1000;
 
-    
+
 
     // Update is called once per frame
     void Update()
     {
-        if (currentFPS > 60 || numItems < 20) {
+        if (currentFPS > 60 || numItems < 20)
+        {
             currentFPS = Mathf.RoundToInt(1f / Time.unscaledDeltaTime);
-            Instantiate(powerUp);
+            // Instantiate(powerUp);
+            Vector3 randomPos = new Vector3(Random.Range(-8f, 8f), Random.Range(-4f, 4f), 0f);
+            Instantiate(powerUp, randomPos, Quaternion.identity);
             ++numItems;
             numberOfPowerUpsViewer.SetText("{0}", numItems);
             fpsCounter.SetText("fps: {0}", currentFPS);
