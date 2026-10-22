@@ -9,7 +9,7 @@ namespace EscapeThe90s.HUD
         public void StartGame()
         {
             _gameStateManager.RequestStart();
-            Debug.Log(_gameStateManager.GetCurrentState());
+            Debug.Log(_gameStateManager.CurrentState);
         }
 
         public override void Show()

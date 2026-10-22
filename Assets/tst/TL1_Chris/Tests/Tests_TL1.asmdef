@@ -5,7 +5,8 @@
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "Chris.Game",
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "StateLogic"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

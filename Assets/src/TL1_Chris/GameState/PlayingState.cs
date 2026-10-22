@@ -1,13 +1,12 @@
-using System.Diagnostics;
+using UnityEngine;
 
 namespace EscapeThe90s.GameStates
 {
     public class PlayingState : GameState
     {
-        public override string Enter()
+        public override void Enter()
         {
-            //Debug.WriteLine("Playing State Enter Override");
-            return "Playing State Enter Override";
+            Time.timeScale = 1f;
         }
 
         public override void Update()

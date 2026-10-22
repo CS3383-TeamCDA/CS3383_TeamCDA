@@ -1,144 +1,98 @@
 using System;
 using UnityEngine;
+using EscapeThe90s.State;
 using EscapeThe90s.GameStates;
 
 namespace EscapeThe90s
 {
     public class GameStateManager : MonoBehaviour
     {
-        public GameState currentState { get; private set; }
-        public GameState previousState { get; private set; }
+        #region Properties
 
-        public GameState CurrentState
+        private StateMachine<GameState> machine = new StateMachine<GameState>();
+        public GameState CurrentState => machine.CurrentState;
+        public GameState PreviousState => machine.PreviousState;
+
+        #endregion
+
+        #region Events
+
+        public event Action<GameState> OnStateChanged
         {
-            get
+            add { machine.OnStateChanged += value; }
+            remove { machine.OnStateChanged -= value; }
+        }
+
+        #endregion
+
+        #region private Methods
+
+        private void Start()
+        {
+            if (CurrentState == null)
             {
-                return currentState;
+                machine.ChangeState(new MenuState());
             }
         }
 
-        public event Action<GameState> OnStateChanged;
-        private bool isChangingState;
-
-        public void Initialize(GameState startState)
+        private void Update()
         {
-            if (startState == null)
-            {
-                throw new ArgumentNullException(nameof(startState));
-            }
-
-            if (currentState != null || isChangingState)
-            {
-                return;
-            }
-
-            isChangingState = true;
-            try
-            {
-                previousState = null;
-                currentState = startState;
-                currentState.Enter();
-                OnStateChanged?.Invoke(currentState);
-            }
-            finally
-            {
-                isChangingState = false;
-            }
+            machine.Update();
         }
 
-        public void ChangeState(GameState newState)
-        {
-            if (newState == null || isChangingState)
-            {
-                return;
-            }
+        #endregion
 
-            if (currentState == null)
-            {
-                Initialize(newState);
-                return;
-            }
-
-            if (newState.GetType() == currentState.GetType())
-            {
-                return;
-            }
-
-            isChangingState = true;
-            try
-            {
-                currentState.Exit();
-
-                previousState = currentState;
-                currentState = newState;
-                currentState.Enter();
-                OnStateChanged?.Invoke(currentState);
-            }
-            finally
-            {
-                isChangingState = false;
-            }
-        }
-
-        public void Start()
-        {
-            if (currentState == null)
-            {
-                Initialize(new MenuState());
-            }
-        }
+        #region public Methods
 
         public void RequestStart()
         {
-            if (currentState is MenuState)
+            if (CurrentState is MenuState)
             {
-                ChangeState(new PlayingState());
+                machine.ChangeState(new PlayingState());
             }
         }
 
         public void RequestPause()
         {
-            if (currentState is PlayingState)
+            if (CurrentState is PlayingState)
             {
-                ChangeState(new PauseState());
+                machine.ChangeState(new PauseState());
             }
         }
 
         public void RequestResume()
         {
-            if (currentState is PauseState)
+            if (CurrentState is PauseState && PreviousState is PlayingState)
             {
-                ChangeState(new PlayingState());
+                machine.ChangeState(PreviousState);
+            }
+        }
+
+        public void RequestGameOver()
+        {
+            if (CurrentState is PlayingState)
+            {
+                machine.ChangeState(new GameOverState());
             }
         }
 
         public void RequestRestart()
         {
-            if (currentState is PlayingState)
+            if (CurrentState is GameOverState || CurrentState is PauseState)
             {
-                ChangeState(new PlayingState());
+                machine.ChangeState(new PlayingState());
             }
         }
 
         public void RequestReturnToMenu()
         {
-            if (currentState is PlayingState || currentState is PauseState)
+            if (CurrentState is PlayingState || CurrentState is PauseState || CurrentState is GameOverState)
             {
-                ChangeState(new MenuState());
+                machine.ChangeState(new MenuState());
             }
         }
 
-        public void Update()
-        {
-            if (currentState != null)
-            {
-                currentState.Update();
-            }
-        }
+        #endregion
 
-        public GameState GetCurrentState()
-        {
-            return currentState;
-        }
     }
 }
