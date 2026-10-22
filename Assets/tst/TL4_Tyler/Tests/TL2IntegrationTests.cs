@@ -18,8 +18,11 @@ public class TL2IntegrationTests
     Set(chunks,"chunkPrefab",template);Set(chunks,"parentTransform",root.transform);
     Set(generator,field,chunks);
    }
-   generator.SetDifficultyLevel(3);
+   // TL4 owns difficulty and marker registration; TL2 only generates rooms.
+   var population=root.AddComponent<EnemyLevelPopulation>();
+   population.SetDifficultyLevel(3);
    root.SetActive(true);generator.GenerateLevel();
+   population.RefreshSpawnPoints();
    var spawner=root.GetComponent<EnemySpawner>();spawner.ConfigureCamera(camera);
    Assert.AreEqual(3,root.GetComponentsInChildren<EnemySpawnPoint>().Length);
    EnemyBase spawned=null;spawner.OnEnemySpawned+=e=>spawned=e;spawner.Tick(1);
