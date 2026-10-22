@@ -3,7 +3,8 @@
     "rootNamespace": "",
     "references": [
         "UnityEngine.UI",
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "StateLogic"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

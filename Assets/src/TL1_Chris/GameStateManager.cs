@@ -1,90 +1,54 @@
 using System;
 using UnityEngine;
+using EscapeThe90s.State;
 using EscapeThe90s.GameStates;
 
 namespace EscapeThe90s
 {
     public class GameStateManager : MonoBehaviour
     {
-        public GameState CurrentState { get; private set; }
-        private GameState previousState { get; set; }
+        #region Properties
 
-        public event Action<GameState> OnStateChanged;
-        private bool isChangingState;
+        private StateMachine<GameState> machine = new StateMachine<GameState>();
+        public GameState CurrentState => machine.CurrentState;
+        public GameState PreviousState => machine.PreviousState;
 
-        public void Initialize(GameState startState)
+        #endregion
+
+        #region Events
+
+        public event Action<GameState> OnStateChanged
         {
-            if (startState == null)
-            {
-                throw new ArgumentNullException(nameof(startState));
-            }
-
-            if (CurrentState != null || isChangingState)
-            {
-                return;
-            }
-
-            isChangingState = true;
-            try
-            {
-                previousState = null;
-                CurrentState = startState;
-                CurrentState.Enter();
-                OnStateChanged?.Invoke(CurrentState);
-            }
-            finally
-            {
-                isChangingState = false;
-            }
+            add { machine.OnStateChanged += value; }
+            remove { machine.OnStateChanged -= value; }
         }
 
-        public void ChangeState(GameState newState)
-        {
-            if (newState == null || isChangingState)
-            {
-                return;
-            }
+        #endregion
 
-            if (CurrentState == null)
-            {
-                Initialize(newState);
-                return;
-            }
+        #region private Methods
 
-            if (newState.GetType() == CurrentState.GetType())
-            {
-                return;
-            }
-
-            isChangingState = true;
-            try
-            {
-                CurrentState.Exit();
-
-                previousState = CurrentState;
-                CurrentState = newState;
-                CurrentState.Enter();
-                OnStateChanged?.Invoke(CurrentState);
-            }
-            finally
-            {
-                isChangingState = false;
-            }
-        }
-
-        public void Start()
+        private void Start()
         {
             if (CurrentState == null)
             {
-                Initialize(new MenuState());
+                machine.ChangeState(new MenuState());
             }
         }
+
+        private void Update()
+        {
+            machine.Update();
+        }
+
+        #endregion
+
+        #region public Methods
 
         public void RequestStart()
         {
             if (CurrentState is MenuState)
             {
-                ChangeState(new PlayingState());
+                machine.ChangeState(new PlayingState());
             }
         }
 
@@ -92,15 +56,15 @@ namespace EscapeThe90s
         {
             if (CurrentState is PlayingState)
             {
-                ChangeState(new PauseState());
+                machine.ChangeState(new PauseState());
             }
         }
 
         public void RequestResume()
         {
-            if (CurrentState is PauseState)
+            if (CurrentState is PauseState && PreviousState is PlayingState)
             {
-                ChangeState(previousState);
+                machine.ChangeState(PreviousState);
             }
         }
 
@@ -108,7 +72,7 @@ namespace EscapeThe90s
         {
             if (CurrentState is PlayingState)
             {
-                ChangeState(new GameOverState());
+                machine.ChangeState(new GameOverState());
             }
         }
 
@@ -116,7 +80,7 @@ namespace EscapeThe90s
         {
             if (CurrentState is GameOverState || CurrentState is PauseState)
             {
-                ChangeState(new PlayingState());
+                machine.ChangeState(new PlayingState());
             }
         }
 
@@ -124,21 +88,11 @@ namespace EscapeThe90s
         {
             if (CurrentState is PlayingState || CurrentState is PauseState || CurrentState is GameOverState)
             {
-                ChangeState(new MenuState());
+                machine.ChangeState(new MenuState());
             }
         }
 
-        public void Update()
-        {
-            if (CurrentState != null)
-            {
-                CurrentState.Update();
-            }
-        }
+        #endregion
 
-        public GameState GetPreviousState()
-        {
-            return previousState;
-        }
     }
 }

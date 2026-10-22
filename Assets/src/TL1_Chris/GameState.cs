@@ -1,18 +1,11 @@
+using EscapeThe90s.State;
+
 namespace EscapeThe90s.GameStates
 {
-    public class GameState
+    public abstract class GameState : IState
     {
-        public virtual string Enter()
-        {
-            return "Base State Enter";
-        }
-        public virtual void Update()
-        {
-            
-        }
-        public virtual void Exit()
-        {
-            
-        }
+        public virtual void Enter() { }
+        public virtual void Update() { }
+        public virtual void Exit() { }
     }
 }

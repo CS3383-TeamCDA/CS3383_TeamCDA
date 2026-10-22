@@ -4,10 +4,9 @@ namespace EscapeThe90s.GameStates
 {
     public class GameOverState : GameState
     {
-        public override string Enter()
+        public override void Enter()
         {
-            //Debug.WriteLine("Menu State Enter Override");
-            return "Menu State Enter Override";
+            // Code here
         }
 
         public override void Update()
