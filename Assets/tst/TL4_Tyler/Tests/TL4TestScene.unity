@@ -392,7 +392,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: TL4Tyler_Tests::TL4StressTest
   numberOfItemsViewer: {fileID: 1822971818}
   fpsCounter: {fileID: 770354848}
-  item: {fileID: 8844519681351310584, guid: 47af76c935c043d2bbd2648e7279dbdf, type: 3}
+  item: {fileID: 4311587290486528061, guid: 2f6a23a66998f4ebbbac180c85c633cb, type: 3}
 --- !u!4 &561362427
 Transform:
   m_ObjectHideFlags: 0
