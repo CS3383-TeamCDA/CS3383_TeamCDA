@@ -1,0 +1,97 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &169004797567456527
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2552363062613459435}
+  - component: {fileID: 1252460810545174499}
+  - component: {fileID: 3661376697050255243}
+  - component: {fileID: 8071788293423603798}
+  - component: {fileID: 7153272843077031969}
+  m_Layer: 0
+  m_Name: LevelGenerator
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2552363062613459435
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 169004797567456527}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1252460810545174499
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 169004797567456527}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4ef09598256c4c4c9ac281ce0c73054, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+  StartChunkGen: {fileID: 3661376697050255243}
+  MiddleChunkGen: {fileID: 8071788293423603798}
+  EndChunkGen: {fileID: 7153272843077031969}
+--- !u!114 &3661376697050255243
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 169004797567456527}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f59a5b190f244d14fb3e8dfdbe0d4f42, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+  chunkPrefab: {fileID: 3576581302417329701, guid: ff051b67d5d96ba41b103292f4c95050, type: 3}
+  chunkSize: {x: 16, y: 0, z: 16}
+  parentTransform: {fileID: 2552363062613459435}
+--- !u!114 &8071788293423603798
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 169004797567456527}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f59a5b190f244d14fb3e8dfdbe0d4f42, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Tl2_Caleb::ChunkSpawner
+  chunkPrefab: {fileID: 7408420190158862431, guid: d307be2c30152794d809266fc9e517dd, type: 3}
+  chunkSize: {x: 16, y: 0, z: 10}
+  parentTransform: {fileID: 2552363062613459435}
+--- !u!114 &7153272843077031969
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 169004797567456527}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f59a5b190f244d14fb3e8dfdbe0d4f42, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Tl2_Caleb::ChunkSpawner
+  chunkPrefab: {fileID: 4254145794663292463, guid: 1f7204f25ae5aa945a80423070e3052c, type: 3}
+  chunkSize: {x: 16, y: 0, z: 10}
+  parentTransform: {fileID: 2552363062613459435}

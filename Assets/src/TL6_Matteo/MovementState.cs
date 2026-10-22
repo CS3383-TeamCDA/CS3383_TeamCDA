@@ -11,7 +11,6 @@ public class MovementState : StateLogic.BaseState
 
     public virtual string Execute()
     {
-        Debug.Log("MovementState: Execute");
         return "MovementState: Execute";
     }
 
