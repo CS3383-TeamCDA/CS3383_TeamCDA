@@ -1,29 +1,38 @@
-using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.Android;
-using UnityEngine.TestTools;
 using EscapeThe90s.GameStates;
 
 public class BindingTestsTL1
 {
-    // A Test behaves as an ordinary method
+    // Test-only state that does NOT override Enter(), so the base GameState version runs.
+    private class NoOverrideState : GameState { }
+
+    [SetUp]
+    public void SetUp()
+    {
+        // Start from a value no state sets, so any change is clearly caused by Enter().
+        Time.timeScale = 0.5f;
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        Time.timeScale = 1f;
+    }
+
     [Test]
     public void BaseRef_ToSubclass_UsesOverride()
     {
-        GameState baseline = new GameState();
-        GameState actual = new MenuState();
-        string a = baseline.Enter();
-        string b = actual.Enter();
-        Assert.AreNotEqual(a, b);
+        GameState state = new PauseState();
+        state.Enter();
+        Assert.AreEqual(0f, Time.timeScale);
     }
 
     [Test]
     public void BaseRef_ToSubclass_NoBindingChange()
     {
-        GameState baseline = new GameState();
-        GameState actual = new GameState();
-
-        Assert.AreEqual(baseline.Enter(), actual.Enter());
+        GameState state = new NoOverrideState();
+        state.Enter();
+        Assert.AreEqual(0.5f, Time.timeScale);
     }
 }
