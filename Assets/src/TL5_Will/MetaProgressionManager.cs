@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using UnityEngine;
 using EscapeThe90s.HUD;
+using System.Collections.Generic;
 
 namespace EscapeThe90s.MetaProgression
 {
@@ -11,6 +12,8 @@ namespace EscapeThe90s.MetaProgression
 
         private HUDController hudController;
         private int currency = 0;
+        private int[] upgradeLevels;
+        private List<UpgradeDefinition> definitions;
         private CancellationTokenSource _cts;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
