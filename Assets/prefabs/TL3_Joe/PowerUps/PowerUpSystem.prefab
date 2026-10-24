@@ -46,3 +46,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Joe.Game::EscapeThe90s.PowerUps.PowerUpManager
   definitionAssets:
   - {fileID: 11400000, guid: 3b7d9fc68f2c747e6b9aa94099367cc1, type: 2}
+  - {fileID: 11400000, guid: 6eae999706a894af59b9a007557b9705, type: 2}
+  - {fileID: 11400000, guid: 81c263ef2342a46a4911784b4e006b10, type: 2}
+  magnetPullSpeed: 12
+  despawnDistanceBehind: 20

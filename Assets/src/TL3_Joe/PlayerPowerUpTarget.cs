@@ -9,6 +9,8 @@ namespace EscapeThe90s.PowerUps
         public float SpeedMultiplier { get; private set; } = 1f;
         public float PickupRadius { get; private set; }
 
+        public Vector3 Position => transform.position;
+
         private void Awake()
         {
             PickupRadius = basePickupRadius;

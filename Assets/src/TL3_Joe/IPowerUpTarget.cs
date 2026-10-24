@@ -1,3 +1,5 @@
+
+using UnityEngine;
 namespace EscapeThe90s.PowerUps
 {
     /// <summary>
@@ -12,6 +14,8 @@ namespace EscapeThe90s.PowerUps
 
         /// <summary>Current pickup radius. Owned by this feature.</summary>
         float PickupRadius { get; }
+
+        Vector3 Position { get; }
 
         /// <summary>Forwards to TL6: PlayerController.SetSpeedMultiplier(float).</summary>
         void SetSpeedMultiplier(float multiplier);
