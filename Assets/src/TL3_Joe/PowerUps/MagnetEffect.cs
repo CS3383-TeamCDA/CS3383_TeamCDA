@@ -16,19 +16,18 @@ namespace EscapeThe90s.PowerUps
 
         public override void Apply(IPowerUpTarget target, int stackCount)
         {
+            Debug.Log($"[MagnetEffect] Apply: radius {BoostedRadius}");
             target.SetPickupRadius(BoostedRadius);
-            Debug.Log($"[MagnetEffect] Apply: radius to {BoostedRadius}");
         }
 
         public override void Remove(IPowerUpTarget target, StatSnapshot snapshot)
         {
+            Debug.Log($"[MagnetEffect] Remove: restoring radius {snapshot.Value}");
             target.SetPickupRadius(snapshot.Value);
-            Debug.Log("[MagnetEffect] Remove: restore pickup radius from snapshot");
         }
 
         public override StatSnapshot CreateSnapshot(IPowerUpTarget target)
         {
-            Debug.Log("[MagnetEffect] CreateSnapshot: save current pickup radius");
             return new StatSnapshot(StatKind.PickupRadius, target.PickupRadius);
         }
     }

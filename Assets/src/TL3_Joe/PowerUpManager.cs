@@ -18,6 +18,10 @@ namespace EscapeThe90s.PowerUps
         public event Action<PowerUpCollectedEventArgs> OnPowerUpCollected;
 
         [SerializeField] private PowerUpDefinition[] definitionAssets;
+        [SerializeField] private float magnetPullSpeed = 12f;        // units per second
+        [SerializeField] private float despawnDistanceBehind = 20f;  // units behind the player
+
+        private readonly List<PowerUpType> expired = new();          // reused by Tick
 
         private IPowerUpTarget target;
 
@@ -108,16 +112,44 @@ namespace EscapeThe90s.PowerUps
                 return;
             }
 
-            // TODO: temporary effects (Speed Boost, Magnet)
-            Debug.Log($"[PowerUpManager] Temporary effect {type} not implemented yet.");
-            Debug.Log($"[PowerUpManager] HandlePickup {item.Type}");
+            // Temporary effect (Speed Boost, Magnet)
+            if (!activeEffects.TryGetValue(type, out ActiveEffect active))
+            {
+                // First pickup of this type: save the stat BEFORE changing it (Memento)
+                snapshots[type] = effect.CreateSnapshot(target);
+                active = new ActiveEffect(effect, effect.Duration);
+                activeEffects[type] = active;
+            }
+            else
+            {
+                // Already active: add a stack if below the cap, never re-snapshot
+                if (active.StackCount < effect.MaxStacks) active.StackCount++;
+                active.RemainingSeconds = effect.Duration;   // refresh the timer
+            }
+
+            effect.Apply(target, active.StackCount);         // dynamic binding picks the subclass
+            int stacks = active.StackCount;
+
+            if (effect.Duration <= 0f) ExpireEffect(type);   // Step 6a: zero duration ends this frame
+
+            RaiseCollected(new PowerUpCollectedEventArgs(type, position, stacks, effect.Duration, false));
         }
 
         /// <summary>Counts down timers and expires finished effects.</summary>
         public void Tick(float deltaTime)
         {
-            // TODO: subtract deltaTime from each ActiveEffect; collect those at <= 0 and call ExpireEffect
+            if (activeEffects.Count == 0) return;
+
+            expired.Clear();
+            foreach (var pair in activeEffects)
+            {
+                pair.Value.RemainingSeconds -= deltaTime;
+                if (pair.Value.RemainingSeconds <= 0f) expired.Add(pair.Key);
+            }
+
+            foreach (PowerUpType type in expired) ExpireEffect(type);
         }
+
 
         #endregion
 
@@ -139,6 +171,7 @@ namespace EscapeThe90s.PowerUps
         private void Update()
         {
             Tick(Time.deltaTime);
+            UpdateItems(Time.deltaTime);
         }
 
         private bool TryFindTarget()
@@ -208,8 +241,49 @@ namespace EscapeThe90s.PowerUps
 
         private void ExpireEffect(PowerUpType type)
         {
-            // TODO: effect.Remove(target, snapshots[type]); remove from activeEffects and snapshots
-            Debug.Log($"[PowerUpManager] ExpireEffect {type}");
+            if (!activeEffects.TryGetValue(type, out ActiveEffect active)) return;
+
+            snapshots.TryGetValue(type, out StatSnapshot snapshot);
+            if (snapshot != null && TryFindTarget())
+                active.Effect.Remove(target, snapshot);   // restore the saved value
+
+            activeEffects.Remove(type);
+            snapshots.Remove(type);
+            Debug.Log($"[PowerUpManager] {type} expired");
+        }
+
+        /// <summary>Pulls items inside the pickup radius toward the player and removes items left behind.</summary>
+        private void UpdateItems(float deltaTime)
+        {
+            if (!TryFindTarget()) return;   // no active player yet (still on the menu)
+
+            Vector3 playerPos = target.Position;
+            float radius = target.PickupRadius;
+
+            for (int i = activeItems.Count - 1; i >= 0; i--)
+            {
+                PowerUpItem item = activeItems[i];
+
+                if (item == null)   // destroyed by something else
+                {
+                    activeItems.RemoveAt(i);
+                    continue;
+                }
+
+                Vector3 itemPos = item.transform.position;
+
+                // Skipped pickup far behind the player: remove it so it doesn't use up the 200 cap
+                if (itemPos.x < playerPos.x - despawnDistanceBehind)
+                {
+                    activeItems.RemoveAt(i);
+                    Destroy(item.gameObject);
+                    continue;
+                }
+
+                // Inside the pickup radius: move toward the player until the trigger collects it
+                if (Vector2.Distance(itemPos, playerPos) <= radius)
+                    item.transform.position = Vector2.MoveTowards(itemPos, playerPos, magnetPullSpeed * deltaTime);
+            }
         }
 
         private void RaiseCollected(PowerUpCollectedEventArgs args)

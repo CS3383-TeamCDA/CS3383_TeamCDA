@@ -9,6 +9,7 @@ namespace EscapeThe90s.PowerUps
         {
             public float SpeedMultiplier { get; private set; } = 1f;
             public float PickupRadius { get; private set; } = 1.5f;
+            public Vector3 Position => Vector3.zero;
 
             public void SetSpeedMultiplier(float multiplier)
             {

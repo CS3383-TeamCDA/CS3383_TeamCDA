@@ -1,4 +1,6 @@
+using UnityEngine;
 namespace EscapeThe90s.PowerUps.Tests
+
 {
     /// <summary>
     /// Test double for the player. Records every call so tests can check what an effect did.
@@ -7,6 +9,7 @@ namespace EscapeThe90s.PowerUps.Tests
     {
         public float SpeedMultiplier { get; private set; } = 1f;
         public float PickupRadius { get; private set; } = 1.5f;
+        public Vector3 Position => Vector3.zero;
 
         public int HealCalls { get; private set; }
         public int TotalHealed { get; private set; }

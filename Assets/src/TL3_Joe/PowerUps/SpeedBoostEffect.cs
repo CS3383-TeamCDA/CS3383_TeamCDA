@@ -16,19 +16,19 @@ namespace EscapeThe90s.PowerUps
 
         public override void Apply(IPowerUpTarget target, int stackCount)
         {
-            target.SetSpeedMultiplier(1f + BonusPerStack * stackCount);
-            Debug.Log($"[SpeedBoostEffect] Apply, stack {stackCount}");
+            float multiplier = 1f + BonusPerStack * stackCount;   // 1 stack = 1.5, 2 = 2.0, 3 = 2.5
+            Debug.Log($"[SpeedBoostEffect] Apply, stack {stackCount}: multiplier {multiplier}");
+            target.SetSpeedMultiplier(multiplier);
         }
 
         public override void Remove(IPowerUpTarget target, StatSnapshot snapshot)
         {
+            Debug.Log($"[SpeedBoostEffect] Remove: restoring multiplier {snapshot.Value}");
             target.SetSpeedMultiplier(snapshot.Value);
-            Debug.Log("[SpeedBoostEffect] Remove: restore speed multiplier from snapshot");
         }
 
         public override StatSnapshot CreateSnapshot(IPowerUpTarget target)
         {
-            Debug.Log("[SpeedBoostEffect] CreateSnapshot: save current speed multiplier");
             return new StatSnapshot(StatKind.SpeedMultiplier, target.SpeedMultiplier);
         }
     }
