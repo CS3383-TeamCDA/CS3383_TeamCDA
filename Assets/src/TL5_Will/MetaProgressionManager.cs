@@ -3,6 +3,7 @@ using System.Threading;
 using UnityEngine;
 using EscapeThe90s.HUD;
 using System.Collections.Generic;
+using UnityEditor.Overlays;
 
 namespace EscapeThe90s.MetaProgression
 {
@@ -14,6 +15,52 @@ namespace EscapeThe90s.MetaProgression
         private int currency = 0;
         private int[] upgradeLevels;
         private List<UpgradeDefinition> definitions;
+
+        // public void AddCurrency(int amount)
+        // {
+
+        // }
+
+        public int GetUpgradeLevel(UpgradeType type)
+        {
+            return 0;
+        }
+
+        public float GetEffectValue(UpgradeType type)
+        {
+            return 0f;
+        }
+
+        public bool CanPurchase(UpgradeType type)
+        {
+            return false;
+        }
+
+        public bool PurchaseUpgrade(UpgradeType type)
+        {
+            return false;
+        }
+
+        public void ApplyStartingBonuses(/*PlayerController player*/)
+        {
+
+        }
+
+        public SaveData CreateSnapshot()
+        {
+            return new SaveData
+            {
+                currency = currency,
+                upgradeLevels = (int[])upgradeLevels.Clone()
+            };
+        }
+
+        public void RestoreSnapshot(SaveData data)
+        {
+
+        }
+
+        // Temporary ========================================================================
         private CancellationTokenSource _cts;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -68,5 +115,7 @@ namespace EscapeThe90s.MetaProgression
             catch (OperationCanceledException) { }
             catch (Exception e) { Debug.LogException(e); }
         }
+
+        // Temporary ========================================================================
     }
 }
