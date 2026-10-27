@@ -1,3 +1,49 @@
+/*
+ * ===================================================================
+ *  STRATEGY DESIGN PATTERN
+ * ===================================================================
+ *
+ *  Intent
+ *    - Define a family of interchangeable behaviors, wrap each one in
+ *      its own class, and let the caller swap between them freely.
+ *    - Keep the caller depending on an abstraction, not on any one
+ *      concrete behavior.
+ *    - Add new behaviors without changing the code that uses them.
+ *
+ *  Problem
+ *    Each power-up does something different when collected (faster
+ *    movement, a shield, a bigger pickup radius). Putting all of that
+ *    in PowerUpManager as a big switch statement would mean editing the
+ *    manager every time a new power-up is added.
+ *
+ *  How it works here
+ *    1. PowerUpEffect (this class) declares Apply() and Remove() as
+ *       virtual, with a generic base version.
+ *    2. Each concrete effect overrides them with its own behavior.
+ *    3. PowerUpManager keeps a Dictionary<PowerUpType, PowerUpEffect>
+ *       called strategies. When a power-up is collected it looks up the
+ *       effect by type and calls effect.Apply(target, stacks).
+ *    4. The manager only ever sees a PowerUpEffect reference. Dynamic
+ *       binding picks the right subclass's Apply() at run time.
+ *    Adding a new power-up means writing one new subclass and adding
+ *    one dictionary entry. PowerUpManager does not change.
+ *
+ *  Roles
+ *    Client          - PowerUpManager
+ *                      Chooses which strategy to use and calls it.
+ *    Abstraction     - PowerUpEffect (this class)
+ *                      The common interface every strategy shares.
+ *    Implementations - SpeedBoostEffect, ShieldEffect, MagnetEffect
+ *                      The interchangeable behaviors.
+ *
+ *  Note: PowerUpEffect is also the Originator in the Memento pattern
+ *  (see StatSnapshot). Strategy picks what the effect does; Memento
+ *  lets that effect be undone when it expires.
+ *
+ *  Source: https://sourcemaking.com/design_patterns/strategy
+ * ===================================================================
+ */
+
 using UnityEngine;
 
 namespace EscapeThe90s.PowerUps
