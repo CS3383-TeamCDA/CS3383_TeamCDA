@@ -1,10 +1,12 @@
 # Escape the 90s — art style and asset generation guide
 
-Version 1 · 2026-10-22 · Owner: TL4 / Tyler
+Version 2 · Updated 2026-10-27 · Owner: TL4 / Tyler
 
 **Style in one sentence:** A ruined neon arcade city inhabited by hostile machines and purple mutants, rendered as crisp side-scrolling pixel art with near-black silhouettes, blue-violet shadows, cyan screen light, and hot-magenta energy.
 
 Use this guide and the relevant reference images together when requesting new artwork. This is an art direction document, not a claim that every depicted character, attack, menu, or visual effect is implemented. Text inside the reference boards is illustrative; the production requirements below define deliverables.
+
+For player work, read **Section 11: Player character assembly contract** before generating or assembling assets. Its player-specific requirements take precedence over the generic examples.
 
 ## 1. Reference library and priority
 
@@ -220,3 +222,188 @@ For UI, substitute the panel/icon specification and use `pause-ui.png`; request 
 - [ ] Save the reference choices, prompt, manifest and approved output together.
 
 Start with one approved idle pose before generating a full character set. Generate and review one action at a time, then preview the full set in the TL4 movement test scene. A convincing concept sheet is only the beginning: reject frames that drift in identity or fail the production checks.
+
+## 11. Player character assembly contract
+
+### 11.1 Scope, references, and authority
+
+This section specifies the first **horizontal, two-handed rifle** setup. MUST means a required invariant; SHOULD means a preferred choice that may change with an explicit brief. Do not silently substitute a one-handed pose, a flattened character-with-gun image, or an unrelated player controller.
+
+- [Player identity reference](references/player-walk-identity.png): frame from the supplied `PlayerWalkDemo.mp4`. Preserve spiky dark-blue hair, red neck scarf and long cape, navy cyber armor, cyan/magenta highlights, blue backpack, and mechanical legs.
+- [Assembled Unity prototype](references/player-two-handed-unity.png): demonstrates separate body, arms and rifle. This is a working generated-art prototype, not a guarantee of final animation polish.
+- Implementation source of truth: the separately delivered **`TwoHandedHero_UnityAssets.zip`**, containing `Assets/TwoHandedHero`. It has intentionally **not** been installed in this repository. Request the ZIP or its source folder if it is unavailable; do not claim to have inspected or imported it from this guide alone.
+- The ZIP's `.meta` files, prefab, clips and scripts define its exact current assembly. Preserve those files when extending that package. Numbers below describe that version; they are not universal measurements for new drawings.
+- Future player deliverables stay outside the repository as a downloadable asset-folder ZIP unless the user explicitly requests installation. Documentation and its visual references may live here.
+
+### 11.2 Required separation of artwork
+
+| Piece | MUST contain | MUST NOT contain |
+| --- | --- | --- |
+| Body action maps | Head/hair, scarf/cape, torso with shoulder attachment area, backpack, hips, legs and feet | Arms, hands, weapon, muzzle flash, scenery |
+| Support arm | Complete far arm: shoulder, upper arm, elbow, forearm, supporting palm | Torso, rifle or second arm |
+| Trigger arm | Complete near arm: shoulder, upper arm, elbow, forearm, trigger-grip hand | Torso, rifle or second arm |
+| Weapon | Complete rifle, stock, grip, foregrip, barrel | Character's hands, arms or body |
+| Optional muzzle/impact effects | Effect only, with explicit attachment/timing metadata | Baked-in weapon or character |
+
+The first package uses **one reusable sprite for each complete arm**, not individual upper-arm/forearm bones and not a new arm image for every frame. Arm transforms follow the weapon and adjust for braking/recoil. Hair and cape are baked into the body maps. Do not describe this as IK, cloth physics, a skeletal rig, or independently animated cape layers.
+
+Keep complete body maps for separate actions. Never present a labeled concept board as an importable atlas. Export actual RGBA transparency, preserve internal armor colors, and inspect alpha on light and dark backgrounds. No opaque checkerboard, background glow plate, or neighboring-frame fragments are allowed.
+
+### 11.3 Exact prefab hierarchy and draw order
+
+Use these names and paths when extending the existing package; animation bindings depend on them.
+
+```text
+TwoHandedHero                         TwoHandedRig; root for external placement
+└── Visuals                           Animator; mirror this entire transform
+    ├── Body                          SpriteRenderer, sorting order 10
+    ├── Shoulder                      Transform; frame-keyed shoulder height
+    └── WeaponGrip                    Transform; shared attachment/recoil origin
+        ├── SupportHand               SpriteRenderer, order 5; COMPLETE support arm
+        ├── Weapon                    SpriteRenderer, order 20
+        ├── TriggerHand               SpriteRenderer, order 30; COMPLETE trigger arm
+        └── Muzzle                    Transform; shot/effect origin
+```
+
+All four renderers MUST use the same sorting layer. Back-to-front order is support arm → body → weapon → trigger arm. The `SupportHand` and `TriggerHand` names describe their pivot roles; the sprites contain complete arms. Do not add duplicate arms to the body.
+
+Keep `WeaponGrip` and `Shoulder` as siblings under `Visuals`. The rig computes their relationship; parenting the grip beneath Shoulder as well would apply the offset twice. Body clips bind `Body/m_Sprite` and `Shoulder/m_LocalPosition.y` relative to the Animator on `Visuals`. They MUST NOT keyframe the Weapon sprite, root world position, facing scale, or hand transforms.
+
+### 11.4 Coordinate and grip contract
+
+Author facing right: local +X points toward the muzzle and +Y points up. Anchor offsets are in **WeaponGrip-local Unity units**, not pixels and not scaled Weapon-renderer coordinates. All `WeaponGrip` children share bob, recoil and facing. The weapon image's pivot is the trigger-hand grip.
+
+| Setting | Current package value |
+| --- | --- |
+| Carry and Run grip offset from Shoulder | `(0.67, -0.14)` |
+| Stop grip offset from Shoulder | `(0.58, -0.36)` |
+| TriggerHand local position | `(0, 0, 0)` |
+| SupportHand position, both sample rifles | `(0.54, 0.02, 0)` |
+| Muzzle position, both sample rifles | `(1.17, 0.30, 0)` |
+| Trigger arm Z rotation | `0°`; Stop uses `-20°` |
+| Support arm Z rotation | `17°`; Stop uses `5°` |
+| Run bob | `0.025 × sin(runTime × 4π / runCycleSeconds)` on local Y |
+| Run cycle duration | `1.0` second |
+| Default recoil | `0.055` units backward, recovering over `0.16` seconds |
+
+Evaluation order MUST be:
+
+1. Animator chooses body sprite and shoulder-height key for the current frame.
+2. In `LateUpdate`, compute `WeaponGrip.localPosition = Shoulder.localPosition + actionGripOffset + bob + recoil`.
+3. Set TriggerHand local position to zero and apply its action rotation.
+4. Set SupportHand and Muzzle local positions from the equipped weapon definition; apply the support-arm action rotation.
+5. Render the whole assembly with the same facing transform.
+
+For recoil, subtract `recoilDistance × remainingRecoilTime / recoilSeconds` from the grip's local X. Moving only the rifle image would detach the hands and MUST NOT be used.
+
+`SetFacingRight` mirrors the **entire Visuals group** by changing the sign of its X scale, preserving the original scale magnitude and Y/Z scales. Do not flip just Body, double-flip the gun, or mirror the physics root. Retain the previous facing when movement input/velocity is zero.
+
+### 11.5 Sprite metadata and dimensions
+
+Keep existing `.meta` files; do not let Unity regenerate their GUIDs. Use Point filtering, no mipmaps, no lossy compression, and preserve texture dimensions. Do not independently center or auto-trim each body sprite and discard its anchor.
+
+Current package specifics for reproducibility:
+
+- Carry PNG: `1774 × 887`, eight sprites in reading order.
+- Run PNG: `1254 × 1254`, sixteen sprites in reading order.
+- Stop PNG: `1536 × 1024`, six sprites. Its row gutter is offset: in Unity bottom-left coordinates the upper-row rectangles start at Y `534` with height `490`; the lower row starts at Y `0` with height `534`. Each column is `512` pixels wide. **Do not replace this with an equal 3×2 automatic slice.**
+- Shoot PNG: `1254 × 1254`, four sprites in reading order.
+- Parts PNG: `1536 × 1024`; support arm upper-left, trigger arm upper-right, PulseRifle lower-left, ArcRifle lower-right. The saved sprites use tight rectangles inside these regions.
+- Parts pivots are normalized within their saved tight rectangles: support arm `(0.86, 0.13)`, trigger arm `(0.91, 0.49)`, each rifle `(0.29, 0.15)`. Parts import at `400` PPU.
+- The builder sizes the PulseRifle renderer to `1.65` world units wide, support arm to `1.5`, trigger arm to `0.85`. Both rifles reuse the calibrated weapon renderer scale; new rifle art must match that scale or be recalibrated.
+- Body PPU is computed per sheet as maximum visible frame height divided by `2.4`. Body pivots use a measured foot baseline and per-frame shoulder-X anchors. The generated shoulder-height keys use visible-frame height divided by PPU, multiplied by `0.68` for Carry/Run or `0.71` for Stop/Shoot. These are prototype calibrations, not anatomical measurements guaranteed for replacement art.
+
+For exact per-frame rectangles and pivots, read the supplied PNG `.meta` files or `Editor/BuildTwoHandedHero.cs`. Do not infer them from the rendered preview. For newly authored maps, prefer genuinely uniform cells, consistent native pixel density, recorded attachment coordinates and a common baseline. If artwork geometry changes, update the import metadata and attachment calibration together, then review every frame.
+
+### 11.6 Animation and event contract
+
+A frame count means **unique drawings**, not render frames or duplicated keys. A repeated endpoint key for looping/holding does not count as a new drawing.
+
+| State | Drawings | Sprite playback | Duration | End behavior |
+| --- | ---: | ---: | ---: | --- |
+| Carry | 8 | 8 FPS | 1 second | Loop |
+| Run | 16 | 16 FPS | 1 second | Loop |
+| Stop | 6 | 12 FPS | 0.5 seconds | Return to Carry |
+| Shoot, stationary | 4 | 12 FPS | 1/3 second | Return to Carry |
+
+New run variants may use **12–16 distinct frames**; new stopping variants may use **4–8**. The first package uses the exact counts above. Changing a frame count or playback rate MUST also update the runtime duration fields and run-bob period. Rendering at 60 FPS is independent of sprite playback FPS.
+
+Runtime behavior MUST preserve these rules:
+
+- Start in Carry.
+- `SetMoving(true)` immediately starts Run; repeated calls with the same value do not restart the loop.
+- Changing from moving to stopped starts Stop once. Plant/brake → absorb momentum → settle torso → let hair/cape catch up. Returning to Run interrupts Stop immediately.
+- `Fire()` while stationary starts Shoot and recoil. It can interrupt Stop. Shoot then returns to Carry.
+- `Fire()` while running keeps Run on the body and applies recoil to the shared weapon/hand assembly. It MUST NOT freeze or reset the legs.
+- Starting to run interrupts standing Shoot. Do not force the user to wait for an action clip before movement responds.
+- Stop and Shoot transitions in this prototype are driven by `TwoHandedRig` timers and `Animator.Play`, not Animator triggers or animation events. Do not add a second competing transition system.
+- `Fire()` is a visual request, not permission to deal damage. The gameplay controller owns fire rate, ammo, collision, damage and projectile spawning. It calls the visual event only after accepting the shot.
+
+There are no authored Walk, Jump, Crouch, Reload or angled-aim states in this package. Do not rename Run to Walk or claim these actions exist. A future jump implementation must define how it interrupts Stop/Shoot without delaying gameplay response.
+
+### 11.7 Interchangeable weapon requirements
+
+Use `TwoHandedWeapon` definitions for sprite, support-grip offset, muzzle offset, recoil distance and recoil duration. Equip using `rig.Equip(definition)` so both attachments update with the artwork. Do not directly replace only the SpriteRenderer sprite.
+
+To add a rifle in this pose family:
+
+1. Author its trigger grip and foregrip to match the reference handling pose. Keep stock clearance around the face and shoulder.
+2. Import the sprite with its pivot at the trigger-hand contact, not the geometric center.
+3. Match the existing renderer's physical scale by calibrating PPU or sprite dimensions. Do not assume equal image dimensions imply equal weapon size.
+4. Duplicate a weapon definition and assign the new sprite.
+5. Measure support-palm and muzzle offsets in WeaponGrip-local space. If measuring a point from weapon pixels, subtract the sprite pivot, divide by PPU, and apply the Weapon renderer's local transform to obtain the grip-local position.
+6. Preview right and left facing, Carry, Run, Stop and Shoot. Check shoulder connection, finger/grip contact, supporting palm, stock/face clearance and muzzle position.
+7. If the stock, grip spacing or weapon mass cannot fit naturally, create a new arm-pose family. Do not stretch limbs or hide major gaps with glow.
+
+The first support hand is a cupped palm. A vertical foregrip can need different finger artwork for a convincing full grasp; transform alignment alone is not proof of anatomically correct contact. Validate the image as well as the coordinates.
+
+### 11.8 Assembly sequence for an automated agent
+
+1. Read this section and the package README. Confirm access to the actual source assets. Preserve user ownership boundaries and the requested output location.
+2. Inspect current `.meta`, prefab, clips and runtime scripts before editing. Record baseline GUIDs and frame counts.
+3. Generate or modify only the requested pieces. Preserve all other identity details. Keep a source-art copy; do not overwrite approved assets without authorization.
+4. Import into an isolated Unity project. Build the named hierarchy, renderer ordering, grip pivots and shoulder animation bindings exactly as specified.
+5. Use existing package assets when available. The rebuild menu replaces the package's generated clips, weapon definitions, prefab and preview scene, so do not run it over user-customized assets without a reason and a recoverable copy.
+6. Render the assembled character, not just disconnected sprite sheets. Check every frame and transition, both directions, both rifles, and the rifle's visibility against the cape/body.
+7. Run behavior checks: frame counts; stop interruption; running fire; weapon swap; mirrored hand/muzzle coordinates; return to Carry. The delivered version passed eight automated tests; those tests do not verify every pixel or pose.
+8. Package `Assets/TwoHandedHero` with its folder `.meta`, all child `.meta` files, PNGs, `.anim` clips, controller, prefab, scene, weapon definitions, runtime scripts and README. Keep optional Test Framework sources outside the default imported Assets tree unless the dependency is explicitly desired.
+9. Open the ZIP and verify integrity, relative paths, and all serialized GUID references. Do not include Library, Temp, machine-specific paths, unrelated teammate assets, or project-wide settings.
+10. Report the delivered files, actual checks performed and remaining limitations. Do not equate successful compilation with finished animation quality.
+
+### 11.9 Player acceptance gates
+
+- [ ] Body has no baked arms or gun; no doubled shoulders, hands or weapons after assembly.
+- [ ] Every body frame and both arm sprites preserve identity, proportions and consistent apparent pixel size.
+- [ ] Trigger hand contacts the trigger grip; support hand contacts the intended foregrip in both directions.
+- [ ] Rifle does not hide the face during braking, recoil or a run; stock does not pass through the head.
+- [ ] No frame includes pixels from its neighbor; pivots do not jump between actions.
+- [ ] Rifle, both hands and muzzle move together during recoil and facing changes.
+- [ ] Run has the requested distinct poses and readable foot contacts; travel speed is tested against stride speed.
+- [ ] Stop can be interrupted; firing while running preserves the leg cycle.
+- [ ] Gameplay receives a correctly transformed muzzle point; firing visuals do not duplicate damage or ammo logic.
+- [ ] Imported package opens without references to the original game repository or the creator's local paths.
+- [ ] ZIP includes import instructions, metadata, and an honest account of which poses/tests were reviewed.
+
+### 11.10 Copy-ready player generation brief
+
+```text
+Follow ART_STYLE_GUIDE.md section 11. Produce a modular TWO-HANDED player asset,
+not a flattened hero-with-weapon illustration. Use player-walk-identity.png for
+identity and player-two-handed-unity.png for the assembled handling relationship.
+
+Piece to create: [BODY ACTION MAP / SUPPORT ARM / TRIGGER ARM / RIFLE / EFFECT].
+Action: [Carry / Run / Stop / Shoot]. Exact unique drawings: [8 / 16 / 6 / 4].
+Cell dimensions and layout: [explicit dimensions and rows/columns].
+Maintain right-facing fixed side view, scale, pixel density and recorded anchors.
+Body-only maps MUST omit both arms, both hands, weapon and muzzle flash. Preserve
+blue hair, red scarf/cape, blue backpack, navy cyber armor and cyan/magenta details.
+Arm-only output MUST omit body and weapon. Rifle-only output MUST omit all hands.
+Use true transparent RGBA. No labels, grids, frames, scenery or painted checkerboard.
+Keep every silhouette inside its assigned cell with padding. Do not duplicate
+poses to meet the count. For Run, include foot contacts, passing poses and push-off
+with delayed cape/hair response. For Stop, show plant, braking, settling and follow-through.
+
+Deliver the requested independent PNG(s) plus explicit frame order, pivot/anchor
+coordinates and timing. Do not change scripts, install assets in the repository,
+or claim a Unity prefab exists unless those actions were requested and completed.
+```
