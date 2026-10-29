@@ -27,6 +27,7 @@ public class SceneStartupTests
     {
         // 1. Build infrastructure
         containerObj = new GameObject("ServiceContainer");
+        containerObj.SetActive(false);
         var container = containerObj.AddComponent<ServiceContainer>();
 
         manager = new GameObject("GameStateManager");
@@ -36,12 +37,10 @@ public class SceneStartupTests
         publisher.SetActive(false); // Start asleep
         var events = publisher.AddComponent<GameStateEventPublisher>();
 
-        // 2. Register dependencies into the system
-        container.Register<GameStateManager>(gsm);
-
-        // 3. Inject dependency and initialize the component
-        events.Inject(gsm);
-        publisher.SetActive(true); // Awake safely
+        // Let the publisher discover its requirements before the container injects them.
+        publisher.SetActive(true);
+        // Awake resolves both services, injects dependencies, and opens activation gates.
+        containerObj.SetActive(true);
 
         panel = new GameObject("Menu");
         var menu = panel.AddComponent<MainMenuPanel>();
