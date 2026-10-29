@@ -43,14 +43,34 @@ jobs:
         with:
           swap-size-gb: 10
 
+      # Work around the action emitting a negated flag rejected by CLI v0.1.72.
+      - name: Checkout Unity test action
+        uses: actions/checkout@v4
+        with:
+          repository: game-ci/unity-test-runner
+          ref: 32e57712352b500e17974b245a6dce9e11a73213
+          path: .game-ci/unity-test-runner
+          persist-credentials: false
+
+      - name: Fix coverage argument compatibility
+        shell: python
+        run: |
+          from pathlib import Path
+          bundle = Path('.game-ci/unity-test-runner/dist/index.js')
+          source = bundle.read_text()
+          old = '--no-coverageEnabled'
+          assert old in source, 'Coverage workaround no longer matches the action'
+          bundle.write_text(source.replace(old, '--coverageEnabled=false'))
+
       - name: Run Unity Tests
-        uses: game-ci/unity-test-runner@v4
+        uses: ./.game-ci/unity-test-runner
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
           testMode: playmode
+          cliVersion: v0.1.72
           # Coverage instrumentation can crash Unity during assembly loading.
           # Keep test execution enabled without collecting coverage.
           coverageEnabled: false
