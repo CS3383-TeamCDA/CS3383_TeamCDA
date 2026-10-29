@@ -81,7 +81,9 @@ jobs:
         if: failure()
         shell: bash
         run: |
-          mkdir -p artifacts
+          # Unity runs as root in Docker; its artifacts may not be runner-writable.
+          sudo mkdir -p artifacts
+          sudo chown -R "$(id -u):$(id -g)" artifacts
           {
             free -h
             df -h
