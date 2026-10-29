@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Unity.VectorGraphics;
 
 namespace EscapeThe90s.GameStates
 {
@@ -6,7 +7,9 @@ namespace EscapeThe90s.GameStates
     {
         public override void Enter()
         {
-            // Code here
+            // Load the main menu scene or set up the menu UI
+
+            
         }
 
         public override void Update()

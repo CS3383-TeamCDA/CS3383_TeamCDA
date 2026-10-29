@@ -1,6 +1,7 @@
 using UnityEngine;
+using TL2_Dependencies;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : MonoBehaviour, IDependent<IGameStateEventPublisher>
 {
     [SerializeField] private Rigidbody2D _rb;
     [SerializeField] private Collider2D _collider;
@@ -21,6 +22,14 @@ public class PlayerController : MonoBehaviour
         if (_rb == null) _rb = GetComponent<Rigidbody2D>();
         if (_collider == null) _collider = GetComponent<Collider2D>();
         if (_inputHandler == null) _inputHandler = GetComponent<PlayerInputHandler>();
+    }
+
+    public void Inject(IGameStateEventPublisher gsep)
+    {
+        if (gsep != null)
+        {
+            gsep.NotifyPlayerSpawned(this.transform.root);
+        }
     }
 
     void Update()

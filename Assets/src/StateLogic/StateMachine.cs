@@ -49,7 +49,7 @@ namespace EscapeThe90s.State
             {
                 return false;
             }
-
+            
             isChanging = true;
             try
             {
