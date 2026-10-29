@@ -23,9 +23,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: Library
-          key: Library-v5-${{ runner.os }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          key: Library-v6-${{ runner.os }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
           restore-keys: |
-            Library-v5-${{ runner.os }}-
+            Library-v6-${{ runner.os }}-
 
       - name: Free disk space
         uses: jlumbroso/free-disk-space@v1.3.1
