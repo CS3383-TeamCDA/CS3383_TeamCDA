@@ -5,7 +5,9 @@
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "TL2_Hashing",
-        "TL2_RNG"
+        "TL2_RNG",
+        "TL2_WorldData",
+        "TL2_Tiles"
     ],
     "includePlatforms": [
         "Editor"

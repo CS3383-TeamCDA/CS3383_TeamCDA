@@ -1,0 +1,16 @@
+{
+    "name": "TL2_Tiles",
+    "rootNamespace": "",
+    "references": [
+        "GUID:1052eb0585dce6a4c941c857eaddf0ea"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
