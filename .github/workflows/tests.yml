@@ -18,14 +18,14 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Use a fresh cache namespace for troubleshooting
+      # Only restore a Library built from these exact project files. A partial
+      # (prefix) restore brings back stale import/script state from older commits,
+      # which is what broke builds until the cache version was bumped.
       - name: Cache Unity Library
         uses: actions/cache@v4
         with:
           path: Library
-          key: Library-v6-${{ runner.os }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
-          restore-keys: |
-            Library-v6-${{ runner.os }}-
+          key: Library-${{ runner.os }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
 
       - name: Free disk space
         uses: jlumbroso/free-disk-space@v1.3.1
