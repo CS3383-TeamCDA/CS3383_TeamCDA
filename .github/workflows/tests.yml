@@ -51,8 +51,22 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
           testMode: playmode
+          # Coverage instrumentation can crash Unity during assembly loading.
+          # Keep test execution enabled without collecting coverage.
+          coverageEnabled: false
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           customParameters: -job-worker-count 1
+
+      - name: Capture failure diagnostics
+        if: failure()
+        shell: bash
+        run: |
+          mkdir -p artifacts
+          {
+            free -h
+            df -h
+            sudo journalctl -k --since "20 minutes ago" --no-pager | tail -n 200
+          } > artifacts/runner-diagnostics.txt 2>&1
 
       - name: Upload Test Results
         if: always()
