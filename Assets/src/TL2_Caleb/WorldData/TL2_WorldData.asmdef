@@ -1,0 +1,17 @@
+{
+    "name": "TL2_WorldData",
+    "rootNamespace": "",
+    "references": [
+        "GUID:8e973fe1ee6f5bf49b8029a8db3c3835",
+        "GUID:e6da1a6bc79f32d4f8d2889b97e7f694"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

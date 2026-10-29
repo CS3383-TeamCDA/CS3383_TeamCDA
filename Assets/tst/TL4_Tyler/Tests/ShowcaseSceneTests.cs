@@ -11,7 +11,7 @@ public class ShowcaseSceneTests
  {
   EditorSceneManager.LoadSceneInPlayMode("Assets/tst/TL4_Tyler/Tests/TL4EnemyMovementTest.unity",new LoadSceneParameters(LoadSceneMode.Single));
   yield return null;
-  var showcase=Object.FindFirstObjectByType<EnemyAnimationShowcase>();Assert.IsNotNull(showcase);Assert.AreEqual(3,showcase.PreviewCount);
+  var showcase=Object.FindAnyObjectByType<EnemyAnimationShowcase>();Assert.IsNotNull(showcase);Assert.AreEqual(3,showcase.PreviewCount);
   showcase.SetPreviewLevel(3);
   foreach(var enemy in showcase.GetComponentsInChildren<EnemyBase>()){Assert.AreEqual(140,enemy.MaxHealth);Assert.AreEqual(9,enemy.CoinReward);Assert.AreEqual(12,enemy.RangedDamage);}
   for(int i=0;i<3;i++)showcase.NextAnimation(i);

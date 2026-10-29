@@ -1,0 +1,19 @@
+{
+    "name": "TL2_LevelGen",
+    "rootNamespace": "",
+    "references": [
+        "GUID:1052eb0585dce6a4c941c857eaddf0ea",
+        "GUID:8e973fe1ee6f5bf49b8029a8db3c3835",
+        "GUID:e6da1a6bc79f32d4f8d2889b97e7f694",
+        "GUID:9ff14dbbdd8f3b44fbef04d78d6fb805"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

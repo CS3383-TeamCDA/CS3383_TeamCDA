@@ -1,0 +1,63 @@
+```
+using UnityEngine;
+using EscapeThe90s.GameStates;
+using EscapeThe90s;
+using TL2_Dependencies;
+
+public class GameStateEventPublisher : DependentMonoBehaviour, IDependent<GameStateManager>, IGameStateEventPublisher
+{
+    public event System.Action OnGameStarted;
+    public event System.Action OnMenuEntered;
+
+    private GameStateManager _gsm;
+    private readonly EventSubscriptionGroup _eventGroup = new EventSubscriptionGroup();
+
+    public void Inject(GameStateManager dependency)
+    {
+        _gsm = dependency;
+        
+        // Use our standard group layout to track the GameState changes cleanly!
+        _eventGroup.Add<GameState>(OnStateEnter, h => _gsm.OnStateChanged += h, h => _gsm.OnStateChanged -= h);
+    }
+
+    protected override void OnEnabledAfterInitialization()
+    {
+        _eventGroup.SubscribeAll(); 
+        
+        // Catch-up phase: instantly synchronize state parameters when waking up
+        if (_gsm != null && _gsm.CurrentState != null)
+        {
+            OnStateEnter(_gsm.CurrentState);
+        }
+    }
+
+    protected override void OnDisabledAfterInitialization()
+    {
+        _eventGroup.UnsubscribeAll(); 
+    }
+
+    private void OnStateEnter(GameState GS)
+    {
+        // High-visibility tracking line
+        Debug.Log($"📬 [GameStateEventPublisher] OnStateEnter received state transition: {GS?.GetType().Name ?? "NULL"}", this);
+
+        switch (GS)
+        {
+            case PlayingState: 
+                Debug.Log("[GameStateEventPublisher] Broadcasting OnGameStarted Event!");
+                OnGameStarted?.Invoke(); 
+                break;
+            case MenuState: 
+                Debug.Log("[GameStateEventPublisher] Broadcasting OnMenuEntered Event!");
+                OnMenuEntered?.Invoke(); 
+                break;
+            case null: 
+                Debug.LogError("Game state is null!"); 
+                break;
+            default: 
+                Debug.LogWarning($"Unknown State: {GS.GetType().Name}"); 
+                break;
+        }
+    }
+}
+```

@@ -7,7 +7,9 @@
         "TL4Assembly",
         "Unity.TextMeshPro",
         "Tl2_Caleb",
-        "Chris.Game"
+        "Chris.Game",
+        "TL2_Events",
+        "TL2_Dependencies"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff784db24afa9a54db2cff73ab8ed93c, type: 3}
+  m_Name: DualGridTileSet
+  m_EditorClassIdentifier: TL2_LevelGen::TL2_LevelGen.DualGridTileSet
+  tiles:
+    mask00: {fileID: 11400000, guid: c8127e8d183cad047b6ca070e0a7e968, type: 2}
+    mask01: {fileID: 11400000, guid: 6502b391b4a801b4680e84392d8cc448, type: 2}
+    mask02: {fileID: 11400000, guid: ef9ae9e9bd45ffc48a09321d3f096519, type: 2}
+    mask03: {fileID: 11400000, guid: a63f3e0903b2c44498806c0ded55a590, type: 2}
+    mask04: {fileID: 11400000, guid: 0ac1108f43f8cf24a82cb3c32346a8a4, type: 2}
+    mask05: {fileID: 11400000, guid: 15109409c313b4c49bb9efcd6d826ee2, type: 2}
+    mask06: {fileID: 11400000, guid: 48d9a51f89eb44b4b8ecbe63ac2ae6e5, type: 2}
+    mask07: {fileID: 11400000, guid: 33fb8f0998a8da44e81bf89471663baa, type: 2}
+    mask08: {fileID: 11400000, guid: 55ad8d3b9cf90ce4fb6e6a8d889c8e07, type: 2}
+    mask09: {fileID: 11400000, guid: 4fcb12c397eda514a85b6e8e8954a432, type: 2}
+    mask10: {fileID: 11400000, guid: 97c1e372aa4027b498a7f59ed23f27c5, type: 2}
+    mask11: {fileID: 11400000, guid: 57df257eaef7c7f44a4ad6ebbf222a9c, type: 2}
+    mask12: {fileID: 11400000, guid: 5d48a9585df25c1409dc629fdd5d4272, type: 2}
+    mask13: {fileID: 11400000, guid: ed0dcc15928413f4ab48ec01e8dd1f17, type: 2}
+    mask14: {fileID: 11400000, guid: ec842c7ac00a5cb469cbf4b711052b3c, type: 2}
+    mask15: {fileID: 11400000, guid: 391351aa2a5f245429a0c42a96c05ca9, type: 2}

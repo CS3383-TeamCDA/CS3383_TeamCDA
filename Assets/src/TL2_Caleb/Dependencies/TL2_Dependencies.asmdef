@@ -1,0 +1,16 @@
+{
+    "name": "TL2_Dependencies",
+    "rootNamespace": "",
+    "references": [
+        "GUID:443c6ba2ba607374f916ce67442a29cd"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

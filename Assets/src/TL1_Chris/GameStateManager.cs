@@ -99,6 +99,14 @@ namespace EscapeThe90s
             }
         }
 
+        public void RequestQuit()
+        {
+            if (CurrentState is MenuState)
+            {
+                Application.Quit();
+            }
+        }
+
         public void RequestReturnToMenu()
         {
             if (CurrentState is PlayingState || CurrentState is PauseState || CurrentState is GameOverState)

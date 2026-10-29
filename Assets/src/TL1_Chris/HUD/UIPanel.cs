@@ -4,7 +4,6 @@ namespace EscapeThe90s.HUD
 {
     public class UIPanel : MonoBehaviour
     {
-        public GameObject root;
         public bool isVisible { get; private set; }
 
         public virtual void Show()
