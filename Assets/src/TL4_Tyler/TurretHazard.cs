@@ -2,6 +2,27 @@ using UnityEngine;
 
 public class TurretHazard : EnemyBase
 {
+    [SerializeField] private Transform target;
+    [SerializeField] private Vector2 targetAimOffset = new Vector2(0, .9f);
+    private EnemyRangedAttack shooter;
+    private EnemyAnimationDriver animationDriver;
+    public void SetTarget(Transform player) { target = player; }
+    public override Vector3 AttackTargetPosition => base.AttackTargetPosition + (Vector3)targetAimOffset;
+
+    protected override void Awake()
+    {
+        base.Awake();
+        shooter = GetComponent<EnemyRangedAttack>();
+        animationDriver = GetComponent<EnemyAnimationDriver>();
+    }
+
+    protected override void Update()
+    {
+        base.Update();
+        if (TryAcquireTarget(target) && shooter != null && animationDriver != null &&
+            TryGetShotDirection(shooter.ShotOrigin, AttackTargetPosition, out var direction))
+            animationDriver.SetAimDirection(direction);
+    }
     public override EnemyType Type => EnemyType.Turret;
     public override EnemyMovementType MovementType => EnemyMovementType.Static;
 
@@ -27,8 +48,7 @@ public class TurretHazard : EnemyBase
 
     public override void Move()
     {
-        // TODO: Keep the turret stationary; implement targeting and firing separately.
-        Debug.Log("Turret stationary");
+        // Turrets remain fixed at their generated terrain location.
     }
 
 }

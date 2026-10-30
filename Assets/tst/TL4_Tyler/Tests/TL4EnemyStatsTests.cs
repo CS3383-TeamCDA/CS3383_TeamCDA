@@ -13,6 +13,40 @@ public class TL4EnemyStatsTests
     }
     [TearDown] public void TearDown() { Object.DestroyImmediate(instance); }
 
+    [TestCase(EnemyAwareness.Low)]
+    [TestCase(EnemyAwareness.High)]
+    public void AwarenessRandomizesInitiallyAndOnlyUpgradesAfterSixSeconds(EnemyAwareness awareness)
+    {
+        var previousRandomState = Random.state;
+        try
+        {
+            Random.InitState(42);
+            var lower = awareness == EnemyAwareness.Low ? EnemyAggroRange.Close : EnemyAggroRange.Medium;
+            var upper = awareness == EnemyAwareness.Low ? EnemyAggroRange.Medium : EnemyAggroRange.Far;
+            var starts = new System.Collections.Generic.HashSet<EnemyAggroRange>();
+            for (int i = 0; i < 32; i++)
+            {
+                enemy.SetAwareness(awareness);
+                var initial = enemy.AggroRange;
+                starts.Add(initial);
+                Assert.IsTrue(initial == lower || initial == upper);
+                enemy.TickAwareness(5.9f);
+                Assert.AreEqual(initial, enemy.AggroRange, "No upgrade trial before six seconds.");
+                enemy.TickAwareness(.11f);
+                for (int trial = 0; trial < 32; trial++) enemy.TickAwareness(6);
+                Assert.AreEqual(upper, enemy.AggroRange);
+                for (int trial = 0; trial < 10; trial++)
+                {
+                    enemy.TickAwareness(6);
+                    Assert.AreEqual(upper, enemy.AggroRange, "Upgraded detection must never downgrade.");
+                    Assert.AreEqual(awareness, enemy.Awareness, "Awareness category must stay fixed.");
+                }
+            }
+            Assert.AreEqual(2, starts.Count, "Both starting ranges should be possible.");
+        }
+        finally { Random.state = previousRandomState; }
+    }
+
     [Test] public void LevelScalesAllStatsFromBaseWithoutCompounding()
     {
         enemy.SetLevel(3);
