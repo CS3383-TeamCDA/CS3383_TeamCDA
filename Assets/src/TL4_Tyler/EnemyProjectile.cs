@@ -3,6 +3,8 @@ using UnityEngine;
 // Carries the attack snapshot; player collision/damage integration can consume Damage and Owner.
 public class EnemyProjectile : MonoBehaviour
 {
+    [SerializeField] private LayerMask blockingLayers = 1 << 3;
+    [SerializeField, Min(0)] private float collisionRadius = .05f;
     public EnemyBase Owner { get; private set; }
     public int Damage { get; private set; }
     public Vector2 Direction { get; private set; }
@@ -24,7 +26,19 @@ public class EnemyProjectile : MonoBehaviour
     private void Update()
     {
         if (!launched) return;
-        transform.position += (Vector3)(Direction * speed * Time.deltaTime);
+        float distance = speed * Time.deltaTime;
+        // Sweep the whole frame's travel so fast bolts cannot skip thin terrain.
+        if (distance > 0 && blockingLayers.value != 0)
+        {
+            var hit = Physics2D.CircleCast(transform.position, collisionRadius, Direction, distance, blockingLayers);
+            if (hit.collider != null)
+            {
+                transform.position = hit.centroid;
+                Destroy(gameObject);
+                return;
+            }
+        }
+        transform.position += (Vector3)(Direction * distance);
         remainingLife -= Time.deltaTime;
         if (remainingLife <= 0) Destroy(gameObject);
     }

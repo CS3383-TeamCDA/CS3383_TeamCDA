@@ -18,14 +18,14 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Use a fresh cache namespace for troubleshooting
+      # Only restore a Library built from these exact project files. A partial
+      # (prefix) restore brings back stale import/script state from older commits,
+      # which is what broke builds until the cache version was bumped.
       - name: Cache Unity Library
         uses: actions/cache@v4
         with:
           path: Library
-          key: Library-v5-${{ runner.os }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
-          restore-keys: |
-            Library-v5-${{ runner.os }}-
+          key: Library-${{ runner.os }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
 
       - name: Free disk space
         uses: jlumbroso/free-disk-space@v1.3.1
@@ -43,16 +43,52 @@ jobs:
         with:
           swap-size-gb: 10
 
+      # Work around the action emitting a negated flag rejected by CLI v0.1.72.
+      - name: Checkout Unity test action
+        uses: actions/checkout@v4
+        with:
+          repository: game-ci/unity-test-runner
+          ref: 32e57712352b500e17974b245a6dce9e11a73213
+          path: .game-ci/unity-test-runner
+          persist-credentials: false
+
+      - name: Fix coverage argument compatibility
+        shell: python
+        run: |
+          from pathlib import Path
+          bundle = Path('.game-ci/unity-test-runner/dist/index.js')
+          source = bundle.read_text()
+          old = '--no-coverageEnabled'
+          assert old in source, 'Coverage workaround no longer matches the action'
+          bundle.write_text(source.replace(old, '--coverageEnabled=false'))
+
       - name: Run Unity Tests
-        uses: game-ci/unity-test-runner@v4
+        uses: ./.game-ci/unity-test-runner
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
           testMode: playmode
+          cliVersion: v0.1.72
+          # Coverage instrumentation can crash Unity during assembly loading.
+          # Keep test execution enabled without collecting coverage.
+          coverageEnabled: false
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           customParameters: -job-worker-count 1
+
+      - name: Capture failure diagnostics
+        if: failure()
+        shell: bash
+        run: |
+          # Unity runs as root in Docker; its artifacts may not be runner-writable.
+          sudo mkdir -p artifacts
+          sudo chown -R "$(id -u):$(id -g)" artifacts
+          {
+            free -h
+            df -h
+            sudo journalctl -k --since "20 minutes ago" --no-pager | tail -n 200
+          } > artifacts/runner-diagnostics.txt 2>&1
 
       - name: Upload Test Results
         if: always()

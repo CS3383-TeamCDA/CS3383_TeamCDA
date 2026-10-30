@@ -4,6 +4,8 @@ using UnityEngine.Serialization;
 
 public enum EnemyMovementType { Static, Flying, Ground }
 public enum EnemyAttackMode { MeleeOnly, RangedOnly, Both }
+public enum EnemyAggroRange { Close, Medium, Far }
+public enum EnemyAwareness { Low, High }
 
 public abstract class EnemyBase : MonoBehaviour
 {
@@ -26,7 +28,25 @@ public abstract class EnemyBase : MonoBehaviour
 
     [Header("Movement")]
     [SerializeField] protected float speed;
-    [SerializeField] protected float aggroRadius;
+    [Header("Aggro detection")]
+    [SerializeField] private EnemyAwareness awareness = EnemyAwareness.High;
+    [FormerlySerializedAs("awarenessRefreshInterval")]
+    [SerializeField, Min(.1f)] private float awarenessUpgradeInterval = 6;
+    [SerializeField, Range(0, 1)] private float awarenessUpgradeChance = .5f;
+    [Tooltip("Runtime choice: Low uses Close/Medium; High uses Medium/Far.")]
+    [SerializeField] private EnemyAggroRange currentAggroRange = EnemyAggroRange.Medium;
+    private float awarenessElapsed;
+    private Transform aggroTarget;
+    public Transform AggroTarget => aggroTarget;
+    public virtual Vector3 AttackTargetPosition => aggroTarget != null ? aggroTarget.position : transform.position;
+    public virtual bool CanAttackTarget => true;
+    public virtual bool CanStartAttack => CanAttackTarget;
+    public bool HasAggro => !IsDefeated && aggroTarget != null;
+    [SerializeField, Min(0)] private float closeAggroRadius = 6;
+    [SerializeField, Min(0)] private float mediumAggroRadius = 16;
+    [SerializeField, Min(0)] private float farAggroRadius = 32;
+    // Retain the legacy field for existing subclasses; pursuit uses ActiveAggroRadius.
+    [SerializeField, HideInInspector] protected float aggroRadius;
     protected int hp;
     private bool initialized;
     private bool defeated;
@@ -44,8 +64,83 @@ public abstract class EnemyBase : MonoBehaviour
     public int MeleeDamage => CanMelee ? Scale(baseMeleeDamage, meleeDamagePerLevel, 0) : 0;
     public int RangedDamage => CanRanged ? Scale(baseRangedDamage, rangedDamagePerLevel, 0) : 0;
     public bool IsDefeated => defeated;
+    public EnemyAggroRange AggroRange => currentAggroRange;
+    public EnemyAwareness Awareness => awareness;
+    public float CloseAggroRadius => Mathf.Max(0, closeAggroRadius);
+    public float MediumAggroRadius => Mathf.Max(CloseAggroRadius, mediumAggroRadius);
+    public float FarAggroRadius => Mathf.Max(MediumAggroRadius, farAggroRadius);
+    public float ActiveAggroRadius
+    {
+        get
+        {
+            switch (currentAggroRange)
+            {
+                case EnemyAggroRange.Close: return CloseAggroRadius;
+                case EnemyAggroRange.Medium: return MediumAggroRadius;
+                case EnemyAggroRange.Far: return FarAggroRadius;
+                default: return MediumAggroRadius;
+            }
+        }
+    }
 
-    protected virtual void Awake() { EnsureInitialized(); }
+    public void SetAwareness(EnemyAwareness value)
+    {
+        if (!Enum.IsDefined(typeof(EnemyAwareness), value)) throw new ArgumentOutOfRangeException(nameof(value));
+        awareness = value;
+        ChooseAwarenessRange();
+    }
+
+    private void ChooseAwarenessRange()
+    {
+        bool wider = UnityEngine.Random.value >= .5f;
+        currentAggroRange = awareness == EnemyAwareness.High
+            ? (wider ? EnemyAggroRange.Far : EnemyAggroRange.Medium)
+            : (wider ? EnemyAggroRange.Medium : EnemyAggroRange.Close);
+        awarenessElapsed = 0;
+    }
+
+    // Awareness category stays fixed. Only the lower range can upgrade, never downgrade.
+    public void TickAwareness(float deltaTime)
+    {
+        if (IsDefeated || currentAggroRange == UpperAwarenessRange || float.IsNaN(deltaTime) || float.IsInfinity(deltaTime) || deltaTime <= 0) return;
+        awarenessElapsed += deltaTime;
+        if (awarenessElapsed < Mathf.Max(.1f, awarenessUpgradeInterval)) return;
+        awarenessElapsed = 0;
+        if (UnityEngine.Random.value < awarenessUpgradeChance) currentAggroRange = UpperAwarenessRange;
+    }
+
+    private EnemyAggroRange UpperAwarenessRange => awareness == EnemyAwareness.High
+        ? EnemyAggroRange.Far : EnemyAggroRange.Medium;
+
+    // Once acquired, distance can no longer break aggro for this enemy's lifetime.
+    public bool TryAcquireTarget(Transform candidate)
+    {
+        if (IsDefeated) return false;
+        if (aggroTarget == null && CanDetectTarget(candidate)) aggroTarget = candidate;
+        return HasAggro && aggroTarget.gameObject.activeInHierarchy;
+    }
+
+    protected virtual void Update() { TickAwareness(Time.deltaTime); }
+
+    public bool CanDetectTarget(Transform target)
+    {
+        return !IsDefeated && target != null && target.gameObject.activeInHierarchy &&
+            ((Vector2)(target.position - transform.position)).sqrMagnitude <= ActiveAggroRadius * ActiveAggroRadius;
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireSphere(transform.position, CloseAggroRadius);
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, MediumAggroRadius);
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, FarAggroRadius);
+        Gizmos.color = Color.white;
+        Gizmos.DrawWireSphere(transform.position, ActiveAggroRadius);
+    }
+
+    protected virtual void Awake() { EnsureInitialized(); ChooseAwarenessRange(); }
 
     private void EnsureInitialized()
     {

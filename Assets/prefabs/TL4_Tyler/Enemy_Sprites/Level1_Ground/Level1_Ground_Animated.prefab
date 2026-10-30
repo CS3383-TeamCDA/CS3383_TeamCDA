@@ -13,6 +13,10 @@ GameObject:
   - component: {fileID: 7667172116839964565}
   - component: {fileID: 7036625746818960747}
   - component: {fileID: 5069441384107025636}
+  - component: {fileID: 2044100001}
+  - component: {fileID: 2044100002}
+  - component: {fileID: 2044100003}
+  - component: {fileID: 2044100004}
   m_Layer: 0
   m_Name: Level1_Ground_Animated
   m_TagString: Untagged
@@ -83,7 +87,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 10
   m_MaskInteraction: 0
   m_Sprite: {fileID: 4723107735738678597, guid: 0c638ab17761a47e8affabc12bbcb972, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -141,8 +145,23 @@ MonoBehaviour:
   meleeDamagePerLevel: 2
   rangedDamagePerLevel: 2
   speed: 2
-  aggroRadius: 6
+  awareness: 0
+  awarenessUpgradeInterval: 6
+  awarenessUpgradeChance: 0.5
+  currentAggroRange: 1
+  closeAggroRadius: 6
+  mediumAggroRadius: 16
+  farAggroRadius: 32
+  aggroRadius: 64
   facingRight: 1
+  target: {fileID: 0}
+  stoppingDistance: 1
+  acceleration: 20
+  jumpSpeed: 9
+  groundLayers:
+    serializedVersion: 2
+    m_Bits: 8
+  crowdGap: 0.08
 --- !u!114 &5069441384107025636
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -159,8 +178,84 @@ MonoBehaviour:
   muzzle: {fileID: 2268943966382753163}
   target: {fileID: 0}
   shotInterval: 1
-  projectileSpeed: 8
+  projectileSpeed: 7.2
   projectileLifetime: 4
+--- !u!50 &2044100001
+Rigidbody2D:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4311587290486528061}
+  m_BodyType: 0
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_GravityScale: 1
+  m_Material: {fileID: 6200000, guid: 0d57f46c1845e6841b464f3bd35101b0, type: 2}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 1
+  m_SleepingMode: 1
+  m_CollisionDetection: 1
+  m_Constraints: 4
+--- !u!70 &2044100002
+CapsuleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4311587290486528061}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0.65}
+  m_Size: {x: 0.45, y: 1.3}
+  m_Direction: 0
+--- !u!114 &2044100003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4311587290486528061}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73ba3d146e654a28afc0790363a20dc4, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: TL4Assembly::EnemyAnimationDriver
 --- !u!1 &4894726654783550742
 GameObject:
   m_ObjectHideFlags: 0
@@ -186,9 +281,32 @@ Transform:
   m_GameObject: {fileID: 4894726654783550742}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.78, z: 0}
+  m_LocalPosition: {x: 0.55, y: 0.9, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 336385203433870742}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2044100004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4311587290486528061}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98929b9b6b064bada410155de2d8555c, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: TL4Assembly::EnemyAttackAnimations
+  closeAttackRange: 1.5
+  farAttackRange: 8
+  meleeCooldown: 1
+  rangedCooldown: 1.3
+  secondMeleeChance: 0.3
+  meleePauseRange: {x: 0.15, y: 0.25}
+  firstMeleeRecovery: 0.1
+  secondShotChance: 0.35
+  burstPauseRange: {x: 0.25, y: 0.45}
+  recoveryRange: {x: 0.3, y: 0.7}
+  pursuitWindowRange: {x: 0.5, y: 0.9}

@@ -42,6 +42,10 @@ public class EnemyAnimationShowcase : MonoBehaviour
         p.actor.name = p.label + " Preview";
         p.actor.transform.localScale = Vector3.one * 1.4f;
         p.actor.SetLevel(level);
+        var body = p.actor.GetComponent<Rigidbody2D>();
+        if (body != null) body.simulated = false;
+        var attacks = p.actor.GetComponent<EnemyAttackAnimations>();
+        if (attacks != null) attacks.enabled = false;
         var driver = p.actor.GetComponent<EnemyAnimationDriver>();
         if (driver != null) driver.enabled = false;
         var animator = p.actor.GetComponent<Animator>();

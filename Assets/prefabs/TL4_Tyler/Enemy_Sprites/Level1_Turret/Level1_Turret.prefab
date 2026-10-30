@@ -45,6 +45,7 @@ GameObject:
   - component: {fileID: 3159229003962319650}
   - component: {fileID: 2867853188832446081}
   - component: {fileID: 5271107705922119314}
+  - component: {fileID: 2044200001}
   m_Layer: 0
   m_Name: Level1_Turret
   m_TagString: Untagged
@@ -115,7 +116,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 10
   m_MaskInteraction: 0
   m_Sprite: {fileID: -539579915749326718, guid: 1584cf435fbc742828c72d439892604f, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -145,7 +146,7 @@ Animator:
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
   m_AnimatePhysics: 0
-  m_WarningMessage: 
+  m_WarningMessage:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
@@ -160,7 +161,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 18a0f8bf6bd546b19e15eb5b8cc6803a, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: TL4Assembly::TurretHazard
   attackMode: 1
   level: 1
@@ -173,7 +174,16 @@ MonoBehaviour:
   meleeDamagePerLevel: 2
   rangedDamagePerLevel: 2
   speed: 0
+  awareness: 1
+  awarenessUpgradeInterval: 6
+  awarenessUpgradeChance: 0.5
+  currentAggroRange: 1
+  closeAggroRadius: 6
+  mediumAggroRadius: 16
+  farAggroRadius: 32
   aggroRadius: 0
+  target: {fileID: 0}
+  targetAimOffset: {x: 0, y: 0.9}
 --- !u!114 &2867853188832446081
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -184,13 +194,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7592fc9d3eda429db9c1bdc13a502249, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: TL4Assembly::EnemyRangedAttack
   projectilePrefab: {fileID: 7095910485768529873, guid: 74abab95a9a9141d3a2d54214b64d029, type: 3}
   muzzle: {fileID: 3507046555097990067}
   target: {fileID: 0}
   shotInterval: 1
-  projectileSpeed: 8
+  projectileSpeed: 7.2
   projectileLifetime: 4
 --- !u!114 &5271107705922119314
 MonoBehaviour:
@@ -202,5 +212,28 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 73ba3d146e654a28afc0790363a20dc4, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: TL4Assembly::EnemyAnimationDriver
+--- !u!114 &2044200001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6743709566900238644}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98929b9b6b064bada410155de2d8555c, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: TL4Assembly::EnemyAttackAnimations
+  closeAttackRange: 1.5
+  farAttackRange: 32
+  meleeCooldown: 1
+  rangedCooldown: 1.3
+  secondMeleeChance: 0
+  meleePauseRange: {x: 0.15, y: 0.25}
+  firstMeleeRecovery: 0.1
+  secondShotChance: 0.35
+  burstPauseRange: {x: 0.25, y: 0.45}
+  recoveryRange: {x: 0.3, y: 0.7}
+  pursuitWindowRange: {x: 0.5, y: 0.9}
