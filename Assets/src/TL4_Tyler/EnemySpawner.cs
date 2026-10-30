@@ -123,6 +123,9 @@ public class EnemySpawner : MonoBehaviour
     }
 
     public event Action<EnemyType, Vector3> OnEnemyDefeated;
+    // TL5 subscribes to this instance event to credit its own currency manager.
+    // The amount is already scaled by enemy level. Ordinary despawns do not award coins.
+    public event Action<int> OnCoinsAwarded;
 
     public void SetSpawnRate(float rate)
     {
@@ -192,10 +195,12 @@ public class EnemySpawner : MonoBehaviour
 
     private void HandleEnemyDefeated(EnemyBase enemy)
     {
+        int coins = enemy.CoinReward;
         enemy.Defeated -= HandleEnemyDefeated;
         activeEnemies.Remove(enemy);
         if (this != null)
         {
+            OnCoinsAwarded?.Invoke(coins);
             OnEnemyDefeated?.Invoke(enemy.Type, enemy.transform.position);
         }
     }
