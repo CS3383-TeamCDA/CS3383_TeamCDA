@@ -85,7 +85,7 @@ namespace EscapeThe90s.MetaProgression
             _cts = null;
         }
 
-        private void AddCurrency(int amount)
+        public void AddCurrency(int amount)
         {
             currency += amount;
 

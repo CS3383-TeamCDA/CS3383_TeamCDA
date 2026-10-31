@@ -2,7 +2,8 @@
     "name": "TL5Assembly",
     "rootNamespace": "",
     "references": [
-        "GUID:443c6ba2ba607374f916ce67442a29cd"
+        "GUID:443c6ba2ba607374f916ce67442a29cd",
+        "GUID:7d9e55b8980dc4227ba8a3ed45a4e75d"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
