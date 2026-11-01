@@ -20,11 +20,11 @@ namespace EscapeThe90s.MetaProgression
         public int MaxLevel => maxLevel;
         public UpgradeEffect Effect => effect;
 
-        private float GetEffectValue(int level)
+        public float GetEffectValue(int level)
         {
             return 0f;
         } 
-        private int GetCost(int level)
+        public int GetCost(int level)
         {
             return 0;
         }
