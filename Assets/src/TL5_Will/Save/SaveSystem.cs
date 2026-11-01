@@ -7,7 +7,7 @@ namespace EscapeThe90s.MetaProgression
     /// <summary>
     /// «static» «Caretaker» (Memento pattern) for TL5 Meta Progression.
     /// Owns all file I/O for the persistent save file.
-    /// This file contains only the Save() function (plus the members it needs).
+    /// Contains Save() and Load() (plus the members they need).
     /// </summary>
     public static class SaveSystem
     {
@@ -78,7 +78,49 @@ namespace EscapeThe90s.MetaProgression
             }
         }
 
-        // ---- Helpers used only by Save() ----
+        /// <summary>
+        /// Reads and validates the local save file. The file is untrusted input:
+        /// currency must be non-negative and there must be one non-negative level
+        /// per UpgradeType. If the file is missing, unreadable, or invalid, safe
+        /// default progress is returned and OnPersistenceError is raised (a missing
+        /// file on first launch is not an error and is not reported).
+        /// </summary>
+        /// <returns>Validated SaveData, or default progress (0 currency, all levels 0).</returns>
+        public static SaveData Load()
+        {
+            int typeCount = Enum.GetValues(typeof(UpgradeType)).Length;
+            string path = FilePath;
+
+            if (!File.Exists(path))
+            {
+                return Defaults(typeCount);
+            }
+
+            try
+            {
+                SaveData data = JsonUtility.FromJson<SaveData>(File.ReadAllText(path));
+
+                if (data != null && data.currency >= 0 && data.upgradeLevels != null
+                    && data.upgradeLevels.Length == typeCount
+                    && Array.TrueForAll(data.upgradeLevels, l => l >= 0))
+                {
+                    return data;
+                }
+
+                ReportError("Load failed: save data failed validation; using defaults.");
+            }
+            catch (Exception e)
+            {
+                ReportError($"Load failed: {e.Message}; using defaults.");
+            }
+
+            return Defaults(typeCount);
+        }
+
+        // ---- Helpers ----
+
+        private static SaveData Defaults(int typeCount) =>
+            new SaveData { currency = 0, upgradeLevels = new int[typeCount] };
 
         private static void ReportError(string message)
         {

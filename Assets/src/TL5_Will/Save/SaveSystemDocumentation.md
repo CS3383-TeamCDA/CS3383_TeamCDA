@@ -40,14 +40,23 @@ The write-to-temp-then-swap approach means a crash or full disk mid-write cannot
 ## 2. Requirements
 
 - Unity (C#, .NET Standard 2.1 or later profile; uses `UnityEngine.JsonUtility`).
-- The project's existing `SaveData.cs` (the Memento). It is marked `[Serializable]` and keeps `currency` and `upgradeLevels` as `[SerializeField]` private fields, which `JsonUtility` serializes correctly, so no changes to `SaveData` are needed.
+- The project's `SaveData` class (the Memento), with public fields so `JsonUtility` can serialize it:
+
+```csharp
+[System.Serializable]
+public class SaveData
+{
+    public int currency;
+    public int[] upgradeLevels;
+}
+```
 
 ---
 
 ## 3. Installation
 
 1. Copy `SaveSystem.cs` into your Unity project, e.g. `Assets/Scripts/MetaProgression/`.
-2. Make sure `SaveData.cs` is in the project (it is, from the earlier TL5 work).
+2. Make sure `SaveData` (above) is in the project.
 3. No scene setup is needed: `SaveSystem` is static and is not attached to a GameObject.
 
 ---
@@ -135,3 +144,62 @@ Example file contents:
 - **Single responsibility:** only `SaveSystem` writes the save file; no other feature does (Champion Document §8).
 - **Diagram vs. document:** the Champion Document refers to a `SaveDataManager` singleton, while the class diagram uses a static `SaveSystem`. This code follows the class diagram, which notes that Singleton was dropped and `SaveSystem` is a static helper.
 - **Not run in Unity:** this code has not been compiled or tested inside Unity in this environment.
+
+
+---
+---
+
+# Load Function (added)
+
+**Scope of this addition:** the `Load()` function in `SaveSystem`. The `Save` documentation above is unchanged.
+
+## L1. Description
+
+`Load()` implements the interface contract: *"Returns validated saved data; if no valid file exists, returns default progress without crashing."* It reads `metaprogression.json` (the file `Save` writes), deserializes it with `JsonUtility`, validates it, and returns a `SaveData`.
+
+Per Champion Document §8, the save file is treated as untrusted input. Data is accepted only if:
+
+- `currency` is non-negative, and
+- `upgradeLevels` has exactly one entry per `UpgradeType` (Health, Speed, MagnetRange), and
+- every level is non-negative.
+
+Otherwise safe default progress is returned: currency `0` and all levels `0`.
+
+## L2. Usage
+
+```csharp
+// Run start (use case RS1, step 3) or game start
+SaveData data = SaveSystem.Load();
+```
+
+Subscribe to `OnPersistenceError` if you want to be told when defaults were substituted:
+
+```csharp
+SaveSystem.OnPersistenceError += message => Debug.LogWarning(message);
+```
+
+`Load` never throws and never returns `null`, so the result can be used directly, for example in `MetaProgressionManager.RestoreSnapshot(data)`. Default progress is built with the object initializer `new SaveData { currency = 0, upgradeLevels = new int[n] }`, where `n` is the number of `UpgradeType` values.
+
+## L3. Behaviour
+
+| Situation | Result |
+| --- | --- |
+| Valid save file | Returns the saved `SaveData`; no event raised. |
+| File does not exist (first launch) | Returns default progress; no event raised, because this is normal. |
+| Unreadable file, malformed JSON, or missing fields | Returns default progress; error logged; `OnPersistenceError` raised. |
+| Negative currency or level, or wrong number of levels | Returns default progress; error logged; `OnPersistenceError` raised. |
+
+## L4. Notes and Limits
+
+- **Maximum level is not checked here.** Max levels live in each `UpgradeDefinition`, which the static `SaveSystem` does not know about. Clamping levels to their maximum belongs in `MetaProgressionManager.RestoreSnapshot`.
+- **Adding an `UpgradeType`:** the expected level count follows the enum automatically. Saves written before the new type was added will fail validation and fall back to defaults.
+- **Load does not write.** A rejected file is left on disk and is overwritten by the next `Save`.
+
+## L5. Testing Notes (maps to Champion Document §7)
+
+| Test | How to check |
+| --- | --- |
+| Round-trip | `Save` a snapshot, `Load`, and compare currency and every level. |
+| Missing file | Delete the save file; `Load` returns `0` currency, all levels `0`, with no event. |
+| Corrupt file | Replace the file contents with `not json`; `Load` returns defaults and `OnPersistenceError` fires. |
+| Invalid values | Edit the file to `"currency": -5`; `Load` returns defaults and the event fires. |
