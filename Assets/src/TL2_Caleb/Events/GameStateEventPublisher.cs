@@ -8,6 +8,7 @@ public class GameStateEventPublisher : DependentMonoBehaviour, IDependent<GameSt
     public event System.Action OnGameStarted;
     public event System.Action OnMenuEntered;
     public event System.Action<Transform> OnPlayerSpawned; // 🚀 Implement event
+    public event System.Action OnPlayerDied;
 
     private GameStateManager _gsm;
     private readonly EventSubscriptionGroup _eventGroup = new EventSubscriptionGroup();
@@ -27,8 +28,16 @@ public class GameStateEventPublisher : DependentMonoBehaviour, IDependent<GameSt
     // 🚀 Implement notice method
     public void NotifyPlayerSpawned(Transform playerTransform)
     {
+        CurrentPlayer = playerTransform;
         OnPlayerSpawned?.Invoke(playerTransform);
     }
+
+    public void NotifyPlayerDied()
+    {
+        OnPlayerDied?.Invoke();
+    }
+
+    public Transform CurrentPlayer { get; private set; }
 
     protected override void OnEnabledAfterInitialization()
     {
