@@ -5,7 +5,7 @@ public class TempPlayerController : MonoBehaviour
 {
     [SerializeField] private Rigidbody2D _rb;
     [SerializeField] private Collider2D _collider;
-    [SerializeField] private PlayerInputHandler _inputHandler;
+    [SerializeField] private PlayerMovementInputHandler _inputHandler;
 
     [Header("Horizontal")]
     [SerializeField] private float _xAcceleration = 60f;
@@ -19,7 +19,7 @@ public class TempPlayerController : MonoBehaviour
 
     // Give our states access to the player's components/settings.
     public Rigidbody2D Rb => _rb;
-    public PlayerInputHandler Input => _inputHandler;
+    public IPlayerMovementInput Input;
     public float XAcceleration => _xAcceleration;
     public float XDeceleration => _xDeceleration;
     public float MaxSpeedX => _maxSpeedX;
@@ -31,10 +31,10 @@ public class TempPlayerController : MonoBehaviour
     {
         if (_rb == null) _rb = GetComponent<Rigidbody2D>();
         if (_collider == null) _collider = GetComponent<Collider2D>();
-        if (_inputHandler == null)
-            _inputHandler = GetComponent<PlayerInputHandler>();
+        if (_inputHandler == null) _inputHandler = GetComponent<PlayerMovementInputHandler>();
 
         _stateManager = new PlayerStateManager(this);
+        Input = GetComponent<IPlayerMovementInput>();
     }
 
     void Start()
