@@ -27,8 +27,11 @@ public class GameStateEventPublisher : DependentMonoBehaviour, IDependent<GameSt
     // 🚀 Implement notice method
     public void NotifyPlayerSpawned(Transform playerTransform)
     {
+        CurrentPlayer = playerTransform;
         OnPlayerSpawned?.Invoke(playerTransform);
     }
+
+    public Transform CurrentPlayer { get; private set; }
 
     protected override void OnEnabledAfterInitialization()
     {
