@@ -9,8 +9,10 @@ namespace TL2_Dependencies
         event Action OnMenuEntered;
 
         event Action<Transform> OnPlayerSpawned;
+        event Action OnPlayerDied;
         Transform CurrentPlayer { get; }
 
         void NotifyPlayerSpawned(Transform playerTransform);
+        void NotifyPlayerDied();
     }   
 }

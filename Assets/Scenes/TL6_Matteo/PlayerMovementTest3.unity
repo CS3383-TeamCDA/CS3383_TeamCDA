@@ -900,6 +900,10 @@ PrefabInstance:
       propertyPath: m_LocalPosition.y
       value: -282.67526
       objectReference: {fileID: 0}
+    - target: {fileID: 1922273083409665807, guid: 0da14fc95075319448e7ee6e15fa5102, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -10
+      objectReference: {fileID: 0}
     - target: {fileID: 2914908739968955138, guid: 0da14fc95075319448e7ee6e15fa5102, type: 3}
       propertyPath: m_Enabled
       value: 0
@@ -995,10 +999,14 @@ PrefabInstance:
     - target: {fileID: 6145341378240684543, guid: 0da14fc95075319448e7ee6e15fa5102, type: 3}
       propertyPath: Target.TrackingTarget
       value: 
-      objectReference: {fileID: 1660843769}
+      objectReference: {fileID: 0}
     - target: {fileID: 6158501637962087148, guid: 0da14fc95075319448e7ee6e15fa5102, type: 3}
       propertyPath: m_IsActive
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6365047058369278287, guid: 0da14fc95075319448e7ee6e15fa5102, type: 3}
+      propertyPath: childObject
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 7017676963482175148, guid: 0da14fc95075319448e7ee6e15fa5102, type: 3}
       propertyPath: GameStateEvents
