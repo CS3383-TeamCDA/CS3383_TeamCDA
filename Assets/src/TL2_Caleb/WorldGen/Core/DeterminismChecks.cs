@@ -38,7 +38,7 @@ namespace EscapeThe90s.WorldGen
             var f = new List<string>();
             RngBasics(f); IdSymmetry(f); SameInputsSameOutput(f); OrderIndependence(f);
             ChunkIndependence(f); Constraints(f); RequiredOverflow(f); Distribution(f); Golden(f);
-            TerrainAndDualGrid(f);
+            TerrainAndDualGrid(f); WindowAndColliders(f);
             return f;
         }
 
@@ -225,6 +225,47 @@ namespace EscapeThe90s.WorldGen
                 {
                     if (DualGrid.MaskAt(flat, x, 0) != (DualGrid.BL | DualGrid.BR)) { f.Add("Flat street top row is not mask 12"); return; }
                     if (DualGrid.MaskAt(flat, x, -1) != 15) { f.Add("Flat street body row is not mask 15"); return; }
+                }
+            }
+        }
+
+
+        // ---- Phase 4: streaming window + colliders ----
+        static void WindowAndColliders(List<string> f)
+        {
+            if (ChunkWindow.ChunkIndexAt(-50f, 10) != 0) f.Add("ChunkIndexAt must clamp low");
+            if (ChunkWindow.ChunkIndexAt(99999f, 10) != 9) f.Add("ChunkIndexAt must clamp high");
+            if (ChunkWindow.ChunkIndexAt(WorldConstants.ChunkWidthCells, 10) != 1) f.Add("ChunkIndexAt boundary wrong");
+            for (int c = 0; c < 12; c++)
+                for (int i = 0; i < 12; i++)
+                    for (int r = 1; r <= 3; r++)
+                    {
+                        if (ChunkWindow.ShouldLoad(i, c, r) && ChunkWindow.ShouldUnload(i, c, r)) { f.Add("A chunk is both loaded and unloaded"); return; }
+                        bool keep = ChunkWindow.ShouldLoad(i, c, r) || !ChunkWindow.ShouldUnload(i, c, r);
+                        if (!keep && System.Math.Abs(i - c) <= r) { f.Add("Hysteresis broken"); return; }
+                    }
+
+            var biomes = TestBiomes();
+            int w = WorldConstants.ChunkWidthCells;
+            for (int seed = 0; seed < 40; seed++)
+            {
+                var r = Req(seed, seed + 3, 16, seed % 5, BuildingFlags.All, 0, BuildingType.Arcade);
+                StreetLayout layout = StreetGenerator.Generate((ulong)seed, r, biomes[seed % 5]);
+                var t = new StreetTerrain((ulong)seed, layout, true);
+                for (int ci = 0; ci < layout.ChunkCount; ci++)
+                {
+                    List<ColliderBox> boxes = TerrainColliders.ForChunk(t, ci);
+                    foreach (ColliderBox b in boxes)
+                        if (b.X0 < 0 || b.X1 > w) { f.Add("Collider box leaves its chunk"); return; }
+                    for (int lx = 0; lx < w; lx++)
+                        for (int y = -WorldConstants.SlabDepthCells; y <= WorldConstants.MaxBumpHeight + 1; y++)
+                        {
+                            bool covered = false;
+                            foreach (ColliderBox b in boxes)
+                                if (lx >= b.X0 && lx < b.X1 && y >= b.Y0 && y < b.Y1) { covered = true; break; }
+                            if (covered != t.IsFilled(ci * w + lx, y))
+                            { f.Add("Colliders do not match terrain at chunk " + ci + " cell " + lx + "," + y); return; }
+                        }
                 }
             }
         }

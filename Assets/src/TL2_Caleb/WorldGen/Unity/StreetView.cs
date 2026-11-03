@@ -1,18 +1,26 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
 namespace EscapeThe90s.WorldGen
 {
     /// <summary>
-    /// Phase 3: builds one generated street out of real tiles and sprites (one Tilemap + building sprite per chunk).
-    /// Right-click the component header and choose "Rebuild", or just press Play.
-    /// The generated objects are not saved with the scene (HideFlags.DontSave).
-    /// Phase 4 replaces "build everything" with load/unload around the player.
+    /// Builds one generated street out of real tiles, sprites and colliders.
+    ///  - Follow == null: every chunk is built at once (handy for inspecting a whole street in the Scene view).
+    ///  - Follow assigned: only chunks within LoadRadiusChunks of it exist; others load/unload as it moves (play mode).
+    /// Right-click the component header and choose "Rebuild". Generated objects are not saved with the scene.
     /// </summary>
     public class StreetView : MonoBehaviour
     {
         public WorldGenSettings settings;
         public WorldArt art;
+        [Tooltip("Optional: the player (or any transform). Chunks stream in/out around it.")]
+        public Transform follow;
+        [Range(1, 6)] public int loadRadiusChunks = 2;
+        [Tooltip("Set the main camera to 640x360 pixel scale (orthographic size 11.25) when building.")]
+        public bool setupCamera = true;
+
+        [Header("Street")]
         public int nodeA = 0, nodeB = 1;
         [Range(6, 60)] public int chunkCount = 24;
         public int biome = 0;
@@ -21,9 +29,26 @@ namespace EscapeThe90s.WorldGen
         [Range(0, 3)] public int requiredArcades = 1;
         public bool curbsAndSteps = true;
 
-        GameObject _root;
+        GameObject _root, _gridGo;
+        StreetLayout _layout;
+        StreetTerrain _terrain;
+        readonly Dictionary<int, GameObject> _chunks = new Dictionary<int, GameObject>();
+        readonly List<int> _scratch = new List<int>();
+
+        public int WidthCells { get { return _layout == null ? 0 : _layout.ChunkCount * WorldConstants.ChunkWidthCells; } }
+        public int LoadedChunkCount { get { return _chunks.Count; } }
+        public StreetLayout Layout { get { return _layout; } }
+
+        /// <summary>Camera y that puts the street surface 3 cells (48 px) above the bottom edge, so exactly the visible ground rows fill the bottom.</summary>
+        public static float CameraY(float orthographicSize) { return orthographicSize - WorldConstants.GroundDepthCells; }
+        public static float DefaultOrthographicSize { get { return WorldConstants.ViewHeightPixels / 2f / WorldConstants.CellPixels; } }
 
         void Start() { if (Application.isPlaying) Rebuild(); }
+
+        void Update()
+        {
+            if (Application.isPlaying && _layout != null && follow != null) UpdateWindow();
+        }
 
         [ContextMenu("Rebuild")]
         public void Rebuild()
@@ -48,23 +73,63 @@ namespace EscapeThe90s.WorldGen
                 Required = required, DifficultyTier = difficultyTier
             };
             LevelService level = settings.CreateService();
-            StreetLayout layout = level.GetStreet(request);
-            var terrain = new StreetTerrain(settings.SeedValue, layout, curbsAndSteps);
+            _layout = level.GetStreet(request);
+            _terrain = new StreetTerrain(settings.SeedValue, _layout, curbsAndSteps);
 
             _root = new GameObject("Generated Street");
             _root.hideFlags = HideFlags.DontSave;
             _root.transform.SetParent(transform, false);
-            var gridGo = new GameObject("Grid");
-            gridGo.hideFlags = HideFlags.DontSave;
-            gridGo.transform.SetParent(_root.transform, false);
-            var grid = gridGo.AddComponent<Grid>();
-            grid.cellSize = new Vector3(1f, 1f, 0f);   // 1 cell = 1 unit; set sprite PPU to 16 so a cell is 16 px
+            _gridGo = new GameObject("Grid");
+            _gridGo.hideFlags = HideFlags.DontSave;
+            _gridGo.transform.SetParent(_root.transform, false);
+            var grid = _gridGo.AddComponent<Grid>();
+            grid.cellSize = new Vector3(1f, 1f, 0f);   // 1 cell = 1 unit (sprites are 16 PPU, so a cell is 16 px)
 
-            for (int i = 0; i < layout.ChunkCount; i++)
-                BuildChunk(gridGo.transform, layout, terrain, layout.Chunks[i], i == layout.ChunkCount - 1);
+            if (follow == null)
+                for (int i = 0; i < _layout.ChunkCount; i++) LoadChunk(i);
+            else
+                UpdateWindow();
+
+            if (setupCamera) SetupCamera();
         }
 
-        void BuildChunk(Transform parent, StreetLayout layout, StreetTerrain terrain, ChunkData chunk, bool last)
+        void UpdateWindow()
+        {
+            float x = transform.InverseTransformPoint(follow.position).x;
+            int center = ChunkWindow.ChunkIndexAt(x, _layout.ChunkCount);
+
+            int lo = Mathf.Max(0, center - loadRadiusChunks);
+            int hi = Mathf.Min(_layout.ChunkCount - 1, center + loadRadiusChunks);
+            for (int i = lo; i <= hi; i++)
+                if (!_chunks.ContainsKey(i)) LoadChunk(i);
+
+            _scratch.Clear();
+            foreach (var kv in _chunks)
+                if (ChunkWindow.ShouldUnload(kv.Key, center, loadRadiusChunks)) _scratch.Add(kv.Key);
+            for (int k = 0; k < _scratch.Count; k++)
+            {
+                DestroyObject(_chunks[_scratch[k]]);
+                _chunks.Remove(_scratch[k]);
+            }
+        }
+
+        void SetupCamera()
+        {
+            Camera cam = Camera.main;
+            if (cam == null) return;
+            cam.orthographic = true;
+            cam.orthographicSize = DefaultOrthographicSize;
+            if (follow == null)   // with a target, CameraFollow positions the camera
+                cam.transform.position = new Vector3(WorldConstants.ViewWidthPixels / 2f / WorldConstants.CellPixels,
+                                                     CameraY(cam.orthographicSize), -10f);
+        }
+
+        void LoadChunk(int index)
+        {
+            _chunks[index] = BuildChunk(_gridGo.transform, _layout, _terrain, _layout.Chunks[index], index == _layout.ChunkCount - 1);
+        }
+
+        GameObject BuildChunk(Transform parent, StreetLayout layout, StreetTerrain terrain, ChunkData chunk, bool last)
         {
             int w = WorldConstants.ChunkWidthCells;
             int x0 = chunk.Index * w;
@@ -74,7 +139,7 @@ namespace EscapeThe90s.WorldGen
             chunkGo.transform.SetParent(parent, false);
             chunkGo.transform.localPosition = new Vector3(x0, 0f, 0f);
 
-            // Ground: render tiles are centred on cell corners, so the tilemap is shifted half a cell.
+            // Ground art: render tiles are centred on cell corners, so the tilemap is shifted half a cell.
             var groundGo = new GameObject("Ground");
             groundGo.hideFlags = HideFlags.DontSave;
             groundGo.transform.SetParent(chunkGo.transform, false);
@@ -91,7 +156,14 @@ namespace EscapeThe90s.WorldGen
                 }
             art.ApplyPalette(tr, WorldArt.PaletteRow(layout.Biome, 0));
 
-            // Building, centred in the chunk, standing on the street surface (sprite pivot = bottom centre).
+            // Physics: exact boxes from the data grid (never from the tile art).
+            foreach (ColliderBox b in TerrainColliders.ForChunk(terrain, chunk.Index))
+                AddBox(chunkGo, b.X0, b.X1, b.Y0, b.Y1);
+            // Street ends are walls for now; Milestone 2 replaces them with intersections.
+            if (chunk.Index == 0) AddBox(chunkGo, -1, 0, -WorldConstants.SlabDepthCells, 40);
+            if (last) AddBox(chunkGo, w, w + 1, -WorldConstants.SlabDepthCells, 40);
+
+            // Building, centred in the chunk, standing on the surface (sprite pivot = bottom centre).
             if (chunk.Building != BuildingType.None)
             {
                 Sprite sprite = art.GetBuildingSprite(chunk.Building, chunk.Variant);
@@ -108,17 +180,32 @@ namespace EscapeThe90s.WorldGen
                     art.ApplyPalette(sr, WorldArt.PaletteRow(layout.Biome, chunk.Accent));
                 }
             }
+            return chunkGo;
+        }
+
+        static void AddBox(GameObject go, int x0, int x1, int y0, int y1)
+        {
+            var col = go.AddComponent<BoxCollider2D>();
+            col.size = new Vector2(x1 - x0, y1 - y0);
+            col.offset = new Vector2((x0 + x1) * 0.5f, (y0 + y1) * 0.5f);
+        }
+
+        static void DestroyObject(GameObject go)
+        {
+            if (Application.isPlaying) Destroy(go); else DestroyImmediate(go);
         }
 
         void Clear()
         {
+            _chunks.Clear();
+            _layout = null;
             if (_root == null)
             {
                 var existing = transform.Find("Generated Street");
                 if (existing != null) _root = existing.gameObject;
             }
             if (_root == null) return;
-            if (Application.isPlaying) Destroy(_root); else DestroyImmediate(_root);
+            DestroyObject(_root);
             _root = null;
         }
 

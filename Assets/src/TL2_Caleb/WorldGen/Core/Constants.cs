@@ -15,6 +15,9 @@ namespace EscapeThe90s.WorldGen
         public const int AccentsPerBiome = 3;      // palette rows per biome (palette.png has BiomeCount*AccentsPerBiome rows)
         public const int GroundDepthCells = 3;     // visible ground rows below the street surface
         public const int MaxBumpHeight = 2;        // tallest curb/step, in cells
+        public const int SlabDepthCells = 8;       // collider depth under the street surface (visible ground is shallower)
+        public const int ViewWidthPixels = 640;    // target resolution
+        public const int ViewHeightPixels = 360;
 
         public static int ChunkWidthPixels { get { return CellPixels * ChunkWidthCells; } }
     }

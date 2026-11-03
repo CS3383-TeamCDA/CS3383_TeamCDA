@@ -8,6 +8,10 @@ namespace EscapeThe90s.WorldGen
     /// <summary>Menu: Escape the 90s > Create World Art From Sprites. Wires material, palette, ground sheet and buildings.</summary>
     public static class WorldArtSetup
     {
+        // Same action, also reachable from Assets > Create so it is easy to find.
+        [MenuItem("Assets/Create/Escape the 90s/World Art From Sprites")]
+        static void CreateFromAssetsMenu() { Create(); }
+
         [MenuItem("Escape the 90s/Create World Art From Sprites")]
         static void Create()
         {
