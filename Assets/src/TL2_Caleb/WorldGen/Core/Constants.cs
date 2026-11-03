@@ -12,6 +12,9 @@ namespace EscapeThe90s.WorldGen
         public const int MinStreetChunks = 6;      // shortest legal street
         public const int DistancePerTier = 200;    // world units from origin per difficulty tier
         public const int BiomeCount = 5;           // one per arcade game
+        public const int AccentsPerBiome = 3;      // palette rows per biome (palette.png has BiomeCount*AccentsPerBiome rows)
+        public const int GroundDepthCells = 3;     // visible ground rows below the street surface
+        public const int MaxBumpHeight = 2;        // tallest curb/step, in cells
 
         public static int ChunkWidthPixels { get { return CellPixels * ChunkWidthCells; } }
     }
@@ -22,5 +25,6 @@ namespace EscapeThe90s.WorldGen
         public const int Placement = 1;   // which building goes in which chunk
         public const int ChunkLook = 2;   // variant / accent / flip
         public const int Enemies = 3;     // enemy slots
+        public const int Terrain = 4;     // curbs / steps
     }
 }

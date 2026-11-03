@@ -38,6 +38,7 @@ namespace EscapeThe90s.WorldGen
             var f = new List<string>();
             RngBasics(f); IdSymmetry(f); SameInputsSameOutput(f); OrderIndependence(f);
             ChunkIndependence(f); Constraints(f); RequiredOverflow(f); Distribution(f); Golden(f);
+            TerrainAndDualGrid(f);
             return f;
         }
 
@@ -178,6 +179,54 @@ namespace EscapeThe90s.WorldGen
             double pct = 100.0 * withPizza / total;
             if (pct < 17.0 || pct > 23.0) f.Add("Pizza parlor rate " + pct.ToString("F1") + "% (expected about 20%)");
             if (noFlag != 0) f.Add("Special buildings appeared without their flag: " + noFlag);
+        }
+
+
+        // ---- Phase 3: terrain + dual grid ----
+        static void TerrainAndDualGrid(List<string> f)
+        {
+            var biomes = TestBiomes();
+            int w = WorldConstants.ChunkWidthCells;
+            for (int seed = 0; seed < 60; seed++)
+            {
+                var r = Req(seed, seed + 1, 20, seed % 5, BuildingFlags.All, 0, BuildingType.Arcade);
+                StreetLayout layout = StreetGenerator.Generate((ulong)seed, r, biomes[seed % 5]);
+                var t1 = new StreetTerrain((ulong)seed, layout, true);
+                var t2 = new StreetTerrain((ulong)seed, layout, true);
+                if (t1.ContentHash() != t2.ContentHash()) { f.Add("Terrain not deterministic"); return; }
+
+                // bumps only in building-free, non-safe chunks, and within the height limit
+                for (int x = 0; x < t1.WidthCells; x++)
+                {
+                    int hgt = t1.HeightAt(x);
+                    if (hgt > WorldConstants.MaxBumpHeight) { f.Add("Bump taller than MaxBumpHeight"); return; }
+                    if (hgt > 0)
+                    {
+                        ChunkData c = layout.Chunks[x / w];
+                        if (c.IsSafe || c.Building != BuildingType.None) { f.Add("Bump under a building or safe chunk"); return; }
+                    }
+                }
+
+                // dual-grid consistency: each data cell must agree with the corner bit of its 4 incident tiles
+                for (int x = -2; x < t1.WidthCells + 2; x++)
+                    for (int y = -WorldConstants.GroundDepthCells; y <= WorldConstants.MaxBumpHeight; y++)
+                    {
+                        bool filled = t1.IsFilled(x, y);
+                        if (((DualGrid.MaskAt(t1, x + 1, y + 1) & DualGrid.BL) != 0) != filled ||
+                            ((DualGrid.MaskAt(t1, x, y + 1) & DualGrid.BR) != 0) != filled ||
+                            ((DualGrid.MaskAt(t1, x + 1, y) & DualGrid.TL) != 0) != filled ||
+                            ((DualGrid.MaskAt(t1, x, y) & DualGrid.TR) != 0) != filled)
+                        { f.Add("Dual-grid corner mismatch at cell " + x + "," + y); return; }
+                    }
+
+                // a flat street must only need the 'top edge' (12) and 'solid' (15) tiles
+                var flat = new StreetTerrain((ulong)seed, layout, false);
+                for (int x = 0; x <= flat.WidthCells; x++)
+                {
+                    if (DualGrid.MaskAt(flat, x, 0) != (DualGrid.BL | DualGrid.BR)) { f.Add("Flat street top row is not mask 12"); return; }
+                    if (DualGrid.MaskAt(flat, x, -1) != 15) { f.Add("Flat street body row is not mask 15"); return; }
+                }
+            }
         }
 
         static void Golden(List<string> f)

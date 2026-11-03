@@ -220,7 +220,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1642420480}
-  - component: {fileID: 1642420479}
+  - component: {fileID: 1642420481}
   m_Layer: 0
   m_Name: GameObject
   m_TagString: Untagged
@@ -228,27 +228,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1642420479
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1642420478}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 594bf6bd264a38040b559009bb61f99d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: EscapeThe90s.WorldGen.Unity::EscapeThe90s.WorldGen.StreetPreview
-  settings: {fileID: 11400000, guid: 4f9ec585818a5694a93484ac5d565396, type: 2}
-  nodeA: 0
-  nodeB: 1
-  chunkCount: 33
-  biome: 1
-  allowed: 1
-  difficultyTier: 0
-  requiredArcades: 2
-  unitsPerCell: 0.5
 --- !u!4 &1642420480
 Transform:
   m_ObjectHideFlags: 0
@@ -264,6 +243,28 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1642420481
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1642420478}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef516dbbdb7ec6541a0d15ad938f9766, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: EscapeThe90s.WorldGen.Unity::EscapeThe90s.WorldGen.StreetView
+  settings: {fileID: 11400000, guid: 4f9ec585818a5694a93484ac5d565396, type: 2}
+  art: {fileID: 11400000, guid: d7e6cd82b5854a5429da42fc9998b217, type: 2}
+  nodeA: 0
+  nodeB: 1
+  chunkCount: 24
+  biome: 0
+  allowed: -1
+  difficultyTier: 0
+  requiredArcades: 1
+  curbsAndSteps: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
