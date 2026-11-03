@@ -1,4 +1,5 @@
 using UnityEngine;
+using System;
 
 namespace EscapeThe90s.PowerUps
 {
@@ -9,6 +10,7 @@ namespace EscapeThe90s.PowerUps
     public class SpeedBoostEffect : PowerUpEffect
     {
         public const float BonusPerStack = 0.5f;
+        public const float MaxMultiplier = 2.5f;   // hard cap, even if MaxStacks is misconfigured
 
         public SpeedBoostEffect() : base(6f, false, 3)
         {
@@ -16,8 +18,14 @@ namespace EscapeThe90s.PowerUps
 
         public override void Apply(IPowerUpTarget target, int stackCount)
         {
-            float multiplier = 1f + BonusPerStack * stackCount;   // 1 stack = 1.5, 2 = 2.0, 3 = 2.5
-            Debug.Log($"[SpeedBoostEffect] Apply, stack {stackCount}: multiplier {multiplier}");
+            if (target == null)
+                throw new ArgumentNullException(nameof(target));
+            if (stackCount < 1)
+                throw new ArgumentOutOfRangeException(nameof(stackCount), stackCount, "Stack count must be at least 1.");
+
+            int stacks = Mathf.Min(stackCount, MaxStacks);
+            float multiplier = Mathf.Min(1f + BonusPerStack * stacks, MaxMultiplier);   // 1 stack = 1.5, 2 = 2.0, 3 = 2.5 (cap)
+            Debug.Log($"[SpeedBoostEffect] Apply, stack {stacks}: multiplier {multiplier}");
             target.SetSpeedMultiplier(multiplier);
         }
 
