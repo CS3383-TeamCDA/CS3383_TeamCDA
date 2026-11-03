@@ -1,0 +1,14 @@
+{
+    "name": "EscapeThe90s.WorldGen.Unity",
+    "rootNamespace": "EscapeThe90s.WorldGen",
+    "references": [ "EscapeThe90s.WorldGen.Core" ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
