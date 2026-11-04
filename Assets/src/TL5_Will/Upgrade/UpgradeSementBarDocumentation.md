@@ -51,3 +51,19 @@ The component subscribes to the button in `OnEnable`, unsubscribes in `OnDisable
 - **`Instance` must be set.** `MetaProgressionManager.Instance` is never assigned in the current class, so the bar will stay empty until it is.
 - **Segment count** must be set by hand to match each upgrade's `MaxLevel`.
 - **Not run in Unity:** this code has not been compiled or tested in this environment.
+
+---
+
+## 5. AI Interaction Log
+
+Tool: Claude (Anthropic), chat interface. Inputs given to the AI: the project's C# files, the class diagram image, and the Champion Document. Instructions: keep code succinct, avoid extra features, and write a documentation file for each class.
+
+| # | Request | AI response | Outcome |
+| --- | --- | --- | --- |
+| 1 | How to add a bar between the upgrade buttons, built from segments like the reference image, where + adds a chunk and - removes one. | Proposed a frame `Image` with one `Image` per level, and wrote `UpgradeSegmentBar`: + calls `PurchaseUpgrade`, `Refresh` shows `level` segments. Noted that the design has no refund, so the - button cannot be wired. | First version of the class. |
+| 2 | Step-by-step creation of the bar in Unity with a white background and black segments, and where the stretch anchor preset is. | Gave the setup steps using plain coloured `Image`s (no sprites) and the Alt+Shift stretch preset in the Rect Transform header. | Bars built in the scene. |
+| 3 | Troubleshooting: the bar's Type kept reverting to Speed, then changing one bar changed all of them. | Found that every `UpgradeType` value was assigned `= 0`, so Unity could not tell them apart; fix is to remove the assignments. For the second problem: multi-selection or a locked Inspector, not the script. | Enum corrected; bars set individually. |
+
+### Verification
+
+The AI did not compile or run any code in Unity. All code and Inspector setup were to be checked in the Unity editor by the team.
