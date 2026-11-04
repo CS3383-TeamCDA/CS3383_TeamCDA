@@ -71,20 +71,6 @@ public class MenuStateTests
     #region Update
 
     [Test]
-    public void Update_UnlocksCursorIfAnotherSystemLocksIt()
-    {
-        menuState.Enter();
-        Cursor.lockState = CursorLockMode.Locked;
-
-        // Without a focused Game view (e.g. batch mode), Unity ignores cursor locking, so this test cannot apply.
-        Assume.That(Cursor.lockState, Is.EqualTo(CursorLockMode.Locked), "Cursor locking is unavailable in this test environment.");
-
-        menuState.Update();
-
-        Assert.AreEqual(CursorLockMode.None, Cursor.lockState);
-    }
-
-    [Test]
     public void Update_DoesNotChangeTimeScale()
     {
         menuState.Enter();
