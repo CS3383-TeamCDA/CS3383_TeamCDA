@@ -33,6 +33,97 @@ public class EnemyProjectileTests
         return enemy;
     }
 
+    private PlayerHealth CreatePlayer(Vector2 position, out Collider2D collider)
+    {
+        var player = new GameObject("Player");
+        player.transform.SetParent(root.transform);
+        player.transform.position = position;
+        var health = player.AddComponent<PlayerHealth>();
+        var hurtbox = new GameObject("Child hurtbox");
+        hurtbox.transform.SetParent(player.transform, false);
+        collider = hurtbox.AddComponent<BoxCollider2D>();
+        collider.isTrigger = true;
+        return health;
+    }
+
+    private EnemyProjectile CreateShot(GroundEnemy owner, float speed = 0)
+    {
+        var shot = new GameObject("Shot").AddComponent<EnemyProjectile>();
+        shot.transform.SetParent(root.transform);
+        shot.Launch(owner, Vector2.right, speed, 2);
+        return shot;
+    }
+
+    [UnityTest]
+    public IEnumerator PlayerHitUsesSnapshotAndCannotDamageTwice()
+    {
+        var owner = CreateEnemy();
+        var health = CreatePlayer(Vector2.right * 3, out var collider);
+        var shot = CreateShot(owner);
+        int damage = shot.Damage;
+        owner.SetLevel(owner.Level + 1);
+        int calls = 0;
+        health.OnHealthChanged += (_, __) =>
+        {
+            calls++;
+            Assert.IsFalse(shot.TryHitPlayer(collider), "Reentrant damage must be rejected.");
+        };
+        Assert.IsTrue(shot.TryHitPlayer(collider));
+        Assert.IsFalse(shot.TryHitPlayer(collider));
+        Assert.AreEqual(health.MaxHealth - damage, health.CurrentHealth);
+        Assert.AreEqual(1, calls);
+        yield return null;
+        Assert.IsTrue(shot == null);
+    }
+
+    [UnityTest]
+    public IEnumerator InvalidTargetsDoNotConsumeShot()
+    {
+        var owner = CreateEnemy();
+        var health = CreatePlayer(Vector2.right * 3, out var collider);
+        var shot = CreateShot(owner);
+        Assert.IsFalse(shot.TryHitPlayer(null));
+        Assert.IsFalse(shot.TryHitPlayer(owner.GetComponent<Collider2D>()));
+        collider.enabled = false;
+        Assert.IsFalse(shot.TryHitPlayer(collider));
+        collider.enabled = true;
+        health.TakeDamage(health.MaxHealth);
+        Assert.IsFalse(shot.TryHitPlayer(collider));
+        var other = CreatePlayer(Vector2.right * 5, out var otherCollider);
+        Assert.IsTrue(shot.TryHitPlayer(otherCollider));
+        Assert.Less(other.CurrentHealth, other.MaxHealth);
+        yield return null;
+    }
+
+    [UnityTest]
+    public IEnumerator SweepHitsTriggerPlayerButStopsAtEarlierWall()
+    {
+        foreach (bool blocked in new[] { false, true })
+        {
+            var owner = CreateEnemy();
+            var health = CreatePlayer(Vector2.right * 3, out _);
+            GameObject wall = null;
+            if (blocked)
+            {
+                wall = new GameObject("Wall");
+                wall.transform.SetParent(root.transform);
+                wall.layer = LayerMask.NameToLayer("Ground");
+                wall.transform.position = Vector2.right;
+                wall.AddComponent<BoxCollider2D>().size = new Vector2(.1f, 4);
+            }
+            var shot = CreateShot(owner, 1000);
+            int damage = shot.Damage;
+            Physics2D.SyncTransforms();
+            yield return new WaitForSeconds(.05f);
+            Assert.IsTrue(shot == null);
+            Assert.AreEqual(health.MaxHealth - (blocked ? 0 : damage), health.CurrentHealth);
+            Object.Destroy(health.gameObject);
+            Object.Destroy(owner.gameObject);
+            if (wall != null) Object.Destroy(wall);
+            yield return null;
+        }
+    }
+
     [UnityTest]
     public IEnumerator VisibleBoltsFireFromCorrectSideTravelAndStopAtTerrain()
     {

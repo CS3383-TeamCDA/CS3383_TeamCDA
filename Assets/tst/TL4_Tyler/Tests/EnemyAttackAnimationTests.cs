@@ -114,6 +114,103 @@ public class EnemyAttackAnimationTests
             .SetValue(attacks, chance);
     }
 
+    private void MakeMeleeHitDue()
+    {
+        typeof(EnemyAttackAnimations).GetField("meleeHitAt", BindingFlags.Instance | BindingFlags.NonPublic)
+            .SetValue(attacks, Time.time);
+    }
+
+    private PlayerHealth BeginMeleeAgainstPlayer()
+    {
+        SetMeleeChance(0);
+        var health = target.AddComponent<PlayerHealth>();
+        target.transform.position = Vector3.right;
+        Assert.IsTrue(enemy.TryAcquireTarget(target.transform));
+        Assert.AreEqual(EnemyAttackAnimation.Melee, attacks.TryTriggerAttack());
+        return health;
+    }
+
+    [UnityTest]
+    public IEnumerator MeleeWaitsForStrikeAndAppliesSnapshotOnlyOnce()
+    {
+        Assert.IsFalse(attacks.TryApplyMeleeDamage());
+        var health = BeginMeleeAgainstPlayer();
+        int damage = enemy.MeleeDamage;
+        enemy.SetLevel(enemy.Level + 1);
+        Assert.IsFalse(attacks.TryApplyMeleeDamage(), "Wind-up must not deal damage.");
+        int changes = 0;
+        health.OnHealthChanged += (_, __) =>
+        {
+            changes++;
+            Assert.IsFalse(attacks.TryApplyMeleeDamage(), "Health callbacks cannot repeat a strike.");
+        };
+        MakeMeleeHitDue();
+        Assert.IsTrue(attacks.TryApplyMeleeDamage());
+        Assert.IsFalse(attacks.TryApplyMeleeDamage());
+        Assert.AreEqual(health.MaxHealth - damage, health.CurrentHealth);
+        Assert.AreEqual(1, changes);
+        yield return null;
+    }
+
+    [UnityTest]
+    public IEnumerator DodgingStrikeConsumesMissEvenIfPlayerReturns()
+    {
+        var health = BeginMeleeAgainstPlayer();
+        target.transform.position = Vector3.right * 10;
+        MakeMeleeHitDue();
+        Assert.IsFalse(attacks.TryApplyMeleeDamage());
+        target.transform.position = Vector3.right;
+        Assert.IsFalse(attacks.TryApplyMeleeDamage());
+        Assert.AreEqual(health.MaxHealth, health.CurrentHealth);
+        yield return null;
+    }
+
+    [UnityTest]
+    public IEnumerator TerrainBlocksStrike()
+    {
+        var health = BeginMeleeAgainstPlayer();
+        var wall = new GameObject("Melee wall");
+        wall.transform.SetParent(target.transform, false);
+        wall.transform.position = Vector3.right * .5f;
+        wall.layer = LayerMask.NameToLayer("Ground");
+        wall.AddComponent<BoxCollider2D>().size = new Vector2(.1f, 4);
+        Physics2D.SyncTransforms();
+        MakeMeleeHitDue();
+        Assert.IsFalse(attacks.TryApplyMeleeDamage());
+        Assert.AreEqual(health.MaxHealth, health.CurrentHealth);
+        yield return null;
+    }
+
+    [UnityTest]
+    public IEnumerator DeathOrDisableCancelsPendingDamage()
+    {
+        var health = BeginMeleeAgainstPlayer();
+        attacks.enabled = false;
+        MakeMeleeHitDue();
+        Assert.IsFalse(attacks.TryApplyMeleeDamage());
+        attacks.enabled = true;
+        Assert.IsFalse(attacks.TryApplyMeleeDamage());
+        enemy.TakeDamage(enemy.MaxHealth);
+        yield return new WaitForSeconds(1);
+        Assert.AreEqual(health.MaxHealth, health.CurrentHealth);
+    }
+
+    [UnityTest]
+    public IEnumerator ScheduledDoubleMeleeDealsDamageOncePerSwing()
+    {
+        var health = BeginMeleeAgainstPlayer();
+        // The first swing is already scheduled; force its optional follow-up.
+        typeof(EnemyAttackAnimations).GetField("followUpPending", BindingFlags.Instance | BindingFlags.NonPublic)
+            .SetValue(attacks, true);
+        int damage = enemy.MeleeDamage;
+        int changes = 0;
+        health.OnHealthChanged += (_, __) => changes++;
+        float deadline = Time.time + 4;
+        while (attacks.IsMovementLocked && Time.time < deadline) yield return null;
+        Assert.AreEqual(2, changes);
+        Assert.AreEqual(health.MaxHealth - 2 * damage, health.CurrentHealth);
+    }
+
     [UnityTest]
     public IEnumerator DoubleMeleeHasExactlyTwoSwingsWithPauseAndMovementLock()
     {

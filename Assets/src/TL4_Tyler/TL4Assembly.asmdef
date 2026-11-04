@@ -1,3 +1,4 @@
 {
-	"name": "TL4Assembly"
+	"name": "TL4Assembly",
+	"references": ["TL6Assembly"]
 }
