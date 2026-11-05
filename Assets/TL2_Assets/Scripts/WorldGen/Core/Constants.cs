@@ -9,7 +9,7 @@ namespace EscapeThe90s.WorldGen
         public const int CellPixels = 16;          // one data-grid cell, in pixels
         public const int ChunkWidthCells = 32;     // chunk width in cells (=512 px at 16 px cells)
         public const int EndSafeChunks = 1;        // chunks at each street end: no buildings, no enemies
-        public const int MinStreetChunks = 6;      // shortest legal street
+        public const int MinStreetChunks = 4;      // shortest legal street (two safe ends + two playable chunks)
         public const int DistancePerTier = 200;    // world units from origin per difficulty tier
         public const int BiomeCount = 5;           // one per arcade game
         public const int AccentsPerBiome = 3;      // palette rows per biome (palette.png has BiomeCount*AccentsPerBiome rows)

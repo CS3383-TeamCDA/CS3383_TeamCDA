@@ -22,7 +22,7 @@ namespace EscapeThe90s.WorldGen
 
         [Header("Street")]
         public int nodeA = 0, nodeB = 1;
-        [Range(6, 60)] public int chunkCount = 24;
+        [Range(4, 60)] public int chunkCount = 24;
         public int biome = 0;
         public BuildingFlags allowed = BuildingFlags.All;
         public int difficultyTier = 0;
@@ -32,18 +32,35 @@ namespace EscapeThe90s.WorldGen
         GameObject _root, _gridGo;
         StreetLayout _layout;
         StreetTerrain _terrain;
+        bool _explicitLayout;
         readonly Dictionary<int, GameObject> _chunks = new Dictionary<int, GameObject>();
+        readonly Dictionary<int, List<GameObject>> _chunkOwnedObjects = new Dictionary<int, List<GameObject>>();
         readonly List<int> _scratch = new List<int>();
 
         public int WidthCells { get { return _layout == null ? 0 : _layout.ChunkCount * WorldConstants.ChunkWidthCells; } }
         public int LoadedChunkCount { get { return _chunks.Count; } }
         public StreetLayout Layout { get { return _layout; } }
+        public bool IsChunkLoaded(int chunkIndex) { return _chunks.ContainsKey(chunkIndex); }
+
+        /// <summary>Registers a world-space object to be removed with its streamed terrain chunk.</summary>
+        public bool RegisterChunkObject(int chunkIndex, GameObject instance)
+        {
+            if (instance == null || !_chunks.ContainsKey(chunkIndex)) return false;
+            List<GameObject> instances;
+            if (!_chunkOwnedObjects.TryGetValue(chunkIndex, out instances))
+            {
+                instances = new List<GameObject>();
+                _chunkOwnedObjects.Add(chunkIndex, instances);
+            }
+            instances.Add(instance);
+            return true;
+        }
 
         /// <summary>Camera y that puts the street surface 3 cells (48 px) above the bottom edge, so exactly the visible ground rows fill the bottom.</summary>
         public static float CameraY(float orthographicSize) { return orthographicSize - WorldConstants.GroundDepthCells; }
         public static float DefaultOrthographicSize { get { return WorldConstants.ViewHeightPixels / 2f / WorldConstants.CellPixels; } }
 
-        void Start() { if (Application.isPlaying) Rebuild(); }
+        void Start() { if (Application.isPlaying && !_explicitLayout) Rebuild(); }
 
         void Update()
         {
@@ -53,6 +70,7 @@ namespace EscapeThe90s.WorldGen
         [ContextMenu("Rebuild")]
         public void Rebuild()
         {
+            _explicitLayout = false;
             if (settings == null || art == null || art.spriteMaterial == null || art.groundSheet == null)
             {
                 Debug.LogWarning("StreetView: assign Settings and Art (with material + ground sheet).");
@@ -73,12 +91,36 @@ namespace EscapeThe90s.WorldGen
                 Required = required, DifficultyTier = difficultyTier
             };
             LevelService level = settings.CreateService();
-            _layout = level.GetStreet(request);
+            BuildLayout(level.GetStreet(request), false);
+        }
+
+        /// <summary>Displays an already-generated world street from the region network.</summary>
+        public void ShowWorldStreet(WorldStreet street, bool reverse)
+        {
+            if (street == null) { Debug.LogWarning("StreetView: cannot display a null world street."); return; }
+            _explicitLayout = true;
+            BuildLayout(street.Layout, reverse);
+        }
+
+        void BuildLayout(StreetLayout layout, bool reverse)
+        {
+            if (settings == null || art == null || art.spriteMaterial == null || art.groundSheet == null)
+            {
+                Debug.LogWarning("StreetView: assign Settings and Art (with material + ground sheet).");
+                return;
+            }
+            Clear();
+            _layout = layout;
             _terrain = new StreetTerrain(settings.SeedValue, _layout, curbsAndSteps);
 
             _root = new GameObject("Generated Street");
             _root.hideFlags = HideFlags.DontSave;
             _root.transform.SetParent(transform, false);
+            if (reverse)
+            {
+                _root.transform.localScale = new Vector3(-1f, 1f, 1f);
+                _root.transform.localPosition = new Vector3(WidthCells, 0f, 0f);
+            }
             _gridGo = new GameObject("Grid");
             _gridGo.hideFlags = HideFlags.DontSave;
             _gridGo.transform.SetParent(_root.transform, false);
@@ -95,7 +137,7 @@ namespace EscapeThe90s.WorldGen
 
         void UpdateWindow()
         {
-            float x = transform.InverseTransformPoint(follow.position).x;
+            float x = _root.transform.InverseTransformPoint(follow.position).x;
             int center = ChunkWindow.ChunkIndexAt(x, _layout.ChunkCount);
 
             int lo = Mathf.Max(0, center - loadRadiusChunks);
@@ -108,8 +150,10 @@ namespace EscapeThe90s.WorldGen
                 if (ChunkWindow.ShouldUnload(kv.Key, center, loadRadiusChunks)) _scratch.Add(kv.Key);
             for (int k = 0; k < _scratch.Count; k++)
             {
-                DestroyObject(_chunks[_scratch[k]]);
-                _chunks.Remove(_scratch[k]);
+                int chunkIndex = _scratch[k];
+                DestroyChunkObjects(chunkIndex);
+                DestroyObject(_chunks[chunkIndex]);
+                _chunks.Remove(chunkIndex);
             }
         }
 
@@ -159,7 +203,7 @@ namespace EscapeThe90s.WorldGen
             // Physics: exact boxes from the data grid (never from the tile art).
             foreach (ColliderBox b in TerrainColliders.ForChunk(terrain, chunk.Index))
                 AddBox(chunkGo, b.X0, b.X1, b.Y0, b.Y1);
-            // Street ends are walls for now; Milestone 2 replaces them with intersections.
+            // Network play uses these walls as safe points where the player chooses an intersection exit.
             if (chunk.Index == 0) AddBox(chunkGo, -1, 0, -WorldConstants.SlabDepthCells, 40);
             if (last) AddBox(chunkGo, w, w + 1, -WorldConstants.SlabDepthCells, 40);
 
@@ -195,8 +239,19 @@ namespace EscapeThe90s.WorldGen
             if (Application.isPlaying) Destroy(go); else DestroyImmediate(go);
         }
 
+        void DestroyChunkObjects(int chunkIndex)
+        {
+            List<GameObject> instances;
+            if (!_chunkOwnedObjects.TryGetValue(chunkIndex, out instances)) return;
+            foreach (GameObject instance in instances)
+                if (instance != null) DestroyObject(instance);
+            _chunkOwnedObjects.Remove(chunkIndex);
+        }
+
         void Clear()
         {
+            var ownedChunks = new List<int>(_chunkOwnedObjects.Keys);
+            foreach (int chunkIndex in ownedChunks) DestroyChunkObjects(chunkIndex);
             _chunks.Clear();
             _layout = null;
             if (_root == null)
