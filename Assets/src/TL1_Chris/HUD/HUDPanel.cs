@@ -50,7 +50,7 @@ namespace EscapeThe90s.HUD
         {
             if (currencyText != null)
             {
-                currencyText.text = $"Currency: {currency}";
+                currencyText.text = $"{currency}";
             }
         }
 
