@@ -63,7 +63,6 @@ namespace EscapeThe90s.MetaProgression
         /// </summary>
         public bool PurchaseUpgrade(UpgradeType type)
         {
-            Debug.Log($"Purchase {type}: level {GetUpgradeLevel(type)} -> currency {currency}\n{System.Environment.StackTrace}");
             if (!CanPurchase(type))
                 return false;
 
