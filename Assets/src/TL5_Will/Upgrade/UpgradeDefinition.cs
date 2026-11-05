@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace EscapeThe90s.MetaProgression
 {
+    [System.Serializable]
     public class UpgradeDefinition
     {
         [SerializeField] private UpgradeType type;
@@ -10,7 +11,7 @@ namespace EscapeThe90s.MetaProgression
         [SerializeField] private int baseCost;
         [SerializeField] private float costGrowth;
         [SerializeField] private int maxLevel;
-        [SerializeField] private UpgradeEffect effect;
+        private UpgradeEffect effect;
 
         public UpgradeType Type => type;
         public float BaseValue => baseValue;
@@ -18,15 +19,21 @@ namespace EscapeThe90s.MetaProgression
         public int BaseCost => baseCost;
         public float CostGrowth => costGrowth;
         public int MaxLevel => maxLevel;
-        public UpgradeEffect Effect => effect;
+        public UpgradeEffect Effect => effect ??= type switch
+        {
+            UpgradeType.Health => new HealthEffect(),
+            UpgradeType.Speed => new SpeedEffect(),
+            UpgradeType.MagnetRange => new MagnetRangeEffect(),
+            _ => new UpgradeEffect()
+        };
 
         public float GetEffectValue(int level)
         {
-            return 0f;
+            return baseValue + (valuePerLevel * level);
         } 
         public int GetCost(int level)
         {
-            return 0;
+            return Mathf.RoundToInt(baseCost + (Mathf.Pow(costGrowth, level)));
         }
     }
 }

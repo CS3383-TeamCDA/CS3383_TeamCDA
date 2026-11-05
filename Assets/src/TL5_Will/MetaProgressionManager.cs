@@ -7,18 +7,25 @@ using UnityEditor.Overlays;
 
 namespace EscapeThe90s.MetaProgression
 {
-    public class MetaProgressionManager
+    public class MetaProgressionManager : MonoBehaviour
     {
         public static MetaProgressionManager Instance { get; private set; }
-
         private HUDController hudController;
-        private int currency = 0;
+        [SerializeField] private int currency = 0;
         private int[] upgradeLevels;
-        private List<UpgradeDefinition> definitions;
+        [SerializeField] private List<UpgradeDefinition> definitions;
+
+        private void Awake()
+        {
+            if (Instance != null) { Destroy(gameObject); return; }
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+            RestoreSnapshot(SaveSystem.Load());
+        }
 
         public void AddCurrency(int amount)
         {
-            if(amount > 0)
+            if (amount > 0)
                 currency += amount;
         }
 
@@ -43,8 +50,9 @@ namespace EscapeThe90s.MetaProgression
         {
             UpgradeDefinition def = GetDefinition(type);
             if (def == null || upgradeLevels == null || (int)type >= upgradeLevels.Length)
+            {
                 return false;
-
+            }
             int level = GetUpgradeLevel(type);
             return level < def.MaxLevel && currency >= def.GetCost(level);
         }
@@ -55,6 +63,7 @@ namespace EscapeThe90s.MetaProgression
         /// </summary>
         public bool PurchaseUpgrade(UpgradeType type)
         {
+            Debug.Log($"Purchase {type}: level {GetUpgradeLevel(type)} -> currency {currency}\n{System.Environment.StackTrace}");
             if (!CanPurchase(type))
                 return false;
 
@@ -103,8 +112,13 @@ namespace EscapeThe90s.MetaProgression
 
         private UpgradeDefinition GetDefinition(UpgradeType type)
         {
-           return definitions?.Find(d => d.Type == type); 
+            if (definitions == null)
+            {
+                return null;
+            }
+                
+            return definitions.Find(d => d.Type == type);
         }
-            
+
     }
 }

@@ -12,21 +12,28 @@ namespace EscapeThe90s.MetaProgression
         [SerializeField] private UpgradeType type;
         [SerializeField] private Button plusButton;
         [SerializeField] private Image[] segments;
-
         private void OnEnable()
         {
             plusButton.onClick.AddListener(OnPlusClicked);
             Refresh();
         }
 
-        private void OnDisable() => plusButton.onClick.RemoveListener(OnPlusClicked);
+        private void Start()
+        {
+            Refresh();
+        }
 
+        private void OnDisable()
+        {
+            plusButton.onClick.RemoveListener(OnPlusClicked); 
+        }
+        
         private void OnPlusClicked()
         {
             MetaProgressionManager.Instance?.PurchaseUpgrade(type);
             Refresh();
         }
-
+        
         /// <summary>Shows the first (level) segments and hides the rest.</summary>
         public void Refresh()
         {
