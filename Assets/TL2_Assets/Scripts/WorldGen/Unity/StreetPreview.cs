@@ -13,7 +13,7 @@ namespace EscapeThe90s.WorldGen
     {
         public WorldGenSettings settings;
         public int nodeA = 0, nodeB = 1;
-        [Range(6, 60)] public int chunkCount = 24;
+        [Range(4, 60)] public int chunkCount = 24;
         public int biome = 0;
         public BuildingFlags allowed = BuildingFlags.All;
         public int difficultyTier = 0;

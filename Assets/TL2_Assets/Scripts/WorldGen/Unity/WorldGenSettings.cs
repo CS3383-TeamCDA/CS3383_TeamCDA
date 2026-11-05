@@ -9,6 +9,9 @@ namespace EscapeThe90s.WorldGen
         public long seed = 12345;
         [Tooltip("Index = biome id. Leave empty to use built-in defaults for all biomes.")]
         public BiomeDefinition[] biomes;
+        [Header("Playable street lengths")]
+        [Min(WorldConstants.MinStreetChunks)] public int minNetworkStreetChunks = WorldConstants.MinStreetChunks;
+        [Min(WorldConstants.MinStreetChunks)] public int maxNetworkStreetChunks = 6;
 
         public BiomeRules[] GetRules()
         {
@@ -25,5 +28,9 @@ namespace EscapeThe90s.WorldGen
         public ulong SeedValue { get { return unchecked((ulong)seed); } }
 
         public LevelService CreateService() { return new LevelService(SeedValue, GetRules()); }
+
+        /// <summary>Creates the deterministic region, street, intersection, and nearest-arcade biome queries for this world.</summary>
+        public WorldNetwork CreateWorldNetwork()
+        { return new WorldNetwork(SeedValue, GetRules(), minNetworkStreetChunks, maxNetworkStreetChunks); }
     }
 }

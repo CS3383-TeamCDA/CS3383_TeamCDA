@@ -9,15 +9,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 360cb00cf639e2247832288462183b24, type: 3}
-  m_Name: Biome2
+  m_Script: {fileID: 11500000, guid: cb6de77da78503f4ca486a2f23727856, type: 3}
+  m_Name: Biome
   m_EditorClassIdentifier: EscapeThe90s.WorldGen.Unity::EscapeThe90s.WorldGen.BiomeDefinition
   rules:
-    Name: Biome2
-    BuildingDensityPercent: 35
+    Name: 
+    BuildingDensityPercent: 65
     AccentCount: 3
-    EnemiesMinPerChunk: 3
-    EnemiesMaxPerChunk: 10
+    EnemiesMinPerChunk: 1
+    EnemiesMaxPerChunk: 3
     TiersPerExtraEnemy: 2
     EnemyHardCap: 8
     EnemyKindWeights: 01000000i
