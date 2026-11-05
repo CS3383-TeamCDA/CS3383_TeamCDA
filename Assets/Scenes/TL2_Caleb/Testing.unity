@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &767995370
+--- !u!1 &119250901
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,10 +127,67 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 767995374}
-  - component: {fileID: 767995373}
-  - component: {fileID: 767995372}
-  - component: {fileID: 767995371}
+  - component: {fileID: 119250903}
+  - component: {fileID: 119250902}
+  m_Layer: 0
+  m_Name: Street
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &119250902
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 119250901}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13f113494d5ef4345beb0551cda2731f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: EscapeThe90s.WorldGen.Unity::EscapeThe90s.WorldGen.StreetView
+  settings: {fileID: 11400000, guid: 0952a819963541a4e9c701e72315603f, type: 2}
+  art: {fileID: 11400000, guid: d7e6cd82b5854a5429da42fc9998b217, type: 2}
+  follow: {fileID: 339798812}
+  loadRadiusChunks: 2
+  setupCamera: 1
+  nodeA: 0
+  nodeB: 1
+  chunkCount: 24
+  biome: 0
+  allowed: -1
+  difficultyTier: 0
+  requiredArcades: 1
+  curbsAndSteps: 1
+--- !u!4 &119250903
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 119250901}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &339798808
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 339798812}
+  - component: {fileID: 339798811}
+  - component: {fileID: 339798810}
+  - component: {fileID: 339798809}
   m_Layer: 0
   m_Name: Demo Player
   m_TagString: Untagged
@@ -138,28 +195,28 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &767995371
+--- !u!114 &339798809
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 767995370}
+  m_GameObject: {fileID: 339798808}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8f5fd478beb982541a25c4a265ea0d1e, type: 3}
+  m_Script: {fileID: 11500000, guid: 95440ed19794a2a4488a6531c6eacecc, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: EscapeThe90s.WorldGen.Demo::DemoWalker
+  m_EditorClassIdentifier: Assembly-CSharp::DemoWalker
   moveSpeed: 7
   jumpVelocity: 14
   gravityScale: 3
---- !u!70 &767995372
+--- !u!70 &339798810
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 767995370}
+  m_GameObject: {fileID: 339798808}
   m_Enabled: 1
   serializedVersion: 3
   m_Density: 1
@@ -190,14 +247,14 @@ CapsuleCollider2D:
   m_Offset: {x: 0, y: 0}
   m_Size: {x: 0.5, y: 1}
   m_Direction: 0
---- !u!50 &767995373
+--- !u!50 &339798811
 Rigidbody2D:
   serializedVersion: 5
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 767995370}
+  m_GameObject: {fileID: 339798808}
   m_BodyType: 0
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
@@ -217,13 +274,13 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
---- !u!4 &767995374
+--- !u!4 &339798812
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 767995370}
+  m_GameObject: {fileID: 339798808}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 16, y: 3, z: 0}
@@ -243,8 +300,8 @@ GameObject:
   - component: {fileID: 1524323964}
   - component: {fileID: 1524323963}
   - component: {fileID: 1524323962}
-  - component: {fileID: 1524323966}
   - component: {fileID: 1524323965}
+  - component: {fileID: 1524323966}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -379,72 +436,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 1524323961}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a4a95da66ffcbf94bb150b66e9f84836, type: 3}
+  m_Script: {fileID: 11500000, guid: 0780e5ff0b0b96f4c9f4143900150d00, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: EscapeThe90s.WorldGen.Demo::CameraFollow
-  target: {fileID: 767995374}
-  street: {fileID: 1642420481}
---- !u!1 &1642420478
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1642420480}
-  - component: {fileID: 1642420481}
-  m_Layer: 0
-  m_Name: GameObject
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1642420480
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1642420478}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1642420481
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1642420478}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ef516dbbdb7ec6541a0d15ad938f9766, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: EscapeThe90s.WorldGen.Unity::EscapeThe90s.WorldGen.StreetView
-  settings: {fileID: 11400000, guid: 0952a819963541a4e9c701e72315603f, type: 2}
-  art: {fileID: 11400000, guid: d7e6cd82b5854a5429da42fc9998b217, type: 2}
-  follow: {fileID: 767995374}
-  loadRadiusChunks: 2
-  setupCamera: 1
-  nodeA: 0
-  nodeB: 1
-  chunkCount: 24
-  biome: 0
-  allowed: -1
-  difficultyTier: 0
-  requiredArcades: 1
-  curbsAndSteps: 1
+  m_EditorClassIdentifier: Assembly-CSharp::CameraFollow
+  target: {fileID: 339798812}
+  street: {fileID: 119250902}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 1524323964}
-  - {fileID: 1642420480}
-  - {fileID: 767995374}
+  - {fileID: 119250903}
+  - {fileID: 339798812}
