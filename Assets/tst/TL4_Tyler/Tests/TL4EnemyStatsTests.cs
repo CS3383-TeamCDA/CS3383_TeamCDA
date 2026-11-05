@@ -13,6 +13,75 @@ public class TL4EnemyStatsTests
     }
     [TearDown] public void TearDown() { Object.DestroyImmediate(instance); }
 
+#if UNITY_EDITOR
+    [TestCase(0f, 100, 0)]
+    [TestCase(1f, 99, 0)]
+    [TestCase(1f, 100, 1)]
+    public void DeathDropsRespectChanceAndOnlyHappenOnce(float chance, int damage, int expected)
+    {
+        var prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
+            "Assets/prefabs/TL3_Joe/PowerUps/PowerUpSystem.prefab");
+        var system = Object.Instantiate(prefab);
+        var manager = system.GetComponent<EscapeThe90s.PowerUps.PowerUpManager>();
+        var items = (System.Collections.Generic.List<EscapeThe90s.PowerUps.PowerUpItem>)
+            typeof(EscapeThe90s.PowerUps.PowerUpManager).GetField("activeItems",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(manager);
+        var randomState = Random.state;
+        try
+        {
+            // Explicitly initialize definitions for Edit Mode, where Awake is not guaranteed.
+            typeof(EscapeThe90s.PowerUps.PowerUpManager).GetMethod("LoadDefinitions",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).Invoke(manager, null);
+            var serialized = new UnityEditor.SerializedObject(enemy);
+            serialized.FindProperty("powerUpDropChance").floatValue = chance;
+            serialized.FindProperty("powerUpManager").objectReferenceValue = manager;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            enemy.transform.position = new Vector3(7, 3, 0);
+
+            enemy.TakeDamage(damage);
+            enemy.TakeDamage(0);
+            Assert.AreEqual(expected, items.Count);
+            if (expected > 0)
+                Assert.AreEqual(enemy.transform.position, items[0].transform.position);
+        }
+        finally
+        {
+            Random.state = randomState;
+            foreach (var item in items) if (item != null) Object.DestroyImmediate(item.gameObject);
+            Object.DestroyImmediate(system);
+        }
+    }
+#endif
+
+    [Test] public void DeleteExeOnlyKillsEnemyUnderCursorAndDoesNotRepeatDeath()
+    {
+        var viewObject = new GameObject("Delete test camera");
+        var view = viewObject.AddComponent<Camera>();
+        view.orthographic = true;
+        view.transform.position = new Vector3(0, 0, -10);
+        var attack = instance.AddComponent<DeleteExeAttack>();
+        var texture = new Texture2D(16, 16);
+        var sprite = Sprite.Create(texture, new Rect(0, 0, 16, 16), new Vector2(.5f, .5f), 16);
+        instance.AddComponent<SpriteRenderer>().sprite = sprite;
+        int deaths = 0;
+        enemy.Defeated += _ => deaths++;
+        try
+        {
+            Assert.IsFalse(attack.TryDeleteAt(view, view.WorldToScreenPoint(new Vector3(3, 3, 0))));
+            Assert.AreEqual(enemy.MaxHealth, enemy.CurrentHealth);
+            Assert.IsTrue(attack.TryDeleteAt(view, view.WorldToScreenPoint(Vector3.zero)));
+            Assert.IsTrue(enemy.IsDefeated);
+            Assert.IsFalse(attack.TryDeleteAt(view, view.WorldToScreenPoint(Vector3.zero)));
+            Assert.AreEqual(1, deaths);
+        }
+        finally
+        {
+            Object.DestroyImmediate(viewObject);
+            Object.DestroyImmediate(sprite);
+            Object.DestroyImmediate(texture);
+        }
+    }
+
     [TestCase(EnemyAwareness.Low)]
     [TestCase(EnemyAwareness.High)]
     public void AwarenessRandomizesInitiallyAndOnlyUpgradesAfterSixSeconds(EnemyAwareness awareness)

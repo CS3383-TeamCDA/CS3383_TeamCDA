@@ -9,10 +9,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 445b7aa02ec26444da17e30aca8ea57e, type: 3}
+  m_Script: {fileID: 11500000, guid: a7e1181858e9d414dab57be873b91bb9, type: 3}
   m_Name: WorldGenSettings
   m_EditorClassIdentifier: EscapeThe90s.WorldGen.Unity::EscapeThe90s.WorldGen.WorldGenSettings
-  seed: 10
-  biomes:
-  - {fileID: 11400000, guid: ae62696c80ac794428a8cdee4ac082d0, type: 2}
-  - {fileID: 11400000, guid: 6da160427b1806c4ea7e6ce199c3dd38, type: 2}
+  seed: 12345
+  biomes: []

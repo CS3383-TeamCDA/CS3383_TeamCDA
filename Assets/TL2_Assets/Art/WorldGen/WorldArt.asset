@@ -9,10 +9,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2be305fcab9a64949b64771524b394a5, type: 3}
+  m_Script: {fileID: 11500000, guid: 6bf5b92ffca91f6459e95c6b9e82631b, type: 3}
   m_Name: WorldArt
   m_EditorClassIdentifier: EscapeThe90s.WorldGen.Unity::EscapeThe90s.WorldGen.WorldArt
-  spriteMaterial: {fileID: 2100000, guid: 30a343ff44250f141a1971f08b28bee0, type: 2}
+  spriteMaterial: {fileID: 2100000, guid: b4e59dd75ef202b418a59755daed1e9c, type: 2}
   groundSheet: {fileID: 2800000, guid: 025754532e89749418a53010d6b0ba2a, type: 3}
   buildings:
   - type: 1
