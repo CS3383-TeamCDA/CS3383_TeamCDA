@@ -42,6 +42,18 @@ namespace EscapeThe90s.WorldGen
         public StreetLayout Layout { get { return _layout; } }
         public bool IsChunkLoaded(int chunkIndex) { return _chunks.ContainsKey(chunkIndex); }
 
+        public bool TryGetWorldXBounds(out float minX, out float maxX)
+        {
+            minX = maxX = 0f;
+            if (_root == null || _layout == null) return false;
+            float width = WidthCells;
+            float x0 = _root.transform.TransformPoint(Vector3.zero).x;
+            float x1 = _root.transform.TransformPoint(new Vector3(width, 0f, 0f)).x;
+            minX = Mathf.Min(x0, x1);
+            maxX = Mathf.Max(x0, x1);
+            return true;
+        }
+
         /// <summary>Registers a world-space object to be removed with its streamed terrain chunk.</summary>
         public bool RegisterChunkObject(int chunkIndex, GameObject instance)
         {
@@ -98,6 +110,7 @@ namespace EscapeThe90s.WorldGen
         public void ShowWorldStreet(WorldStreet street, bool reverse)
         {
             if (street == null) { Debug.LogWarning("StreetView: cannot display a null world street."); return; }
+            Debug.Log("[AI demo] EscapeThe90s.WorldGen.StreetView.ShowWorldStreet");
             _explicitLayout = true;
             BuildLayout(street.Layout, reverse);
         }

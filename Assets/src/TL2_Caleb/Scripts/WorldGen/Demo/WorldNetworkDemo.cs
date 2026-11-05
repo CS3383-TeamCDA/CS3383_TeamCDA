@@ -5,6 +5,7 @@ using EscapeThe90s.WorldGen;
 using UnityEngine;
 
 /// <summary>Playable Phase 10 demo: walk generated streets, reach intersections, and choose where to go next.</summary>
+[DefaultExecutionOrder(-1000)]
 public class WorldNetworkDemo : MonoBehaviour
 {
     public WorldGenSettings settings;
@@ -31,6 +32,7 @@ public class WorldNetworkDemo : MonoBehaviour
     Int2 _activeIntersection;
     IntersectionExit[] _mapExits = new IntersectionExit[0];
     int _selectedExit;
+    bool _demoInitialized;
     float _entryX;
     float _destinationX;
     bool _atIntersection;
@@ -40,19 +42,35 @@ public class WorldNetworkDemo : MonoBehaviour
     bool _atVirtualIntersection;
     Component _enemySpawner;
     readonly Dictionary<int, List<GameObject>> _streetEnemiesByChunk = new Dictionary<int, List<GameObject>>();
+    Component _powerUpManager;
+    MethodInfo _spawnPowerUp;
+    Type _powerUpType;
+    readonly Dictionary<int, List<GameObject>> _streetPowerUpsByChunk = new Dictionary<int, List<GameObject>>();
     string _message = "";
     readonly List<StreetEdge> _mapEdges = new List<StreetEdge>();
     readonly List<Int2> _mapArcades = new List<Int2>();
     readonly List<Int2> _mapStations = new List<Int2>();
 
-    void Start()
+    void Awake()
     {
+        _streetView = streetView != null ? streetView : GetComponentInChildren<StreetView>();
+        if (_streetView != null) _streetView.enabled = false;
+        if (player != null) player.gameObject.SetActive(false);
+    }
+
+    void Start() { TryInitializeAfterGameStarts(); }
+
+    void TryInitializeAfterGameStarts()
+    {
+        if (_demoInitialized || !IsGameplayStarted()) return;
         if (settings == null || art == null)
         {
             Debug.LogWarning("WorldNetworkDemo: assign World Gen Settings and World Art. Use Escape the 90s > Create World Network Demo to set up the scene.");
             return;
         }
-        _world = settings.CreateWorldNetwork();
+        _demoInitialized = true;
+        _world = new WorldNetwork(settings.SeedValue, CreateDemoBiomeRules(),
+            settings.minNetworkStreetChunks, settings.maxNetworkStreetChunks);
         _streetView = streetView != null ? streetView : GetComponentInChildren<StreetView>();
         if (_streetView == null)
         {
@@ -64,6 +82,7 @@ public class WorldNetworkDemo : MonoBehaviour
         _streetView.art = art;
         _streetView.setupCamera = false;
         CreatePlayerAndCamera();
+        SetupPowerUpManager();
 
         Int2 start = new Int2(startNodeX, startNodeY);
         if (_world.GetIntersection(start).Length == 0) start = FindNearestStreetNode(start);
@@ -81,9 +100,14 @@ public class WorldNetworkDemo : MonoBehaviour
 
     void Update()
     {
+        if (!_demoInitialized)
+        {
+            TryInitializeAfterGameStarts();
+            if (!_demoInitialized) return;
+        }
         if (_world == null || _currentStreet == null || _player == null) return;
         UpdateIntersectionPrompt();
-        SyncStreetEnemies();
+        SyncStreetContent();
         if (!_atIntersection) return;
 
         int direction = ReadVerticalPress();
@@ -94,6 +118,50 @@ public class WorldNetworkDemo : MonoBehaviour
         {
             TravelExit(_activeIntersection, _mapExits[_selectedExit]);
         }
+    }
+
+    bool IsGameplayStarted()
+    {
+        foreach (MonoBehaviour component in FindSceneMonoBehaviours())
+        {
+            if (component == null || component.GetType().Name != "GameStateManager") continue;
+            PropertyInfo currentState = component.GetType().GetProperty("CurrentState", BindingFlags.Instance | BindingFlags.Public);
+            object state = currentState == null ? null : currentState.GetValue(component, null);
+            return state != null && state.GetType().Name == "PlayingState";
+        }
+        return true; // Standalone worldgen scenes without the team menu start immediately.
+    }
+
+    BiomeRules[] CreateDemoBiomeRules()
+    {
+        BiomeRules[] source = settings.GetRules();
+        var demoRules = new BiomeRules[source.Length];
+        for (int i = 0; i < source.Length; i++)
+        {
+            BiomeRules rule = source[i];
+            var buildings = new BuildingRule[rule.Buildings == null ? 0 : rule.Buildings.Length];
+            for (int b = 0; b < buildings.Length; b++)
+            {
+                BuildingRule old = rule.Buildings[b];
+                buildings[b] = new BuildingRule
+                {
+                    Type = old.Type, FillWeight = old.FillWeight, PerStreetPercent = old.PerStreetPercent,
+                    MaxPerStreet = old.MaxPerStreet, VariantCount = old.VariantCount,
+                    EnemyAnchors = old.EnemyAnchors, AllowFlip = old.AllowFlip
+                };
+            }
+            int minEnemies = Mathf.Max(2, rule.EnemiesMinPerChunk);
+            demoRules[i] = new BiomeRules
+            {
+                Name = rule.Name, BuildingDensityPercent = rule.BuildingDensityPercent,
+                AccentCount = rule.AccentCount, EnemiesMinPerChunk = minEnemies,
+                EnemiesMaxPerChunk = Mathf.Max(minEnemies, rule.EnemiesMaxPerChunk),
+                TiersPerExtraEnemy = rule.TiersPerExtraEnemy,
+                EnemyHardCap = Mathf.Max(3, rule.EnemyHardCap),
+                EnemyKindWeights = new[] { 1, 1, 1 }, Buildings = buildings
+            };
+        }
+        return demoRules;
     }
 
     void TravelExit(Int2 from, IntersectionExit exit)
@@ -181,6 +249,8 @@ public class WorldNetworkDemo : MonoBehaviour
             capsule.sharedMaterial = new PhysicsMaterial2D("WorldNetworkDemoNoFriction") { friction = 0f, bounciness = 0f };
         }
         if (teamPlayer) ConfigureTeamPlayer(playerObject, demoPlayerSpeed);
+        playerObject.tag = "Player";
+        AttachPowerUpTarget(playerObject);
         SpriteRenderer playerRenderer = playerObject.GetComponent<SpriteRenderer>();
         if (playerRenderer != null) playerRenderer.sortingOrder = 5;
         _player = playerObject.transform;
@@ -197,15 +267,14 @@ public class WorldNetworkDemo : MonoBehaviour
         camera.orthographicSize = StreetView.DefaultOrthographicSize;
         camera.clearFlags = CameraClearFlags.SolidColor;
         camera.backgroundColor = new Color(0.07f, 0.05f, 0.13f);
-        bool hasCinemachineBrain = camera.GetComponent("CinemachineBrain") != null;
-        _cameraFollow = hasCinemachineBrain ? null : camera.GetComponent<CameraFollow>();
-        if (!hasCinemachineBrain)
-        {
-            if (_cameraFollow == null) _cameraFollow = camera.gameObject.AddComponent<CameraFollow>();
-            _cameraFollow.target = _player;
-            _cameraFollow.street = _streetView;
-        }
-        else BindTeamCinemachineTarget(_player);
+        // The existing Cinemachine rig has no bounds for generated streets. Use our
+        // pixel-snapped follow camera so each generated route supplies its true extent.
+        Component brain = camera.GetComponent("CinemachineBrain");
+        if (brain is Behaviour) ((Behaviour)brain).enabled = false;
+        _cameraFollow = camera.GetComponent<CameraFollow>();
+        if (_cameraFollow == null) _cameraFollow = camera.gameObject.AddComponent<CameraFollow>();
+        _cameraFollow.target = _player;
+        _cameraFollow.street = _streetView;
         _streetView.follow = _player;
         SetupEnemySpawner();
     }
@@ -219,6 +288,18 @@ public class WorldNetworkDemo : MonoBehaviour
             if (inject != null) inject.Invoke(component, new object[] { playerObject });
             return;
         }
+    }
+
+    static void AttachPowerUpTarget(GameObject playerObject)
+    {
+        Type adapterType = Type.GetType(
+            "EscapeThe90s.WorldGen.Integration.GeneratedPlayerPowerUpTarget, EscapeThe90s.WorldGen.Integration", false);
+        if (adapterType == null)
+        {
+            Debug.LogWarning("WorldNetworkDemo: power-up adapter was not loaded; pickups will not affect player stats.");
+            return;
+        }
+        if (playerObject.GetComponent(adapterType) == null) playerObject.AddComponent(adapterType);
     }
 
     static void BindTeamCinemachineTarget(Transform target)
@@ -237,7 +318,7 @@ public class WorldNetworkDemo : MonoBehaviour
     static MonoBehaviour[] FindSceneMonoBehaviours()
     {
 #if UNITY_2023_1_OR_NEWER
-        return FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        return FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include);
 #else
         return FindObjectsOfType<MonoBehaviour>(true);
 #endif
@@ -273,6 +354,7 @@ public class WorldNetworkDemo : MonoBehaviour
         _atVirtualIntersection = false;
         bool reverse = from.Equals(_currentStreet.Edge.B);
         _currentStreetReversed = reverse;
+        EnsureAllDemoEnemyKinds(_currentStreet.Layout);
         float width = _currentStreet.Layout.ChunkCount * WorldConstants.ChunkWidthCells;
         _entryX = reverse ? width - 7f : 7f;
         _destinationX = reverse ? 7f : width - 7f;
@@ -280,6 +362,9 @@ public class WorldNetworkDemo : MonoBehaviour
         StopPlayer();
         // StreetView owns and destroys registered enemies when it rebuilds the old street.
         _streetEnemiesByChunk.Clear();
+        _streetPowerUpsByChunk.Clear();
+        _streetView.follow = _player;
+        _streetView.enabled = true;
         _streetView.ShowWorldStreet(_currentStreet, reverse);
         _mapCenter = from;
         BuildMap(from);
@@ -287,7 +372,23 @@ public class WorldNetworkDemo : MonoBehaviour
         _mapExits = new IntersectionExit[0];
         _message = "Walk to the far end of the street to reach the next intersection.";
         if (_cameraFollow != null) _cameraFollow.street = _streetView;
-        SyncStreetEnemies();
+        _player.gameObject.SetActive(true);
+        SyncStreetContent();
+    }
+
+    static void EnsureAllDemoEnemyKinds(StreetLayout layout)
+    {
+        int nextKind = 0;
+        foreach (ChunkData chunk in layout.Chunks)
+        {
+            if (chunk.Enemies == null) continue;
+            for (int i = 0; i < chunk.Enemies.Length; i++)
+            {
+                EnemySlot slot = chunk.Enemies[i];
+                slot.KindIndex = nextKind++ % 3; // Ground, Flying, Turret
+                chunk.Enemies[i] = slot;
+            }
+        }
     }
 
     void UpdateIntersectionPrompt()
@@ -331,12 +432,16 @@ public class WorldNetworkDemo : MonoBehaviour
 
     void SetupEnemySpawner()
     {
-        Type spawnerType = FindLoadedType("EnemySpawner");
+        Type spawnerType = null;
+        foreach (MonoBehaviour component in FindSceneMonoBehaviours())
+            if (component != null && component.GetType().Name == "EnemySpawner")
+            { _enemySpawner = component; spawnerType = component.GetType(); break; }
+        if (spawnerType == null) spawnerType = Type.GetType("EnemySpawner, TL4Assembly", false);
         if (spawnerType == null || enemyPrefabsByKind == null || enemyPrefabsByKind.Length == 0) return;
         bool hasPrefab = false;
         foreach (GameObject prefab in enemyPrefabsByKind) if (prefab != null) { hasPrefab = true; break; }
         if (!hasPrefab) return;
-        _enemySpawner = GetComponent(spawnerType);
+        if (_enemySpawner == null) _enemySpawner = GetComponent(spawnerType);
         if (_enemySpawner == null)
             foreach (MonoBehaviour component in FindSceneMonoBehaviours())
                 if (component != null && component.GetType() == spawnerType) { _enemySpawner = component; break; }
@@ -363,6 +468,12 @@ public class WorldNetworkDemo : MonoBehaviour
         InvokeSpawnerMethod("SetSpawnRate", 0f);
     }
 
+    void SyncStreetContent()
+    {
+        SyncStreetEnemies();
+        SyncStreetPowerUps();
+    }
+
     void SyncStreetEnemies()
     {
         if (_enemySpawner == null || enemyPrefabsByKind == null || enemyPrefabsByKind.Length == 0 ||
@@ -378,6 +489,88 @@ public class WorldNetworkDemo : MonoBehaviour
         foreach (KeyValuePair<int, List<GameObject>> pair in _streetEnemiesByChunk)
             if (!_streetView.IsChunkLoaded(pair.Key)) unloaded.Add(pair.Key);
         foreach (int chunkIndex in unloaded) _streetEnemiesByChunk.Remove(chunkIndex);
+    }
+
+    void SetupPowerUpManager()
+    {
+        Type managerType = null;
+        foreach (MonoBehaviour component in FindSceneMonoBehaviours())
+            if (component != null && component.GetType().Name == "PowerUpManager" &&
+                component.GetType().Namespace == "EscapeThe90s.PowerUps" && component.gameObject.scene == gameObject.scene)
+            { _powerUpManager = component; managerType = component.GetType(); break; }
+        if (managerType == null) return;
+
+        foreach (MethodInfo method in managerType.GetMethods(BindingFlags.Instance | BindingFlags.Public))
+        {
+            ParameterInfo[] parameters = method.GetParameters();
+            if (method.Name == "SpawnPowerUp" && parameters.Length == 2 && parameters[0].ParameterType == typeof(Vector3))
+            {
+                _spawnPowerUp = method;
+                _powerUpType = parameters[1].ParameterType;
+                FieldInfo despawnDistance = managerType.GetField("despawnDistanceBehind", BindingFlags.Instance | BindingFlags.NonPublic);
+                if (despawnDistance != null && despawnDistance.FieldType == typeof(float))
+                    despawnDistance.SetValue(_powerUpManager, 100000f);
+                return;
+            }
+        }
+    }
+
+    void SyncStreetPowerUps()
+    {
+        if (_powerUpManager == null || _spawnPowerUp == null || _currentStreet == null ||
+            _streetView == null || _streetView.Layout == null) return;
+        foreach (ChunkData chunk in _currentStreet.Layout.Chunks)
+        {
+            if (!_streetView.IsChunkLoaded(chunk.Index) || _streetPowerUpsByChunk.ContainsKey(chunk.Index)) continue;
+            SpawnPowerUpForChunk(chunk);
+        }
+
+        var unloaded = new List<int>();
+        foreach (KeyValuePair<int, List<GameObject>> pair in _streetPowerUpsByChunk)
+            if (!_streetView.IsChunkLoaded(pair.Key)) unloaded.Add(pair.Key);
+        foreach (int chunkIndex in unloaded) _streetPowerUpsByChunk.Remove(chunkIndex);
+    }
+
+    void SpawnPowerUpForChunk(ChunkData chunk)
+    {
+        var spawned = new List<GameObject>();
+        _streetPowerUpsByChunk[chunk.Index] = spawned;
+        // Street-end chunks remain safe; place a deterministic pickup in about every other interior chunk.
+        if (chunk.IsSafe || ((_currentStreet.Request.Id.Value + (ulong)chunk.Index) & 1UL) == 0UL) return;
+
+        ulong hash = _currentStreet.Request.Id.Value ^ ((ulong)(uint)chunk.Index * 0x9E3779B97F4A7C15UL);
+        int typeIndex = (int)(hash % 3UL);
+        int width = WorldConstants.ChunkWidthCells;
+        float fraction = 0.3f + (float)((hash >> 8) % 4000UL) / 10000f;
+        float localX = chunk.Index * width + fraction * width;
+        float streetWidth = _currentStreet.Layout.ChunkCount * width;
+        float x = _currentStreetReversed ? streetWidth - localX : localX;
+        float y = 1.25f;
+        if (chunk.Building != BuildingType.None)
+        {
+            Sprite sprite = art.GetBuildingSprite(chunk.Building, chunk.Variant);
+            if (sprite != null) y = sprite.bounds.max.y + 0.75f;
+        }
+        Vector3 position = new Vector3(x, y, 0f);
+
+        var before = new HashSet<MonoBehaviour>();
+        foreach (MonoBehaviour component in FindSceneMonoBehaviours())
+            if (component != null && component.GetType().Name == "PowerUpItem" && component.gameObject.scene == gameObject.scene)
+                before.Add(component);
+
+        _spawnPowerUp.Invoke(_powerUpManager, new[] { (object)position, Enum.ToObject(_powerUpType, typeIndex) });
+
+        foreach (MonoBehaviour component in FindSceneMonoBehaviours())
+        {
+            if (component == null || component.GetType().Name != "PowerUpItem" ||
+                component.gameObject.scene != gameObject.scene || before.Contains(component)) continue;
+            if ((component.transform.position - position).sqrMagnitude > 0.04f) continue;
+            PropertyInfo typeProperty = component.GetType().GetProperty("Type");
+            if (typeProperty == null || Convert.ToInt32(typeProperty.GetValue(component, null)) != typeIndex) continue;
+            foreach (SpriteRenderer renderer in component.GetComponentsInChildren<SpriteRenderer>(true)) renderer.sortingOrder = 6;
+            if (_streetView.RegisterChunkObject(chunk.Index, component.gameObject)) spawned.Add(component.gameObject);
+            else Destroy(component.gameObject);
+        }
     }
 
     void SpawnEnemiesForChunk(ChunkData chunk)
@@ -412,6 +605,7 @@ public class WorldNetworkDemo : MonoBehaviour
             float localX = chunk.Index * width + slot.X * width;
             float x = _currentStreetReversed ? streetWidth - localX : localX;
             float y = slot.OnBuilding ? buildingHeight + 0.2f : 0.35f;
+            if (prefabIndex == 1) y = Mathf.Max(y, 3f); // flying enemies begin visibly above the street
             Vector3 position = new Vector3(x, y, 0f);
             object result = create.Invoke(_enemySpawner, new object[] { Enum.ToObject(enemyType, prefabIndex), position });
             GameObject enemyObject = result as GameObject;
@@ -457,16 +651,6 @@ public class WorldNetworkDemo : MonoBehaviour
                 null, new[] { typeof(Transform) }, null);
             if (setTarget != null) { setTarget.Invoke(component, new object[] { target }); return; }
         }
-    }
-
-    static Type FindLoadedType(string name)
-    {
-        foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
-        {
-            Type type = assembly.GetType(name);
-            if (type != null) return type;
-        }
-        return null;
     }
 
     void BuildMap(Int2 center)
@@ -670,6 +854,9 @@ public class WorldNetworkDemo : MonoBehaviour
     void OnDestroy()
     {
         ClearStreetEnemies();
+        foreach (List<GameObject> pickups in _streetPowerUpsByChunk.Values)
+            foreach (GameObject pickup in pickups) if (pickup != null) Destroy(pickup);
+        _streetPowerUpsByChunk.Clear();
         if (_ownsPlayer && _player != null)
         {
             if (Application.isPlaying) Destroy(_player.gameObject);
