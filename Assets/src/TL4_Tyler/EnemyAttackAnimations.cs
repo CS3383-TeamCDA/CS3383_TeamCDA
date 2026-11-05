@@ -10,6 +10,8 @@ public class EnemyAttackAnimations : MonoBehaviour
     [SerializeField, Min(0)] private float closeAttackRange = 1.5f;
     [SerializeField, Min(0)] private float farAttackRange = 8;
     [SerializeField, Min(.1f)] private float meleeCooldown = 1;
+    [SerializeField, Range(0, 1)] private float meleeHitNormalizedTime = .5f;
+    [SerializeField] private LayerMask meleeBlockingLayers = 1 << 3;
     [SerializeField, Min(.1f)] private float rangedCooldown = 1.3f;
     [Header("Melee follow-up")]
     [SerializeField, Range(0, 1)] private float secondMeleeChance = .3f;
@@ -27,6 +29,10 @@ public class EnemyAttackAnimations : MonoBehaviour
     private Rigidbody2D body;
     private float nextAttackTime, phaseEndsAt;
     private bool followUpPending, hasUsedMelee;
+    private bool meleeHitPending;
+    private float meleeHitAt;
+    private int meleeDamage;
+    private Transform meleeTarget;
     private EnemyAttackAnimation followUpAttack;
     public EnemyAttackPhase Phase { get; private set; }
     public bool IsMovementLocked => isActiveAndEnabled && Phase != EnemyAttackPhase.Ready && !enemy.IsDefeated;
@@ -44,12 +50,21 @@ public class EnemyAttackAnimations : MonoBehaviour
     private void OnEnable() { enemy.Defeated += OnDefeated; }
     private void OnDisable() { enemy.Defeated -= OnDefeated; CancelSequence(); }
     private void OnDefeated(EnemyBase _) { CancelSequence(); }
-    private void CancelSequence() { Phase = EnemyAttackPhase.Ready; followUpPending = false; }
+    private void CancelSequence()
+    {
+        Phase = EnemyAttackPhase.Ready;
+        followUpPending = false;
+        meleeHitPending = false;
+        meleeTarget = null;
+    }
 
     private void Update()
     {
         if (enemy.IsDefeated) return;
         if (Phase == EnemyAttackPhase.Ready) { TryTriggerAttack(); return; }
+        TryApplyMeleeDamage();
+        // Damage listeners may disable or defeat this enemy synchronously.
+        if (!isActiveAndEnabled || enemy.IsDefeated || Phase == EnemyAttackPhase.Ready) return;
         StopHorizontalMovement();
         if (Phase == EnemyAttackPhase.FollowUpPause && (!ValidTarget() || SelectAttack() != followUpAttack))
         {
@@ -92,6 +107,28 @@ public class EnemyAttackAnimations : MonoBehaviour
 
     private bool ValidTarget() => enemy.HasAggro && enemy.AggroTarget.gameObject.activeInHierarchy;
 
+    /// <summary>Resolves one scheduled melee strike; returns true only when damage is applied.</summary>
+    public bool TryApplyMeleeDamage()
+    {
+        if (!isActiveAndEnabled || enemy.IsDefeated || Phase != EnemyAttackPhase.Attacking ||
+            !meleeHitPending || Time.time < meleeHitAt) return false;
+
+        // A miss consumes the strike too: moving back into range cannot replay it.
+        meleeHitPending = false;
+        if (!enemy.CanMelee || !enemy.CanAttackTarget || !ValidTarget() ||
+            meleeTarget == null || enemy.AggroTarget != meleeTarget || meleeDamage <= 0 ||
+            Vector2.Distance(transform.position, meleeTarget.position) > Mathf.Max(0, closeAttackRange))
+            return false;
+        var health = meleeTarget.GetComponentInParent<PlayerHealth>();
+        if (health == null || !health.isActiveAndEnabled || health.CurrentHealth <= 0 ||
+            health.transform.IsChildOf(transform)) return false;
+        if (Physics2D.Linecast(transform.position, meleeTarget.position, meleeBlockingLayers).collider != null)
+            return false;
+
+        health.TakeDamage(meleeDamage);
+        return true;
+    }
+
     private EnemyAttackAnimation SelectAttack()
     {
         if (!enemy.CanAttackTarget) return EnemyAttackAnimation.None;
@@ -129,7 +166,12 @@ public class EnemyAttackAnimations : MonoBehaviour
         if (!triggered) return false;
         if (attack == EnemyAttackAnimation.Melee) hasUsedMelee = true;
         Phase = EnemyAttackPhase.Attacking;
-        phaseEndsAt = Time.time + animationDriver.AttackDuration(attack);
+        float duration = animationDriver.AttackDuration(attack);
+        phaseEndsAt = Time.time + duration;
+        meleeHitPending = attack == EnemyAttackAnimation.Melee;
+        meleeTarget = meleeHitPending ? enemy.AggroTarget : null;
+        meleeDamage = meleeHitPending ? enemy.MeleeDamage : 0;
+        meleeHitAt = Time.time + duration * Mathf.Clamp01(meleeHitNormalizedTime);
         nextAttackTime = Time.time + Mathf.Max(.1f, attack == EnemyAttackAnimation.Melee ? meleeCooldown : rangedCooldown);
         StopHorizontalMovement();
         AttackTriggered?.Invoke(attack);

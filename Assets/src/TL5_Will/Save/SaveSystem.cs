@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading;
 using UnityEngine;
 
 namespace EscapeThe90s.MetaProgression
@@ -58,14 +59,7 @@ namespace EscapeThe90s.MetaProgression
                 File.WriteAllText(tempPath, json);
 
                 // 2. Swap it in atomically (replace if a save already exists).
-                if (File.Exists(path))
-                {
-                    File.Replace(tempPath, path, null);
-                }
-                else
-                {
-                    File.Move(tempPath, path);
-                }
+                Swap(tempPath, path);
             }
             catch (Exception e) when (e is IOException ||
                                       e is UnauthorizedAccessException ||
@@ -137,6 +131,23 @@ namespace EscapeThe90s.MetaProgression
             catch (Exception)
             {
                 // Best-effort cleanup only; the original error is what gets reported.
+            }
+        }
+
+        private static void Swap(string tempPath, string path)
+        {
+            for (int attempt = 0; ; attempt++)
+            {
+                try
+                {
+                    if (File.Exists(path)) File.Replace(tempPath, path, null);
+                    else File.Move(tempPath, path);
+                    return;
+                }
+                catch (IOException) when (attempt < 4)
+                {
+                    Thread.Sleep(25); // transient lock; wait and retry
+                }
             }
         }
     }
