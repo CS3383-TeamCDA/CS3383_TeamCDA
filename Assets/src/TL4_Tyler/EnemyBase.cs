@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.Serialization;
+using EscapeThe90s.PowerUps;
 
 public enum EnemyMovementType { Static, Flying, Ground }
 public enum EnemyAttackMode { MeleeOnly, RangedOnly, Both }
@@ -9,6 +10,8 @@ public enum EnemyAwareness { Low, High }
 
 public abstract class EnemyBase : MonoBehaviour
 {
+    private static readonly PowerUpType[] dropTypes = (PowerUpType[])Enum.GetValues(typeof(PowerUpType));
+
     [Header("Combat identity")]
     [SerializeField] private EnemyAttackMode attackMode = EnemyAttackMode.Both;
     [SerializeField, Min(1)] private int level = 1;
@@ -19,6 +22,12 @@ public abstract class EnemyBase : MonoBehaviour
     [SerializeField, Min(0)] private int baseCoins = 5;
     [SerializeField, Min(0)] private int baseMeleeDamage = 10;
     [SerializeField, Min(0)] private int baseRangedDamage = 8;
+
+    [Header("Power-up drops")]
+    [Tooltip("Chance of one random power-up on defeat: 0 = never, 1 = always.")]
+    [SerializeField, Range(0f, 1f)] private float powerUpDropChance = .2f;
+    [Tooltip("Optional. If empty, uses the active PowerUpManager in the scene.")]
+    [SerializeField] private PowerUpManager powerUpManager;
 
     [Header("Added per level")]
     [SerializeField, Min(0)] private int healthPerLevel = 20;
@@ -212,8 +221,24 @@ public abstract class EnemyBase : MonoBehaviour
         if (hp == 0)
         {
             defeated = true;
+            TryDropPowerUp();
             Defeated?.Invoke(this);
         }
         return defeated;
+    }
+
+    private void TryDropPowerUp()
+    {
+        if (powerUpDropChance <= 0f) return;
+        if (powerUpDropChance < 1f && UnityEngine.Random.value >= powerUpDropChance) return;
+
+        if (powerUpManager == null)
+            powerUpManager = FindFirstObjectByType<PowerUpManager>();
+
+        if (powerUpManager != null && powerUpManager.isActiveAndEnabled)
+        {
+            PowerUpType type = dropTypes[UnityEngine.Random.Range(0, dropTypes.Length)];
+            powerUpManager.SpawnPowerUp(transform.position, type);
+        }
     }
 }
