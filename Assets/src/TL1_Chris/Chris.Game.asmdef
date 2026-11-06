@@ -4,7 +4,9 @@
     "references": [
         "UnityEngine.UI",
         "Unity.TextMeshPro",
-        "StateLogic"
+        "StateLogic",
+        "Unity.InputSystem",
+        "EscapeThe90s.Contracts"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

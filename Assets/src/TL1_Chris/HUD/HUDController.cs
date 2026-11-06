@@ -8,6 +8,7 @@ namespace EscapeThe90s.HUD
         // [SerializeField] private GameStateManager stateManager;
         [SerializeField] private MainMenuPanel mainMenuPanel;
         [SerializeField] private HUDPanel hudPanel;
+        [SerializeField] private PausePanel pausePanel;
 
         [SerializeField] private int startingHealth = 100;
         [SerializeField] private int startingScore = 0;
@@ -20,6 +21,13 @@ namespace EscapeThe90s.HUD
 
         private void Awake()
         {
+            // PauseMenu is nested inside the HUD prefab, so find it there if the field was left empty.
+            // 'true' includes inactive children, since the panel starts hidden.
+            if (pausePanel == null)
+            {
+                pausePanel = GetComponentInChildren<PausePanel>(true);
+            }
+
             Initialize(startingHealth, startingScore, startingCurrency);
         }
 
@@ -106,9 +114,21 @@ namespace EscapeThe90s.HUD
 
         private void OnStateChange(GameState state)
         {
+            // The main menu is a separate prefab, so it can't be assigned on the HUD prefab. Find it in the scene.
+            // Look each time until found: it may be hidden (inactive) by other systems when the game starts.
+            if (mainMenuPanel == null)
+            {
+                mainMenuPanel = FindAnyObjectByType<MainMenuPanel>(FindObjectsInactive.Include);
+            }
+
             if (mainMenuPanel != null)
             {
                 mainMenuPanel.Hide();
+            }
+
+            if (pausePanel != null)
+            {
+                pausePanel.Hide();
             }
 
             hudPanel.Hide();
@@ -123,6 +143,18 @@ namespace EscapeThe90s.HUD
             else if (state is PlayingState)
             {
                 hudPanel.Show();
+            }
+            else if (state is PauseState)
+            {
+                // Gameplay HUD stays hidden while paused (doc Scenario 2, step 5a); values are kept.
+                if (pausePanel != null)
+                {
+                    pausePanel.Show();
+                }
+                else
+                {
+                    Debug.LogWarning("HUDController: no PausePanel assigned or found under this HUD, so nothing is shown while paused.", this);
+                }
             }
         }
 

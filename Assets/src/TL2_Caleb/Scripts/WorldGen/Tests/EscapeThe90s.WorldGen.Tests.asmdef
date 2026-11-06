@@ -1,0 +1,14 @@
+{
+    "name": "EscapeThe90s.WorldGen.Tests",
+    "rootNamespace": "EscapeThe90s.WorldGen.Tests",
+    "references": [ "EscapeThe90s.WorldGen.Core", "EscapeThe90s.Contracts", "UnityEngine.TestRunner", "UnityEditor.TestRunner" ],
+    "includePlatforms": [ "Editor" ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [ "nunit.framework.dll" ],
+    "autoReferenced": false,
+    "defineConstraints": [ "UNITY_INCLUDE_TESTS" ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

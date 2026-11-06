@@ -1,7 +1,7 @@
 {
     "name": "Joe.Game",
     "rootNamespace": "",
-    "references": [],
+    "references": [ "EscapeThe90s.Contracts" ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

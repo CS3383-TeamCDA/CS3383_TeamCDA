@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using EscapeThe90s.State;
 using EscapeThe90s.GameStates;
 
@@ -13,6 +14,7 @@ namespace EscapeThe90s
         private StateMachine<GameState> machine = new StateMachine<GameState>();
         public GameState CurrentState => machine.CurrentState;
         public GameState PreviousState => machine.PreviousState;
+        private bool isRestarting;
 
         #endregion
 
@@ -93,10 +95,42 @@ namespace EscapeThe90s
 
         public void RequestRestart()
         {
-            if (CurrentState is GameOverState || CurrentState is PauseState)
+            if (isRestarting || !(CurrentState is GameOverState || CurrentState is PauseState))
             {
-                machine.ChangeState(new PlayingState());
+                return;
             }
+
+            // Reloading the scene resets the runtime (level, player, enemies, HUD start values).
+            // This manager survives the reload (DontDestroyOnLoad) and enters PlayingState once the new scene is loaded,
+            // so only the fresh scene's objects receive the state change.
+            isRestarting = true;
+            SceneManager.sceneLoaded += OnRestartSceneLoaded;
+            ReloadActiveScene();
+        }
+
+        private void OnRestartSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            SceneManager.sceneLoaded -= OnRestartSceneLoaded;
+            isRestarting = false;
+            machine.ChangeState(new PlayingState());
+        }
+
+        private static void ReloadActiveScene()
+        {
+            Scene active = SceneManager.GetActiveScene();
+            if (active.buildIndex >= 0)
+            {
+                SceneManager.LoadScene(active.buildIndex);
+                return;
+            }
+
+#if UNITY_EDITOR
+            // Scenes not added to Build Settings can still be reloaded while testing in the Editor.
+            UnityEditor.SceneManagement.EditorSceneManager.LoadSceneInPlayMode(
+                active.path, new LoadSceneParameters(LoadSceneMode.Single));
+#else
+            Debug.LogError($"GameStateManager: scene '{active.name}' is not in Build Settings, so it can't be reloaded for restart.");
+#endif
         }
 
         public void RequestQuit()

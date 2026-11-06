@@ -1,4 +1,4 @@
 {
 	"name": "TL4Assembly",
-	"references": ["TL6Assembly", "Joe.Game", "Unity.InputSystem", "Unity.ugui"]
+	"references": ["TL6Assembly", "Joe.Game", "Unity.InputSystem", "Unity.ugui", "EscapeThe90s.Contracts"]
 }

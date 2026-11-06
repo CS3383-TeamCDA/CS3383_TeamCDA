@@ -1,9 +1,12 @@
 using UnityEngine;
 using TL2_Dependencies;
+using EscapeThe90s.Dependencies.Unity;
 
-public class PlayerSpawnNotifier : DependentMonoBehaviour,
-    IDependent<IGameStateEventPublisher>
+public class PlayerSpawnNotifier : DependencyBehaviour,
+    EscapeThe90s.Contracts.IDependent<IGameStateEventPublisher>
 {
+    private IGameStateEventPublisher _publisher;
+
     
     public void Inject(IGameStateEventPublisher publisher)
     {
@@ -12,7 +15,8 @@ public class PlayerSpawnNotifier : DependentMonoBehaviour,
             Debug.LogError("PlayerSpawnNotifier: Missing event publisher.");
             return;
         }
-
-        publisher.NotifyPlayerSpawned(transform);
+        _publisher = publisher;
     }
+
+    protected override void OnSetupComplete() => _publisher?.NotifyPlayerSpawned(transform);
 }

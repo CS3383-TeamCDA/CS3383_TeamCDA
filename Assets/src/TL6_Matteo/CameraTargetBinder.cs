@@ -2,9 +2,10 @@
 using UnityEngine;
 using Unity.Cinemachine;
 using TL2_Dependencies;
+using EscapeThe90s.Dependencies.Unity;
 
-public class CameraTargetBinder : DependentMonoBehaviour,
-    IDependent<IGameStateEventPublisher>
+public class CameraTargetBinder : DependencyBehaviour,
+    EscapeThe90s.Contracts.IDependent<IGameStateEventPublisher>
 {
     [SerializeField] private CinemachineCamera _cinemachineCamera;
 

@@ -1,0 +1,19 @@
+{
+  "name": "EscapeThe90s.WorldGen.Demo.Editor",
+  "rootNamespace": "EscapeThe90s.WorldGen.Demo.Editor",
+  "references": [
+    "EscapeThe90s.WorldGen.Core",
+    "EscapeThe90s.WorldGen.Unity",
+    "EscapeThe90s.WorldGen.Demo",
+    "EscapeThe90s.Contracts"
+  ],
+  "includePlatforms": [ "Editor" ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

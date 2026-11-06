@@ -1,0 +1,14 @@
+{
+    "name": "EscapeThe90s.Contracts",
+    "rootNamespace": "EscapeThe90s.Contracts",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": true
+}
