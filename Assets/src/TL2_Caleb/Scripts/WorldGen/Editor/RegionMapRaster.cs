@@ -3,7 +3,7 @@ using System;
 namespace EscapeThe90s.WorldGen
 {
     /// <summary>
-    /// Draws a square window of the region map as RGBA pixels (engine-free, so the CoreRunner and the Unity window share it).
+    /// Draws a square window of the region map as RGBA pixels for the Unity editor map window.
     /// Row 0 is the BOTTOM of the map (world y grows upward), which is Unity's texture convention.
     /// Legend: pastel colour = region, darker nodes = region borders, white dot = site, green = surface link,
     /// cyan = subway station, red = origin node (0,0).

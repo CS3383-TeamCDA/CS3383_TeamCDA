@@ -102,8 +102,8 @@ namespace EscapeThe90s.WorldGen
                 ChunkCount = chunkCount, Biome = biome, Allowed = allowed,
                 Required = required, DifficultyTier = difficultyTier
             };
-            LevelService level = settings.CreateService();
-            BuildLayout(level.GetStreet(request), false);
+            WorldNetwork world = settings.CreateWorldNetwork();
+            BuildLayout(world.GetStreet(request), false);
         }
 
         /// <summary>Displays an already-generated world street from the region network.</summary>

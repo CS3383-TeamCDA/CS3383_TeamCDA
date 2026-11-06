@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
 using EscapeThe90s.WorldGen;
+using EscapeThe90s.WorldGen.Demo;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+namespace EscapeThe90s.WorldGen.Demo.Editor
+{
 public static class IntegratedWorldDemoSetup
 {
     const string SourceScenePath = "Assets/Scenes/TL5_Will/GameDemo.unity";
@@ -128,4 +131,5 @@ public static class IntegratedWorldDemoSetup
         scenes.Insert(0, new EditorBuildSettingsScene(scenePath, true));
         EditorBuildSettings.scenes = scenes.ToArray();
     }
+}
 }

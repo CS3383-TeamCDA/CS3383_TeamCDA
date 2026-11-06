@@ -1,7 +1,10 @@
 using EscapeThe90s.WorldGen;
+using EscapeThe90s.WorldGen.Demo;
 using UnityEditor;
 using UnityEngine;
 
+namespace EscapeThe90s.WorldGen.Demo.Editor
+{
 public static class WorldNetworkDemoSetup
 {
     [MenuItem("Escape the 90s/Create World Network Demo")]
@@ -86,4 +89,5 @@ public static class WorldNetworkDemoSetup
             AssetDatabase.LoadAssetAtPath<GameObject>("Assets/prefabs/TL4_Tyler/Enemy_Sprites/Level1_Turret/Level1_Turret.prefab")
         };
     }
+}
 }

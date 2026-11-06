@@ -57,170 +57,239 @@ namespace EscapeThe90s.WorldGen
         public static RegionStreets Build(RegionMap map, Int2 id)
         {
             ulong seed = map.Seed;
-            int r = WorldConstants.RegionSizeNodes;
+            RegionGrid grid = BuildGrid(map, id);
+            var terminals = new SortedSet<int>();
+            var linkNodes = new List<Int2>();
+            var subwayNodes = new List<Int2>();
+            var external = new List<StreetEdge>();
+            CollectTerminals(map, id, grid.Index, terminals, linkNodes, subwayNodes, external);
 
-            // --- nodes of the region and their grid neighbours ---
+            var rng = DeterministicRng.Create(seed, StableId.ForRegion(id), Salt.Interior);
+            List<int> arcades = SelectArcades(ref rng, grid, terminals);
+            var inNet = new bool[grid.Nodes.Count];
+            var edgeSet = new HashSet<long>();
+            var edges = new List<int[]>();
+            int unreachable = ConnectTerminals(seed, grid, terminals, arcades, inNet, edgeSet, edges);
+            Densify(ref rng, grid, arcades, inNet, edgeSet, edges);
+            return Emit(id, grid, arcades, inNet, edges, external, linkNodes, subwayNodes, unreachable);
+        }
+
+        sealed class RegionGrid
+        {
+            public readonly List<Int2> Nodes;
+            public readonly Dictionary<Int2, int> Index;
+            public readonly int[] Neighbors;
+            public readonly bool[] Border;
+
+            public RegionGrid(List<Int2> nodes, Dictionary<Int2, int> index, int[] neighbors, bool[] border)
+            { Nodes = nodes; Index = index; Neighbors = neighbors; Border = border; }
+        }
+
+        static RegionGrid BuildGrid(RegionMap map, Int2 id)
+        {
+            int r = WorldConstants.RegionSizeNodes;
             var nodes = new List<Int2>();
             var index = new Dictionary<Int2, int>();
             for (int y = (id.Y - 1) * r; y < (id.Y + 2) * r; y++)
                 for (int x = (id.X - 1) * r; x < (id.X + 2) * r; x++)
                 {
-                    var n = new Int2(x, y);
-                    if (!map.RegionAt(n).Equals(id)) continue;
-                    index[n] = nodes.Count;
-                    nodes.Add(n);
-                }
-            int N = nodes.Count;
-            var nbr = new int[N * 4];
-            var border = new bool[N];
-            for (int i = 0; i < N; i++)
-                for (int d = 0; d < 4; d++)
-                {
-                    int j;
-                    if (index.TryGetValue(new Int2(nodes[i].X + Dirs[d].X, nodes[i].Y + Dirs[d].Y), out j)) nbr[i * 4 + d] = j;
-                    else { nbr[i * 4 + d] = -1; border[i] = true; }
+                    var node = new Int2(x, y);
+                    if (!map.RegionAt(node).Equals(id)) continue;
+                    index[node] = nodes.Count;
+                    nodes.Add(node);
                 }
 
-            // --- terminals ---
-            var terminals = new SortedSet<int>();
-            var linkNodes = new List<Int2>();
-            var subwayNodes = new List<Int2>();
-            var external = new List<StreetEdge>();
-            RegionInfo info = map.GetRegion(id);
-            foreach (Int2 nb in info.Neighbors)
-            {
-                RegionLink link = map.GetLink(id, nb);
-                bool iAmA = link.A.Equals(id);
-                foreach (BorderEdge e in link.Surface)
+            var neighbors = new int[nodes.Count * 4];
+            var border = new bool[nodes.Count];
+            for (int i = 0; i < nodes.Count; i++)
+                for (int d = 0; d < 4; d++)
                 {
-                    Int2 mine = iAmA ? e.From : e.To, other = iAmA ? e.To : e.From;
+                    int neighbor;
+                    if (index.TryGetValue(new Int2(nodes[i].X + Dirs[d].X, nodes[i].Y + Dirs[d].Y), out neighbor))
+                        neighbors[i * 4 + d] = neighbor;
+                    else { neighbors[i * 4 + d] = -1; border[i] = true; }
+                }
+            return new RegionGrid(nodes, index, neighbors, border);
+        }
+
+        static void CollectTerminals(RegionMap map, Int2 id, Dictionary<Int2, int> index,
+            SortedSet<int> terminals, List<Int2> linkNodes, List<Int2> subwayNodes, List<StreetEdge> external)
+        {
+            RegionInfo info = map.GetRegion(id);
+            foreach (Int2 neighbor in info.Neighbors)
+            {
+                RegionLink link = map.GetLink(id, neighbor);
+                bool regionIsA = link.A.Equals(id);
+                foreach (BorderEdge edge in link.Surface)
+                {
+                    Int2 mine = regionIsA ? edge.From : edge.To;
+                    Int2 other = regionIsA ? edge.To : edge.From;
                     terminals.Add(index[mine]);
                     linkNodes.Add(mine);
                     external.Add(new StreetEdge(mine, other, true));
                 }
-                if (link.HasSubway)
-                {
-                    Int2 st = iAmA ? link.StationA : link.StationB;
-                    terminals.Add(index[st]);
-                    subwayNodes.Add(st);
-                }
+                if (!link.HasSubway) continue;
+                Int2 station = regionIsA ? link.StationA : link.StationB;
+                terminals.Add(index[station]);
+                subwayNodes.Add(station);
             }
+        }
 
-            var rng = DeterministicRng.Create(seed, StableId.ForRegion(id), Salt.Interior);
-
-            // arcades: 2-5 interior nodes, at least 3 apart
+        static List<int> SelectArcades(ref DeterministicRng rng, RegionGrid grid, SortedSet<int> terminals)
+        {
             var interior = new List<int>();
-            for (int i = 0; i < N; i++) if (!border[i]) interior.Add(i);
+            for (int i = 0; i < grid.Nodes.Count; i++) if (!grid.Border[i]) interior.Add(i);
             int wanted = rng.Range(2, 6);
             var arcades = new List<int>();
             for (int k = 0; k < wanted && interior.Count > 0; k++)
                 for (int attempt = 0; attempt < 40; attempt++)
                 {
-                    int cand = interior[rng.Next(interior.Count)];
-                    bool ok = true;
-                    foreach (int a in arcades) if (Manhattan(nodes[a], nodes[cand]) < 3) { ok = false; break; }
-                    if (!ok) continue;
-                    arcades.Add(cand);
-                    terminals.Add(cand);
+                    int candidate = interior[rng.Next(interior.Count)];
+                    bool valid = true;
+                    foreach (int arcade in arcades)
+                        if (Manhattan(grid.Nodes[arcade], grid.Nodes[candidate]) < 3) { valid = false; break; }
+                    if (!valid) continue;
+                    arcades.Add(candidate);
+                    terminals.Add(candidate);
                     break;
                 }
+            return arcades;
+        }
 
-            // --- connect all terminals (Prim over cost-weighted shortest paths) ---
-            var inNet = new bool[N];
-            var edgeSet = new HashSet<long>();
-            var edges = new List<int[]>();       // [i, j]
+        static int ConnectTerminals(ulong seed, RegionGrid grid, SortedSet<int> terminals, List<int> arcades,
+            bool[] inNet, HashSet<long> edgeSet, List<int[]> edges)
+        {
             int unreachable = 0;
-            if (terminals.Count > 0)
+            if (terminals.Count == 0) return unreachable;
+            int start = arcades.Count > 0 ? arcades[0] : First(terminals);
+            inNet[start] = true;
+            var remaining = new SortedSet<int>(terminals);
+            remaining.Remove(start);
+            var distances = new int[grid.Nodes.Count];
+            var previous = new int[grid.Nodes.Count];
+            var heap = new List<long>();
+            while (remaining.Count > 0)
             {
-                int start = arcades.Count > 0 ? arcades[0] : First(terminals);
-                inNet[start] = true;
-                var remaining = new SortedSet<int>(terminals);
-                remaining.Remove(start);
-                var dist = new int[N];
-                var prev = new int[N];
-                var heap = new List<long>();
-                while (remaining.Count > 0)
+                int found = FindNextTerminal(seed, grid, inNet, remaining, distances, previous, heap);
+                if (found < 0) { unreachable += remaining.Count; break; }
+                AddPathToNetwork(found, grid.Nodes.Count, previous, inNet, remaining, edgeSet, edges);
+            }
+            return unreachable;
+        }
+
+        static int FindNextTerminal(ulong seed, RegionGrid grid, bool[] inNet, SortedSet<int> remaining,
+            int[] distances, int[] previous, List<long> heap)
+        {
+            for (int i = 0; i < grid.Nodes.Count; i++) { distances[i] = int.MaxValue; previous[i] = -1; }
+            heap.Clear();
+            for (int i = 0; i < grid.Nodes.Count; i++) if (inNet[i]) { distances[i] = 0; Push(heap, i); }
+            while (heap.Count > 0)
+            {
+                long key = Pop(heap);
+                int cost = (int)(key >> 20), node = (int)(key & 0xFFFFF);
+                if (cost > distances[node]) continue;
+                if (remaining.Contains(node)) return node;
+                for (int d = 0; d < 4; d++)
                 {
-                    for (int i = 0; i < N; i++) { dist[i] = int.MaxValue; prev[i] = -1; }
-                    heap.Clear();
-                    for (int i = 0; i < N; i++) if (inNet[i]) { dist[i] = 0; Push(heap, i); }
-                    int found = -1;
-                    while (heap.Count > 0)
-                    {
-                        long key = Pop(heap);
-                        int cost = (int)(key >> 20), u = (int)(key & 0xFFFFF);
-                        if (cost > dist[u]) continue;
-                        if (remaining.Contains(u)) { found = u; break; }
-                        for (int d = 0; d < 4; d++)
-                        {
-                            int v = nbr[u * 4 + d];
-                            if (v < 0) continue;
-                            int nc = cost + EdgeCost(seed, nodes, border, u, v);
-                            if (nc < dist[v]) { dist[v] = nc; prev[v] = u; Push(heap, v, nc); }
-                        }
-                    }
-                    if (found < 0) { unreachable += remaining.Count; break; }
-                    int cur = found;
-                    while (!inNet[cur])
-                    {
-                        int p = prev[cur];
-                        AddEdge(edgeSet, edges, cur, p, N);
-                        inNet[cur] = true;
-                        remaining.Remove(cur);
-                        cur = p;
-                    }
-                    remaining.Remove(found);
+                    int neighbor = grid.Neighbors[node * 4 + d];
+                    if (neighbor < 0) continue;
+                    int nextCost = cost + EdgeCost(seed, grid.Nodes, grid.Border, node, neighbor);
+                    if (nextCost >= distances[neighbor]) continue;
+                    distances[neighbor] = nextCost;
+                    previous[neighbor] = node;
+                    Push(heap, neighbor, nextCost);
                 }
             }
+            return -1;
+        }
 
-            // --- loops and dense blocks, strongest around arcades; every addition touches the network, so it stays connected ---
-            var dArc = new int[N];
-            for (int i = 0; i < N; i++)
+        static void AddPathToNetwork(int found, int nodeCount, int[] previous, bool[] inNet,
+            SortedSet<int> remaining, HashSet<long> edgeSet, List<int[]> edges)
+        {
+            int current = found;
+            while (!inNet[current])
             {
-                int best = 1000;
-                foreach (int a in arcades) best = Math.Min(best, Manhattan(nodes[i], nodes[a]));
-                dArc[i] = best;
+                int parent = previous[current];
+                AddEdge(edgeSet, edges, current, parent, nodeCount);
+                inNet[current] = true;
+                remaining.Remove(current);
+                current = parent;
             }
+            remaining.Remove(found);
+        }
+
+        static void Densify(ref DeterministicRng rng, RegionGrid grid, List<int> arcades,
+            bool[] inNet, HashSet<long> edgeSet, List<int[]> edges)
+        {
+            int[] distanceToArcade = DistancesToArcades(grid.Nodes, arcades);
             for (int sweep = 0; sweep < 2; sweep++)
             {
-                var cand = new List<long>();
-                for (int i = 0; i < N; i++)
-                    for (int d = 0; d < 4; d += 2)            // right and up neighbours only: each edge once
-                    {
-                        int j = nbr[i * 4 + d];
-                        if (j < 0 || edgeSet.Contains(Key(i, j, N))) continue;
-                        int dm = Math.Min(dArc[i], dArc[j]);
-                        cand.Add(((long)dm << 40) | ((long)i << 20) | (long)j);
-                    }
-                cand.Sort();
-                foreach (long c in cand)
-                {
-                    int i = (int)((c >> 20) & 0xFFFFF), j = (int)(c & 0xFFFFF), dm = (int)(c >> 40);
-                    bool a = inNet[i], b = inNet[j];
-                    if (!a && !b) continue;
-                    if (a != b && dm > 2) continue;           // spurs only inside a dense block
-                    int pct = dm <= 2 ? 80 : (dm <= 4 ? 45 : 22);
-                    if (border[i] || border[j]) pct /= 2;
-                    if (!rng.ChancePercent(pct)) continue;
-                    AddEdge(edgeSet, edges, i, j, N);
-                    inNet[i] = true; inNet[j] = true;
-                }
+                var candidates = new List<long>();
+                CollectDensityCandidates(grid, distanceToArcade, edgeSet, candidates);
+                candidates.Sort();
+                foreach (long candidate in candidates)
+                    TryAddDenseEdge(candidate, ref rng, grid.Nodes.Count, grid.Border, inNet, edgeSet, edges);
             }
+        }
 
-            // --- result ---
+        static int[] DistancesToArcades(List<Int2> nodes, List<int> arcades)
+        {
+            var distances = new int[nodes.Count];
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                int best = 1000;
+                foreach (int arcade in arcades) best = Math.Min(best, Manhattan(nodes[i], nodes[arcade]));
+                distances[i] = best;
+            }
+            return distances;
+        }
+
+        static void CollectDensityCandidates(RegionGrid grid, int[] distanceToArcade, HashSet<long> edgeSet, List<long> candidates)
+        {
+            for (int i = 0; i < grid.Nodes.Count; i++)
+                for (int d = 0; d < 4; d += 2)
+                {
+                    int j = grid.Neighbors[i * 4 + d];
+                    if (j < 0 || edgeSet.Contains(Key(i, j, grid.Nodes.Count))) continue;
+                    int distance = Math.Min(distanceToArcade[i], distanceToArcade[j]);
+                    candidates.Add(((long)distance << 40) | ((long)i << 20) | (long)j);
+                }
+        }
+
+        static void TryAddDenseEdge(long candidate, ref DeterministicRng rng, int nodeCount, bool[] border,
+            bool[] inNet, HashSet<long> edgeSet, List<int[]> edges)
+        {
+            int i = (int)((candidate >> 20) & 0xFFFFF), j = (int)(candidate & 0xFFFFF);
+            int distance = (int)(candidate >> 40);
+            bool a = inNet[i], b = inNet[j];
+            if (!a && !b) return;
+            if (a != b && distance > 2) return;
+            int percent = distance <= 2 ? 80 : (distance <= 4 ? 45 : 22);
+            if (border[i] || border[j]) percent /= 2;
+            if (!rng.ChancePercent(percent)) return;
+            AddEdge(edgeSet, edges, i, j, nodeCount);
+            inNet[i] = true;
+            inNet[j] = true;
+        }
+
+        static RegionStreets Emit(Int2 id, RegionGrid grid, List<int> arcades, bool[] inNet, List<int[]> edges,
+            List<StreetEdge> external, List<Int2> linkNodes, List<Int2> subwayNodes, int unreachable)
+        {
             var result = new RegionStreets { RegionId = id, Unreachable = unreachable };
-            var outNodes = new List<Int2>();
-            for (int i = 0; i < N; i++) if (inNet[i]) outNodes.Add(nodes[i]);
-            outNodes.Sort();
-            result.Nodes = outNodes.ToArray();
+            var outputNodes = new List<Int2>();
+            for (int i = 0; i < grid.Nodes.Count; i++) if (inNet[i]) outputNodes.Add(grid.Nodes[i]);
+            outputNodes.Sort();
+            result.Nodes = outputNodes.ToArray();
 
-            var outEdges = new List<StreetEdge>();
-            foreach (int[] e in edges) outEdges.Add(new StreetEdge(nodes[e[0]], nodes[e[1]], false));
-            outEdges.AddRange(external);
-            outEdges.Sort((x, y) => { int c = x.A.CompareTo(y.A); return c != 0 ? c : x.B.CompareTo(y.B); });
-            result.Edges = outEdges.ToArray();
+            var outputEdges = new List<StreetEdge>();
+            foreach (int[] edge in edges) outputEdges.Add(new StreetEdge(grid.Nodes[edge[0]], grid.Nodes[edge[1]], false));
+            outputEdges.AddRange(external);
+            outputEdges.Sort((x, y) => { int c = x.A.CompareTo(y.A); return c != 0 ? c : x.B.CompareTo(y.B); });
+            result.Edges = outputEdges.ToArray();
 
-            var arcadeNodes = new List<Int2>(); foreach (int a in arcades) arcadeNodes.Add(nodes[a]); arcadeNodes.Sort();
+            var arcadeNodes = new List<Int2>();
+            foreach (int arcade in arcades) arcadeNodes.Add(grid.Nodes[arcade]);
+            arcadeNodes.Sort();
             result.ArcadeNodes = arcadeNodes.ToArray();
             linkNodes.Sort(); result.LinkNodes = linkNodes.ToArray();
             subwayNodes.Sort(); result.SubwayNodes = subwayNodes.ToArray();

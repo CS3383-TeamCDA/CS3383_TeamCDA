@@ -37,15 +37,15 @@ namespace EscapeThe90s.WorldGen
     /// Phase 8 facade joining the region street graph to generated StreetLayouts. All choices are keyed by
     /// seed and canonical edge identity, so loading streets or intersections in any order gives the same world.
     /// </summary>
-    public sealed class WorldNetwork
+    public sealed class WorldNetwork : ILevelQuery
     {
         readonly ulong _seed;
         readonly RegionMap _regions;
-        readonly LevelService _levels;
         readonly BiomeRules[] _biomes;
         readonly int _minStreetChunks;
         readonly int _maxStreetChunks;
         readonly Dictionary<StableId, WorldStreet> _streetCache = new Dictionary<StableId, WorldStreet>();
+        readonly Dictionary<StableId, StreetLayout> _layoutCache = new Dictionary<StableId, StreetLayout>();
 
         public WorldNetwork(ulong seed, BiomeRules[] biomes, int minStreetChunks = WorldConstants.MinStreetChunks, int maxStreetChunks = 6)
         {
@@ -55,11 +55,30 @@ namespace EscapeThe90s.WorldGen
             _minStreetChunks = Math.Max(WorldConstants.MinStreetChunks, minStreetChunks);
             _maxStreetChunks = Math.Max(_minStreetChunks, maxStreetChunks);
             _regions = new RegionMap(seed);
-            _levels = new LevelService(seed, biomes);
         }
 
         public ulong Seed { get { return _seed; } }
         public RegionMap Regions { get { return _regions; } }
+
+        /// <summary>Returns the generated layout for a request, cached by stable street id.</summary>
+        public StreetLayout GetStreet(StreetRequest request)
+        {
+            StreetLayout layout;
+            if (_layoutCache.TryGetValue(request.Id, out layout)) return layout;
+            layout = StreetGenerator.Generate(_seed, request, GetBiomeRules(request.Biome));
+            _layoutCache.Add(request.Id, layout);
+            return layout;
+        }
+
+        public BiomeRules GetBiomeRules(int biome)
+        {
+            return _biomes[((biome % _biomes.Length) + _biomes.Length) % _biomes.Length];
+        }
+
+        public int GetDifficultyTier(float worldDistanceFromOrigin)
+        {
+            return Difficulty.TierAt(worldDistanceFromOrigin);
+        }
 
         /// <summary>Returns the street joining adjacent nodes, or null if that edge is not part of the street network.</summary>
         public WorldStreet GetStreet(Int2 a, Int2 b)
@@ -76,7 +95,7 @@ namespace EscapeThe90s.WorldGen
             WorldStreet cached;
             if (_streetCache.TryGetValue(edge.Id, out cached)) return cached;
             StreetRequest request = MakeRequest(edge);
-            cached = new WorldStreet { Edge = edge, Request = request, Layout = _levels.GetStreet(request) };
+            cached = new WorldStreet { Edge = edge, Request = request, Layout = GetStreet(request) };
             _streetCache[edge.Id] = cached;
             return cached;
         }
@@ -144,6 +163,8 @@ namespace EscapeThe90s.WorldGen
             // Both end chunks remain safe by the StreetGenerator contract.
             int lengthRange = _maxStreetChunks - _minStreetChunks + 1;
             int chunks = _minStreetChunks + (int)(WorldHash.Combine(h, 0x81) % (ulong)lengthRange);
+            StreetKind kind = KindForLength(chunks);
+            float difficulty = DifficultyFor(edge);
             Int2 midpoint = new Int2(RegionMap.FloorDiv(edge.A.X + edge.B.X, 2), RegionMap.FloorDiv(edge.A.Y + edge.B.Y, 2));
             int biome = GetNearestArcade(midpoint).Biome;
             BuildingFlags allowed = BuildingFlags.PizzaParlor | BuildingFlags.WeaponStore | BuildingFlags.Bank |
@@ -156,14 +177,24 @@ namespace EscapeThe90s.WorldGen
                 required = new[] { BuildingType.SubwayEntrance };
             }
             return new StreetRequest { Id = id, ChunkCount = chunks, Biome = biome, Allowed = allowed,
-                Required = required, DifficultyTier = TierFor(edge) };
+                Required = required, DifficultyTier = DifficultyProgression.TierAtDifficulty(difficulty),
+                Difficulty = difficulty, Kind = kind };
         }
 
-        int TierFor(StreetEdge edge)
+        StreetKind KindForLength(int chunks)
+        {
+            if (_minStreetChunks == _maxStreetChunks) return StreetKind.Street;
+            float progress = (chunks - _minStreetChunks) / (float)(_maxStreetChunks - _minStreetChunks);
+            if (progress < 0.34f) return StreetKind.Alley;
+            if (progress < 0.67f) return StreetKind.Street;
+            return StreetKind.Avenue;
+        }
+
+        float DifficultyFor(StreetEdge edge)
         {
             int distance = Math.Max(Math.Abs(edge.A.X), Math.Abs(edge.A.Y));
             distance = Math.Max(distance, Math.Max(Math.Abs(edge.B.X), Math.Abs(edge.B.Y)));
-            return distance / WorldConstants.DistancePerTier;
+            return distance / (float)WorldConstants.DistancePerTier;
         }
 
         bool IsChosenArcadeStreet(StreetEdge edge)

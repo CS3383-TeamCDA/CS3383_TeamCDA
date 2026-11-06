@@ -161,33 +161,48 @@ namespace EscapeThe90s.WorldGen
             if (edges.Length == 0) return null;
 
             var rng = DeterministicRng.Create(_seed, key, Salt.Link);
+            link = CreateLink(a, b, edges, ref rng);
+            _links[key] = link;
+            return link;
+        }
+
+        RegionLink CreateLink(Int2 a, Int2 b, BorderEdge[] edges, ref DeterministicRng rng)
+        {
+            List<BorderEdge> surface = SelectSurfaceLinks(edges, ref rng);
+            surface.Sort(CompareEdges);
+            var link = new RegionLink { A = a, B = b, Surface = surface.ToArray() };
+            if (surface.Count == 0) SetForcedSubway(link, edges, ref rng);
+            return link;
+        }
+
+        static List<BorderEdge> SelectSurfaceLinks(BorderEdge[] edges, ref DeterministicRng rng)
+        {
             int desired = rng.PickWeighted(WorldConstants.LinkCountWeights);
             var chosen = new List<BorderEdge>();
             for (int k = 0; k < desired; k++)
-            {
                 for (int attempt = 0; attempt < 24; attempt++)
                 {
-                    BorderEdge e = edges[rng.Next(edges.Length)];
-                    bool tooClose = false;
-                    for (int c = 0; c < chosen.Count; c++)
-                        if (Manhattan(chosen[c].From, e.From) < WorldConstants.MinConnectionSpacing) { tooClose = true; break; }
-                    if (tooClose) continue;
-                    chosen.Add(e);
+                    BorderEdge candidate = edges[rng.Next(edges.Length)];
+                    if (IsTooCloseToChosen(candidate, chosen)) continue;
+                    chosen.Add(candidate);
                     break;
                 }
-            }
-            chosen.Sort(CompareEdges);
+            return chosen;
+        }
 
-            link = new RegionLink { A = a, B = b, Surface = chosen.ToArray() };
-            if (chosen.Count == 0)
-            {
-                BorderEdge e = edges[rng.Next(edges.Length)];   // forced subway link, stations at the edge's two ends
-                link.HasSubway = true;
-                link.StationA = e.From;
-                link.StationB = e.To;
-            }
-            _links[key] = link;
-            return link;
+        static bool IsTooCloseToChosen(BorderEdge candidate, List<BorderEdge> chosen)
+        {
+            for (int i = 0; i < chosen.Count; i++)
+                if (Manhattan(chosen[i].From, candidate.From) < WorldConstants.MinConnectionSpacing) return true;
+            return false;
+        }
+
+        static void SetForcedSubway(RegionLink link, BorderEdge[] edges, ref DeterministicRng rng)
+        {
+            BorderEdge forced = edges[rng.Next(edges.Length)];
+            link.HasSubway = true;
+            link.StationA = forced.From;
+            link.StationB = forced.To;
         }
 
         /// <summary>Hash of every street network in a square window of coarse cells.</summary>

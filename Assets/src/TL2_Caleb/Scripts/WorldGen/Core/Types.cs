@@ -7,6 +7,10 @@ namespace EscapeThe90s.WorldGen
         None = 0, Generic, PizzaParlor, WeaponStore, SubwayEntrance, TowerEntrance, Arcade, Bank
     }
 
+    public enum StreetKind { Alley = 0, Street, Avenue }
+    public enum ChunkKind { Ground = 0, Gap, Ramp, Plaza }
+    public enum TerrainStampKind { Flat = 0, Curb, StairsUp, StairsDown, Gap, Obstacle, Plaza }
+
     /// <summary>Which special buildings a street is allowed to roll for (your "flags").</summary>
     [Flags]
     public enum BuildingFlags
@@ -64,8 +68,10 @@ namespace EscapeThe90s.WorldGen
     {
         public StableId Id;
         public int Biome;
+        public StreetKind Kind;
         public int ChunkCount;
         public ChunkData[] Chunks;
+        public ChunkSpec[] ChunkSpecs;
         public int DroppedRequired;     // required buildings that did not fit (street too short)
         public GateKind Gate;           // always None until Milestone 3
 
@@ -76,6 +82,15 @@ namespace EscapeThe90s.WorldGen
             h = WorldHash.Combine(h, ChunkCount);
             h = WorldHash.Combine(h, DroppedRequired);
             for (int i = 0; i < Chunks.Length; i++) h = WorldHash.Combine(h, ChunkHash(Chunks[i]));
+            return h;
+        }
+
+        /// <summary>Hash including M6 chunk and stamp metadata. ContentHash remains the legacy pinned-content hash.</summary>
+        public ulong GenerationHash()
+        {
+            ulong h = WorldHash.Combine(ContentHash(), (int)Kind);
+            if (ChunkSpecs == null) return h;
+            foreach (ChunkSpec spec in ChunkSpecs) h = WorldHash.Combine(h, spec.MetadataHash());
             return h;
         }
 
@@ -111,5 +126,7 @@ namespace EscapeThe90s.WorldGen
         public BuildingFlags Allowed;      // which special buildings may roll
         public BuildingType[] Required;    // placed first (e.g. the region's arcades); may be null
         public int DifficultyTier;         // from Difficulty.TierAt(distance)
+        public float Difficulty;            // smooth difficulty for chunk/stamp tuning
+        public StreetKind Kind;
     }
 }

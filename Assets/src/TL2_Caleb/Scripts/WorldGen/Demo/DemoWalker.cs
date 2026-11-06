@@ -1,5 +1,7 @@
 using UnityEngine;
 
+namespace EscapeThe90s.WorldGen.Demo
+{
 // DEMO ONLY. A throwaway player so the generator can be showcased without the team's real player.
 // Delete the whole Demo folder when the real player exists; nothing in the generator depends on it.
 // Controls: A/D or arrow keys to move, Space to jump. Works with the old and the new Input System.
@@ -124,4 +126,5 @@ public class DemoWalker : MonoBehaviour
         tex.Apply();
         return Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0f), 16f);
     }
+}
 }

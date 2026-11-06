@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace EscapeThe90s.WorldGen
@@ -38,10 +39,34 @@ namespace EscapeThe90s.WorldGen
         public static List<string> RunAll()
         {
             var f = new List<string>();
-            RngBasics(f); IdSymmetry(f); SameInputsSameOutput(f); OrderIndependence(f);
-            ChunkIndependence(f); Constraints(f); RequiredOverflow(f); Distribution(f); Golden(f);
-            TerrainAndDualGrid(f); WindowAndColliders(f); RegionChecks(f); StreetNetworkChecks(f);
+            f.AddRange(CheckRngBasics()); f.AddRange(CheckStableIds()); f.AddRange(CheckSameInputs());
+            f.AddRange(CheckOrderIndependence()); f.AddRange(CheckChunkIndependence());
+            f.AddRange(CheckGenerationConstraints()); f.AddRange(CheckRequiredBuildingOverflow());
+            f.AddRange(CheckEnemyDistribution()); f.AddRange(CheckGoldenHashes());
+            f.AddRange(CheckTerrainAndDualGrid()); f.AddRange(CheckChunkWindowAndColliders());
+            f.AddRange(CheckRegions()); f.AddRange(CheckStreetNetworks());
             return f;
+        }
+
+        public static List<string> CheckRngBasics() { return Run(RngBasics); }
+        public static List<string> CheckStableIds() { return Run(IdSymmetry); }
+        public static List<string> CheckSameInputs() { return Run(SameInputsSameOutput); }
+        public static List<string> CheckOrderIndependence() { return Run(OrderIndependence); }
+        public static List<string> CheckChunkIndependence() { return Run(ChunkIndependence); }
+        public static List<string> CheckGenerationConstraints() { return Run(Constraints); }
+        public static List<string> CheckRequiredBuildingOverflow() { return Run(RequiredOverflow); }
+        public static List<string> CheckEnemyDistribution() { return Run(Distribution); }
+        public static List<string> CheckGoldenHashes() { return Run(Golden); }
+        public static List<string> CheckTerrainAndDualGrid() { return Run(TerrainAndDualGrid); }
+        public static List<string> CheckChunkWindowAndColliders() { return Run(WindowAndColliders); }
+        public static List<string> CheckRegions() { return Run(RegionChecks); }
+        public static List<string> CheckStreetNetworks() { return Run(StreetNetworkChecks); }
+
+        static List<string> Run(Action<List<string>> check)
+        {
+            var failures = new List<string>();
+            check(failures);
+            return failures;
         }
 
         static void RngBasics(List<string> f)
@@ -89,16 +114,16 @@ namespace EscapeThe90s.WorldGen
             var reqs = new List<StreetRequest>();
             for (int i = 0; i < 40; i++) reqs.Add(Req(i, i + 100, 12 + i % 20, i % 5, BuildingFlags.All, i % 7));
 
-            var forward = new LevelService(777, biomes);
+            var forward = new WorldNetwork(777, biomes);
             var hashesF = new ulong[reqs.Count];
             for (int i = 0; i < reqs.Count; i++) hashesF[i] = forward.GetStreet(reqs[i]).ContentHash();
 
-            var back = new LevelService(777, biomes);
+            var back = new WorldNetwork(777, biomes);
             for (int i = reqs.Count - 1; i >= 0; i--)
                 if (back.GetStreet(reqs[i]).ContentHash() != hashesF[i]) f.Add("Street " + i + " differs when generated in reverse order");
 
             // Generate everything again after unrelated streets: a stateful RNG would break here.
-            var shuffled = new LevelService(777, biomes);
+            var shuffled = new WorldNetwork(777, biomes);
             for (int i = 0; i < reqs.Count; i += 3) shuffled.GetStreet(reqs[i]);
             for (int i = 0; i < reqs.Count; i++)
                 if (shuffled.GetStreet(reqs[i]).ContentHash() != hashesF[i]) f.Add("Street " + i + " differs after unrelated streets were generated");

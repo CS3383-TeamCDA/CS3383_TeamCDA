@@ -338,7 +338,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3963630674984730463, guid: 0da14fc95075319448e7ee6e15fa5102, type: 3}
       propertyPath: orthographic size
-      value: 11.25
+      value: 11
       objectReference: {fileID: 0}
     - target: {fileID: 3963630674984730463, guid: 0da14fc95075319448e7ee6e15fa5102, type: 3}
       propertyPath: m_BackGroundColor.a
@@ -1324,7 +1324,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e1fc198036a3f164aac51d77a516fcb3, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::WorldNetworkDemo
+  m_EditorClassIdentifier: EscapeThe90s.WorldGen.Demo::EscapeThe90s.WorldGen.Demo.WorldNetworkDemo
   settings: {fileID: 11400000, guid: 4f9ec585818a5694a93484ac5d565396, type: 2}
   art: {fileID: 11400000, guid: d7e6cd82b5854a5429da42fc9998b217, type: 2}
   playerPrefab: {fileID: 4047807644510114612, guid: 0a6f1cd7220343d45951c063b986deb8, type: 3}

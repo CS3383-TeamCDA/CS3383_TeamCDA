@@ -15,6 +15,7 @@ namespace EscapeThe90s.WorldGen
         public const int AccentsPerBiome = 3;      // palette rows per biome (palette.png has BiomeCount*AccentsPerBiome rows)
         public const int GroundDepthCells = 3;     // visible ground rows below the street surface
         public const int MaxBumpHeight = 2;        // tallest curb/step, in cells
+        public const int MaxGapWidthCells = 4;     // conservative placeholder pending a shared player-capabilities contract
         public const int SlabDepthCells = 8;       // collider depth under the street surface (visible ground is shallower)
         public const int RegionSizeNodes = 12;     // one coarse cell is RegionSizeNodes x RegionSizeNodes street-grid nodes (about one region)
         public const int MinConnectionSpacing = 3; // surface connections between two regions are at least this far apart (Manhattan, in nodes)
@@ -35,5 +36,6 @@ namespace EscapeThe90s.WorldGen
         public const int Site = 5;        // region site jitter
         public const int Link = 6;        // region-pair connections
         public const int Interior = 7;    // street network inside a region
+        public const int Stamps = 8;      // chunk terrain stamp selection
     }
 }

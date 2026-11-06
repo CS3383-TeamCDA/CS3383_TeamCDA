@@ -4,6 +4,8 @@ using System.Reflection;
 using EscapeThe90s.WorldGen;
 using UnityEngine;
 
+namespace EscapeThe90s.WorldGen.Demo
+{
 /// <summary>Playable Phase 10 demo: walk generated streets, reach intersections, and choose where to go next.</summary>
 [DefaultExecutionOrder(-1000)]
 public class WorldNetworkDemo : MonoBehaviour
@@ -863,4 +865,5 @@ public class WorldNetworkDemo : MonoBehaviour
             else DestroyImmediate(_player.gameObject);
         }
     }
+}
 }

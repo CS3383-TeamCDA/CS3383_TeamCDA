@@ -1,7 +1,10 @@
 using EscapeThe90s.WorldGen;
+using EscapeThe90s.WorldGen.Demo;
 using UnityEditor;
 using UnityEngine;
 
+namespace EscapeThe90s.WorldGen.Demo.Editor
+{
 // DEMO ONLY (see DemoWalker).
 public static class ShowcaseSetup
 {
@@ -71,4 +74,5 @@ public static class ShowcaseSetup
         if (guids.Length == 0) return null;
         return AssetDatabase.LoadAssetAtPath<T>(AssetDatabase.GUIDToAssetPath(guids[0]));
     }
+}
 }

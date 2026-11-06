@@ -1,6 +1,8 @@
 using EscapeThe90s.WorldGen;
 using UnityEngine;
 
+namespace EscapeThe90s.WorldGen.Demo
+{
 // DEMO ONLY (see DemoWalker). Pixel-snapped side-scroll camera clamped to the street.
 [RequireComponent(typeof(Camera))]
 public class CameraFollow : MonoBehaviour
@@ -27,4 +29,5 @@ public class CameraFollow : MonoBehaviour
                 : (minX + maxX) * 0.5f;
         transform.position = new Vector3(x, StreetView.CameraY(cam.orthographicSize), -10f);
     }
+}
 }

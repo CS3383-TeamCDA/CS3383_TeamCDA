@@ -27,8 +27,6 @@ namespace EscapeThe90s.WorldGen
 
         public ulong SeedValue { get { return unchecked((ulong)seed); } }
 
-        public LevelService CreateService() { return new LevelService(SeedValue, GetRules()); }
-
         /// <summary>Creates the deterministic region, street, intersection, and nearest-arcade biome queries for this world.</summary>
         public WorldNetwork CreateWorldNetwork()
         { return new WorldNetwork(SeedValue, GetRules(), minNetworkStreetChunks, maxNetworkStreetChunks); }

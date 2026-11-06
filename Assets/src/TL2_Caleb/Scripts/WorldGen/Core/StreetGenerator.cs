@@ -10,18 +10,33 @@ namespace EscapeThe90s.WorldGen
     /// </summary>
     public static class StreetGenerator
     {
+        static readonly IChunkGenerator DefaultChunkGenerator = new DeterministicChunkGenerator();
+
         public static StreetLayout Generate(ulong seed, StreetRequest req, BiomeRules rules)
+        { return Generate(seed, req, rules, DefaultChunkGenerator); }
+
+        public static StreetLayout Generate(ulong seed, StreetRequest req, BiomeRules rules, IChunkGenerator chunkGenerator)
         {
+            if (chunkGenerator == null) throw new System.ArgumentNullException("chunkGenerator");
             int n = req.ChunkCount < WorldConstants.MinStreetChunks ? WorldConstants.MinStreetChunks : req.ChunkCount;
-            var layout = new StreetLayout { Id = req.Id, Biome = req.Biome, ChunkCount = n, Gate = GateKind.None };
+            var layout = new StreetLayout { Id = req.Id, Biome = req.Biome, Kind = req.Kind,
+                ChunkCount = n, Gate = GateKind.None };
 
             int dropped;
             BuildingType[] placement = PlaceBuildings(seed, req, rules, n, out dropped);
             layout.DroppedRequired = dropped;
 
             layout.Chunks = new ChunkData[n];
+            layout.ChunkSpecs = new ChunkSpec[n];
+            float difficulty = req.Difficulty;
+            if (float.IsNaN(difficulty) || (difficulty <= 0f && req.DifficultyTier > 0)) difficulty = req.DifficultyTier;
             for (int i = 0; i < n; i++)
-                layout.Chunks[i] = GenerateChunk(seed, req.Id, i, n, placement[i], rules, req.DifficultyTier);
+            {
+                ChunkSpec spec = chunkGenerator.Generate(seed, req.Id, i, n, placement[i], rules,
+                    req.Biome, req.Kind, difficulty);
+                layout.ChunkSpecs[i] = spec;
+                layout.Chunks[i] = spec.Content;
+            }
             return layout;
         }
 
@@ -38,27 +53,35 @@ namespace EscapeThe90s.WorldGen
 
             var rng = DeterministicRng.Create(seed, req.Id, Salt.Placement);
             var counts = new Dictionary<BuildingType, int>();
+            PlaceRequiredBuildings(req.Required, slots, free, counts, ref rng, out dropped);
+            PlaceOptionalSpecials(req.Allowed, rules.Buildings, slots, free, counts, ref rng);
+            PlaceFillerBuildings(req.Allowed, rules, slots, free, counts, ref rng);
+            return slots;
+        }
+
+        static void PlaceRequiredBuildings(BuildingType[] required, BuildingType[] slots, List<int> free,
+            Dictionary<BuildingType, int> counts, ref DeterministicRng rng, out int dropped)
+        {
             dropped = 0;
-
-            // 1) Required buildings first (e.g. the region's arcades). Ignore density and caps.
-            if (req.Required != null)
+            if (required == null) return;
+            for (int i = 0; i < required.Length; i++)
             {
-                for (int k = 0; k < req.Required.Length; k++)
-                {
-                    if (free.Count == 0) { dropped++; continue; }
-                    int pick = rng.Next(free.Count);
-                    slots[free[pick]] = req.Required[k];
-                    free.RemoveAt(pick);
-                    Bump(counts, req.Required[k]);
-                }
+                if (free.Count == 0) { dropped++; continue; }
+                int pick = rng.Next(free.Count);
+                slots[free[pick]] = required[i];
+                free.RemoveAt(pick);
+                Bump(counts, required[i]);
             }
+        }
 
-            // 2) Optional specials: rolled once per street, only if flagged. Rule order is data order.
-            for (int r = 0; r < rules.Buildings.Length; r++)
+        static void PlaceOptionalSpecials(BuildingFlags allowed, BuildingRule[] rules, BuildingType[] slots,
+            List<int> free, Dictionary<BuildingType, int> counts, ref DeterministicRng rng)
+        {
+            for (int i = 0; i < rules.Length; i++)
             {
-                BuildingRule rule = rules.Buildings[r];
+                BuildingRule rule = rules[i];
                 if (!rule.Type.IsSpecial() || rule.PerStreetPercent <= 0) continue;
-                if ((req.Allowed & rule.Type.ToFlag()) == 0) continue;
+                if ((allowed & rule.Type.ToFlag()) == 0) continue;
                 int have = Get(counts, rule.Type);
                 while (have < rule.MaxPerStreet && free.Count > 0 && rng.ChancePercent(rule.PerStreetPercent))
                 {
@@ -69,25 +92,30 @@ namespace EscapeThe90s.WorldGen
                     Bump(counts, rule.Type);
                 }
             }
+        }
 
-            // 3) Filler: each remaining free chunk may get one building (max 1 per chunk).
+        static void PlaceFillerBuildings(BuildingFlags allowed, BiomeRules rules, BuildingType[] slots,
+            List<int> free, Dictionary<BuildingType, int> counts, ref DeterministicRng rng)
+        {
             var weights = new int[rules.Buildings.Length];
             for (int f = 0; f < free.Count; f++)
             {
                 if (!rng.ChancePercent(rules.BuildingDensityPercent)) continue;
                 for (int r = 0; r < weights.Length; r++)
-                {
-                    BuildingRule rule = rules.Buildings[r];
-                    bool allowed = rule.Type == BuildingType.Generic || (req.Allowed & rule.Type.ToFlag()) != 0;
-                    bool underCap = Get(counts, rule.Type) < rule.MaxPerStreet;
-                    weights[r] = (rule.FillWeight > 0 && allowed && underCap) ? rule.FillWeight : 0;
-                }
-                int idx = rng.PickWeighted(weights);
-                if (idx < 0) continue;
-                slots[free[f]] = rules.Buildings[idx].Type;
-                Bump(counts, rules.Buildings[idx].Type);
+                    weights[r] = FillerWeight(rules.Buildings[r], allowed, counts);
+                int index = rng.PickWeighted(weights);
+                if (index < 0) continue;
+                BuildingType building = rules.Buildings[index].Type;
+                slots[free[f]] = building;
+                Bump(counts, building);
             }
-            return slots;
+        }
+
+        static int FillerWeight(BuildingRule rule, BuildingFlags allowed, Dictionary<BuildingType, int> counts)
+        {
+            bool canPlace = rule.Type == BuildingType.Generic || (allowed & rule.Type.ToFlag()) != 0;
+            bool underCap = Get(counts, rule.Type) < rule.MaxPerStreet;
+            return rule.FillWeight > 0 && canPlace && underCap ? rule.FillWeight : 0;
         }
 
         static int Get(Dictionary<BuildingType, int> d, BuildingType t) { int v; return d.TryGetValue(t, out v) ? v : 0; }
