@@ -5,7 +5,8 @@
         "UnityEngine.UI",
         "Unity.TextMeshPro",
         "StateLogic",
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "EscapeThe90s.Contracts"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using EscapeThe90s.Contracts;
 
 namespace EscapeThe90s.WorldGen
 {
@@ -33,12 +34,23 @@ namespace EscapeThe90s.WorldGen
         StreetLayout _layout;
         StreetTerrain _terrain;
         bool _explicitLayout;
-        readonly Dictionary<int, GameObject> _chunks = new Dictionary<int, GameObject>();
+        readonly Dictionary<int, Chunk> _chunks = new Dictionary<int, Chunk>();
         readonly Dictionary<int, List<GameObject>> _chunkOwnedObjects = new Dictionary<int, List<GameObject>>();
         readonly List<int> _scratch = new List<int>();
+        readonly LevelProgress _progress = new LevelProgress();
+        ChunkPool<Chunk> _chunkPool;
+        readonly LevelStreamer _streamer = new LevelStreamer();
+        Transform _sourceTransform;
+        IPlayerPositionSource _fallbackPositionSource;
+
+        /// <summary>Progress and streamed chunk lifecycle for enemy, pickup, and gameplay systems.</summary>
+        public ILevelProgress Progress { get { return _progress; } }
+        /// <summary>Optional team-owned position adapter; Follow is wrapped automatically when this is unset.</summary>
+        public IPlayerPositionSource PositionSource { get; set; }
 
         public int WidthCells { get { return _layout == null ? 0 : _layout.ChunkCount * WorldConstants.ChunkWidthCells; } }
         public int LoadedChunkCount { get { return _chunks.Count; } }
+        public ChunkPoolMetrics PoolMetrics { get { return _chunkPool == null ? new ChunkPoolMetrics(0, 0, 0, 0, 0) : _chunkPool.Metrics; } }
         public StreetLayout Layout { get { return _layout; } }
         public bool IsChunkLoaded(int chunkIndex) { return _chunks.ContainsKey(chunkIndex); }
 
@@ -76,7 +88,7 @@ namespace EscapeThe90s.WorldGen
 
         void Update()
         {
-            if (Application.isPlaying && _layout != null && follow != null) UpdateWindow();
+            if (Application.isPlaying && _layout != null && GetPositionSource() != null) UpdateWindow();
         }
 
         [ContextMenu("Rebuild")]
@@ -125,6 +137,8 @@ namespace EscapeThe90s.WorldGen
             Clear();
             _layout = layout;
             _terrain = new StreetTerrain(settings.SeedValue, _layout, curbsAndSteps);
+            EnsureChunkPool();
+            PrewarmVisibleChunkKinds();
 
             _root = new GameObject("Generated Street");
             _root.hideFlags = HideFlags.DontSave;
@@ -140,7 +154,7 @@ namespace EscapeThe90s.WorldGen
             var grid = _gridGo.AddComponent<Grid>();
             grid.cellSize = new Vector3(1f, 1f, 0f);   // 1 cell = 1 unit (sprites are 16 PPU, so a cell is 16 px)
 
-            if (follow == null)
+            if (GetPositionSource() == null)
                 for (int i = 0; i < _layout.ChunkCount; i++) LoadChunk(i);
             else
                 UpdateWindow();
@@ -150,23 +164,19 @@ namespace EscapeThe90s.WorldGen
 
         void UpdateWindow()
         {
-            float x = _root.transform.InverseTransformPoint(follow.position).x;
-            int center = ChunkWindow.ChunkIndexAt(x, _layout.ChunkCount);
-
-            int lo = Mathf.Max(0, center - loadRadiusChunks);
-            int hi = Mathf.Min(_layout.ChunkCount - 1, center + loadRadiusChunks);
-            for (int i = lo; i <= hi; i++)
+            ChunkStreamWindow window = _streamer.GetWindow(_root.transform, GetPositionSource(),
+                _layout.ChunkCount, loadRadiusChunks);
+            _progress.AdvanceDistance(Mathf.Max(0f, window.StreetLocalX));
+            for (int i = window.FirstChunk; i <= window.LastChunk; i++)
                 if (!_chunks.ContainsKey(i)) LoadChunk(i);
 
             _scratch.Clear();
             foreach (var kv in _chunks)
-                if (ChunkWindow.ShouldUnload(kv.Key, center, loadRadiusChunks)) _scratch.Add(kv.Key);
+                if (_streamer.ShouldRecycle(kv.Key, window.Center, loadRadiusChunks)) _scratch.Add(kv.Key);
             for (int k = 0; k < _scratch.Count; k++)
             {
                 int chunkIndex = _scratch[k];
-                DestroyChunkObjects(chunkIndex);
-                DestroyObject(_chunks[chunkIndex]);
-                _chunks.Remove(chunkIndex);
+                RecycleChunk(chunkIndex);
             }
         }
 
@@ -181,70 +191,95 @@ namespace EscapeThe90s.WorldGen
                                                      CameraY(cam.orthographicSize), -10f);
         }
 
+        IPlayerPositionSource GetPositionSource()
+        {
+            if (PositionSource != null) return PositionSource;
+            if (follow == null) { _sourceTransform = null; _fallbackPositionSource = null; return null; }
+            if (_sourceTransform != follow || _fallbackPositionSource == null)
+            {
+                _sourceTransform = follow;
+                _fallbackPositionSource = new TransformPlayerPositionSource(follow);
+            }
+            return _fallbackPositionSource;
+        }
+
         void LoadChunk(int index)
         {
-            _chunks[index] = BuildChunk(_gridGo.transform, _layout, _terrain, _layout.Chunks[index], index == _layout.ChunkCount - 1);
+            ChunkData content = _layout.Chunks[index];
+            ChunkSpec spec = GetChunkSpec(index, content);
+            Chunk chunk = _chunkPool.Rent(spec.Kind);
+            chunk.Populate(_gridGo.transform, _layout, _terrain, content, spec, art,
+                index == _layout.ChunkCount - 1);
+            _chunks[index] = chunk;
+            NotifyChunkSpawned(index);
         }
 
-        GameObject BuildChunk(Transform parent, StreetLayout layout, StreetTerrain terrain, ChunkData chunk, bool last)
+        ChunkSpec GetChunkSpec(int index, ChunkData content)
         {
-            int w = WorldConstants.ChunkWidthCells;
-            int x0 = chunk.Index * w;
+            if (_layout.ChunkSpecs != null && index < _layout.ChunkSpecs.Length) return _layout.ChunkSpecs[index];
+            return new ChunkSpec(content, ChunkKind.Ground, TerrainStamp.Flat, _layout.Kind, _layout.Biome,
+                _progress.GetCurrentDifficulty(), null);
+        }
 
-            var chunkGo = new GameObject("Chunk " + chunk.Index);
-            chunkGo.hideFlags = HideFlags.DontSave;
-            chunkGo.transform.SetParent(parent, false);
-            chunkGo.transform.localPosition = new Vector3(x0, 0f, 0f);
+        void EnsureChunkPool()
+        {
+            if (_chunkPool == null) _chunkPool = new ChunkPool<Chunk>(CreatePooledChunk);
+        }
 
-            // Ground art: render tiles are centred on cell corners, so the tilemap is shifted half a cell.
-            var groundGo = new GameObject("Ground");
-            groundGo.hideFlags = HideFlags.DontSave;
-            groundGo.transform.SetParent(chunkGo.transform, false);
-            groundGo.transform.localPosition = new Vector3(-0.5f, -0.5f, 0f);
-            var tilemap = groundGo.AddComponent<Tilemap>();
-            var tr = groundGo.AddComponent<TilemapRenderer>();
-            tr.sortingOrder = 0;
-            int lastX = last ? w : w - 1;   // the final chunk also owns the tile on the street's right end
-            for (int lx = 0; lx <= lastX; lx++)
-                for (int ry = -WorldConstants.GroundDepthCells; ry <= terrain.MaxHeight; ry++)
-                {
-                    int mask = DualGrid.MaskAt(terrain, x0 + lx, ry);
-                    if (mask != 0) tilemap.SetTile(new Vector3Int(lx, ry, 0), art.GetGroundTile(mask));
-                }
-            art.ApplyPalette(tr, WorldArt.PaletteRow(layout.Biome, 0));
-
-            // Physics: exact boxes from the data grid (never from the tile art).
-            foreach (ColliderBox b in TerrainColliders.ForChunk(terrain, chunk.Index))
-                AddBox(chunkGo, b.X0, b.X1, b.Y0, b.Y1);
-            // Network play uses these walls as safe points where the player chooses an intersection exit.
-            if (chunk.Index == 0) AddBox(chunkGo, -1, 0, -WorldConstants.SlabDepthCells, 40);
-            if (last) AddBox(chunkGo, w, w + 1, -WorldConstants.SlabDepthCells, 40);
-
-            // Building, centred in the chunk, standing on the surface (sprite pivot = bottom centre).
-            if (chunk.Building != BuildingType.None)
+        Chunk CreatePooledChunk(ChunkKind kind)
+        {
+            var go = new GameObject("Pooled Chunk (" + kind + ")");
+            go.hideFlags = HideFlags.DontSave;
+            go.transform.SetParent(transform, false);
+            Chunk view;
+            switch (kind)
             {
-                Sprite sprite = art.GetBuildingSprite(chunk.Building, chunk.Variant);
-                if (sprite != null)
-                {
-                    var bGo = new GameObject(chunk.Building.ToString());
-                    bGo.hideFlags = HideFlags.DontSave;
-                    bGo.transform.SetParent(chunkGo.transform, false);
-                    bGo.transform.localPosition = new Vector3(w * 0.5f, 0f, 0f);
-                    var sr = bGo.AddComponent<SpriteRenderer>();
-                    sr.sprite = sprite;
-                    sr.flipX = chunk.Flipped;
-                    sr.sortingOrder = 1;
-                    art.ApplyPalette(sr, WorldArt.PaletteRow(layout.Biome, chunk.Accent));
-                }
+                case ChunkKind.Gap: view = go.AddComponent<GapChunk>(); break;
+                case ChunkKind.Ramp: view = go.AddComponent<RampChunk>(); break;
+                case ChunkKind.Plaza: view = go.AddComponent<PlazaChunk>(); break;
+                default: view = go.AddComponent<GroundChunk>(); break;
             }
-            return chunkGo;
+            view.Initialize();
+            return view;
         }
 
-        static void AddBox(GameObject go, int x0, int x1, int y0, int y1)
+        void PrewarmVisibleChunkKinds()
         {
-            var col = go.AddComponent<BoxCollider2D>();
-            col.size = new Vector2(x1 - x0, y1 - y0);
-            col.offset = new Vector2((x0 + x1) * 0.5f, (y0 + y1) * 0.5f);
+            int visibleCapacity = GetPositionSource() == null ? _layout.ChunkCount : Mathf.Min(_layout.ChunkCount, loadRadiusChunks * 2 + 3);
+            var counts = new Dictionary<ChunkKind, int>();
+            for (int i = 0; i < _layout.ChunkCount; i++)
+            {
+                ChunkKind kind = GetChunkSpec(i, _layout.Chunks[i]).Kind;
+                int count;
+                counts.TryGetValue(kind, out count);
+                if (count < visibleCapacity) counts[kind] = count + 1;
+            }
+            foreach (KeyValuePair<ChunkKind, int> pair in counts) _chunkPool.Prewarm(pair.Key, pair.Value);
+        }
+
+        void NotifyChunkSpawned(int index)
+        {
+            ChunkSpec spec = GetChunkSpec(index, _layout.Chunks[index]);
+            float x0 = index * WorldConstants.ChunkWidthCells;
+            float x1 = x0 + WorldConstants.ChunkWidthCells;
+            Vector3 min = _root.transform.TransformPoint(new Vector3(x0, -WorldConstants.SlabDepthCells, 0f));
+            Vector3 max = _root.transform.TransformPoint(new Vector3(x1, Mathf.Max(1, _terrain.MaxHeight + 1), 0f));
+            var id = new ChunkId(_layout.Id.Value, index);
+            _progress.NotifyChunkSpawned(new ChunkSpawnedInfo(id,
+                new ChunkBounds(Mathf.Min(min.x, max.x), min.y, Mathf.Max(min.x, max.x), max.y),
+                spec.Difficulty, DifficultyProgression.TierAtDifficulty(spec.Difficulty), spec.Biome,
+                spec.Kind, spec.SpawnLocations));
+        }
+
+        void RecycleChunk(int index)
+        {
+            if (!_chunks.TryGetValue(index, out Chunk chunk)) return;
+            _progress.NotifyChunkRecycled(new ChunkId(_layout.Id.Value, index));
+            DestroyChunkObjects(index);
+            chunk.ResetForPool();
+            chunk.transform.SetParent(transform, false);
+            _chunkPool.Return(chunk);
+            _chunks.Remove(index);
         }
 
         static void DestroyObject(GameObject go)
@@ -263,6 +298,12 @@ namespace EscapeThe90s.WorldGen
 
         void Clear()
         {
+            if (_layout != null)
+            {
+                _scratch.Clear();
+                foreach (int index in _chunks.Keys) _scratch.Add(index);
+                for (int i = 0; i < _scratch.Count; i++) RecycleChunk(_scratch[i]);
+            }
             var ownedChunks = new List<int>(_chunkOwnedObjects.Keys);
             foreach (int chunkIndex in ownedChunks) DestroyChunkObjects(chunkIndex);
             _chunks.Clear();

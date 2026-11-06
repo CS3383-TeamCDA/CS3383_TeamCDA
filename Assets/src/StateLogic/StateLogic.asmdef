@@ -1,3 +1,4 @@
 {
-	"name": "StateLogic"
+	"name": "StateLogic",
+	"references": ["EscapeThe90s.Contracts"]
 }

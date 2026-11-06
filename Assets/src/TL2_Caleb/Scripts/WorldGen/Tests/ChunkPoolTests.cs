@@ -1,4 +1,5 @@
 using EscapeThe90s.WorldGen;
+using EscapeThe90s.Contracts;
 using NUnit.Framework;
 
 namespace EscapeThe90s.WorldGen.Tests

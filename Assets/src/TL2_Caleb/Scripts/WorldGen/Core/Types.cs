@@ -8,7 +8,6 @@ namespace EscapeThe90s.WorldGen
     }
 
     public enum StreetKind { Alley = 0, Street, Avenue }
-    public enum ChunkKind { Ground = 0, Gap, Ramp, Plaza }
     public enum TerrainStampKind { Flat = 0, Curb, StairsUp, StairsDown, Gap, Obstacle, Plaza }
 
     /// <summary>Which special buildings a street is allowed to roll for (your "flags").</summary>
