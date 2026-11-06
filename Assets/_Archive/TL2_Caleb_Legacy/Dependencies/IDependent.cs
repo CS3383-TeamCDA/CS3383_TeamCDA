@@ -1,4 +1,3 @@
-public interface IDependent<T>
+public interface IDependent<T> : EscapeThe90s.Contracts.IDependent<T>
 {
-    void Inject(T dependency);
 }

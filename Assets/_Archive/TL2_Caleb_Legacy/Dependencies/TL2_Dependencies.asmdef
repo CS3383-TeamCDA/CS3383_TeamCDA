@@ -2,7 +2,9 @@
     "name": "TL2_Dependencies",
     "rootNamespace": "",
     "references": [
-        "GUID:443c6ba2ba607374f916ce67442a29cd"
+        "GUID:443c6ba2ba607374f916ce67442a29cd",
+        "EscapeThe90s.Contracts",
+        "EscapeThe90s.Dependencies.Unity"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

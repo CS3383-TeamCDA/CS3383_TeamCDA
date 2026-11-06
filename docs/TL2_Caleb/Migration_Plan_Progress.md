@@ -14,8 +14,9 @@
 
 The user confirmed the current project compiles and the playable demo works in Play Mode.
 
-## Remaining plan work
+## M9 review and remaining plan work
 
-- **M9:** Review and document the full assembly dependency graph with the team. Contracts is established, but existing feature-to-feature references still need an acyclic-boundary review.
+- **M9 implementation/review:** Added the TL2-owned `EscapeThe90s.Dependencies.Unity` module and Contracts interfaces for `IDependent<T>` and engine-neutral game-state events. Migrated the camera and player-spawn notifier to `DependencyBehaviour`; the existing game ServiceContainer now delegates scene and dynamic-object injection through `DependencyScope`. The module usage guide is in `Assets/src/TL2_Caleb/Dependencies/README.md`; the archived publisher remains as a Unity-specific adapter/rollback path. Dependency trees, concrete use cases, and game-focused integration ownership are in `M9_Dependency_Review.md`. A static audit found no cycle in 34 asmdefs; Unity compile/Play Mode confirmation and team sign-off on policy and Composition responsibilities remain.
 - Confirm the open plan decisions around plaza-style intersections, player capability APIs, TL3/TL4 event adoption versus adapters, and TL5 save ownership.
+- Keep remaining acceptance work focused on the complete playable game and its end-to-end run loop; “demo” assembly names are historical.
 - Complete any remaining planned stress runs and acceptance evidence after the team confirms the required scope.

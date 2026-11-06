@@ -12,7 +12,7 @@ public abstract class DependentMonoBehaviour : MonoBehaviour
         // Automatically discover every IDependent<T> interface this script implements
         foreach (var iface in GetType().GetInterfaces())
         {
-            if (iface.IsGenericType && iface.GetGenericTypeDefinition() == typeof(IDependent<>))
+            if (iface.IsGenericType && iface.GetGenericTypeDefinition() == typeof(EscapeThe90s.Contracts.IDependent<>))
             {
                 _missingTypes.Add(iface.GetGenericArguments()[0]);
             }

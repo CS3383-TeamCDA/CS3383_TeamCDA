@@ -10,36 +10,22 @@ public class ServiceContainer : MonoBehaviour
     [SerializeField] private GameObject gsepPrefab;
 
     private readonly Dictionary<Type, object> _registry = new Dictionary<Type, object>();
+    private EscapeThe90s.Dependencies.Unity.DependencyScope _dependencyScope;
 
     private void Awake()
     {
         RegisterAllDependencies();
-        
-        // PHASE 1: Safely inject raw pointers while components are still asleep.
-        InjectAllSceneDependents();
-        
-        // PHASE 2: Now that every script is 100% wired, process fulfillment gates in a batch sweep.
+        _dependencyScope = GetComponent<EscapeThe90s.Dependencies.Unity.DependencyScope>();
+        if (_dependencyScope == null) _dependencyScope = gameObject.AddComponent<EscapeThe90s.Dependencies.Unity.DependencyScope>();
+        foreach (var dependency in _registry)
+            _dependencyScope.Register(dependency.Key, dependency.Value);
+        _dependencyScope.InjectSceneDependencies();
         WakeAllSceneDependents();
-        
+        _dependencyScope.ActivateSceneDependencies();
         ValidateSceneDependents();
     }
 
-    /// <summary>
-    /// Phase 1 Step: Scans the hierarchy and injects dependencies without waking up scripts.
-    /// </summary>
-    private void InjectAllSceneDependents()
-    {
-        var allMonoBehaviours = FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include);
-
-        foreach (var mono in allMonoBehaviours)
-        {
-            InjectTargetOnly(mono); 
-        }
-    }
-
-    /// <summary>
-    /// Phase 2 Step: Sweeps components and instructs the base class to verify tracking counts.
-    /// </summary>
+    /// <summary>Activates legacy components that still use the archived lifecycle gate.</summary>
     private void WakeAllSceneDependents()
     {
         var allMonoBehaviours = FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include);
@@ -61,6 +47,7 @@ public class ServiceContainer : MonoBehaviour
         foreach (var mono in allMonoBehaviours)
         {
             if (mono == null) continue;
+            if (mono is EscapeThe90s.Dependencies.Unity.DependencyBehaviour) continue;
             
             var method = mono.GetType().GetMethod("LogMissingDependenciesError");
             if (method != null)
@@ -120,6 +107,7 @@ public class ServiceContainer : MonoBehaviour
         if (publisherInstance != null)
         {
             Register<TL2_Dependencies.IGameStateEventPublisher>(publisherInstance);
+            Register<EscapeThe90s.Contracts.IGameStateEventPublisher>(publisherInstance);
         }
         else
         {
@@ -145,62 +133,12 @@ public class ServiceContainer : MonoBehaviour
     /// </summary>
     public void InjectDynamicObject(GameObject spawnedObject)
     {
-        var monos = spawnedObject.GetComponentsInChildren<MonoBehaviour>(true);
-        foreach (var mono in monos)
+        if (_dependencyScope == null)
         {
-            InjectTargetOnly(mono);
+            Debug.LogError("ServiceContainer: DependencyScope has not been initialized.", this);
+            return;
         }
-        
-        // Wake them immediately since the scene setup sweep has already run
-        foreach (var mono in monos)
-        {
-            if (mono is DependentMonoBehaviour dependent)
-            {
-                dependent.ProcessActivationGate();
-            }
-        }
+        _dependencyScope.Inject(spawnedObject);
     }
 
-    /// <summary>
-    /// Performs the reflection work to push dependencies without immediately kicking off lifecycle gates.
-    /// </summary>
-    private void InjectTargetOnly(MonoBehaviour mono)
-    {
-        if (mono == null) return;
-
-        Type targetType = mono.GetType();
-
-        foreach (var pair in _registry)
-        {
-            Type registeredType = pair.Key;
-            object dependencyInstance = pair.Value;
-
-            Type dependentInterface = typeof(IDependent<>).MakeGenericType(registeredType);
-
-            if (dependentInterface.IsAssignableFrom(targetType))
-            {
-                MethodInfo injectMethod = targetType.GetMethod(nameof(IDependent<object>.Inject), new[] { registeredType });
-                if (injectMethod != null)
-                {
-                    injectMethod.Invoke(mono, new[] { dependencyInstance });
-                    
-                    // Mark the type as ready inside the base class registry tracking stack
-                    if (mono is DependentMonoBehaviour dependentBase)
-                    {
-                        dependentBase.TrackFulfilledType(registeredType);
-                    }
-                }
-            }
-        }
-    }
-
-    // Maintained for backward compatibility or direct manual calls
-    private void InjectTarget(MonoBehaviour mono)
-    {
-        InjectTargetOnly(mono);
-        if (mono is DependentMonoBehaviour dependent)
-        {
-            dependent.ProcessActivationGate();
-        }
-    }
 }
