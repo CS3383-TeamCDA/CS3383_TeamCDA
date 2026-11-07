@@ -172,7 +172,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 103019594}
-  - component: {fileID: 103019595}
   m_Layer: 0
   m_Name: TL3_Joe
   m_TagString: Untagged
@@ -196,19 +195,6 @@ Transform:
   - {fileID: 161730964}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &103019595
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 103019593}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 841df487653e0324dbf96b6f09fdf216, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Tl2_Caleb::SetChildActiveOnStart
-  childObject: {fileID: 161730963}
 --- !u!1 &143849062 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 6627869569352318946, guid: f03f01e559694814c89d3a23e4b80738, type: 3}
@@ -341,7 +327,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1598020894}
-  - component: {fileID: 1598020895}
   m_Layer: 0
   m_Name: LevelGenerationTrigger
   m_TagString: Untagged
@@ -364,19 +349,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 491617737138964615}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1598020895
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1598020893}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d3c1477342bc35e42bad08803837a0d5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Tl2_Caleb::LevelGenerationTrigger
-  _levelGeneratorPrefab: {fileID: 1252460810545174499, guid: 393e51e7d581f5b42b3a896eb7c108b7, type: 3}
 --- !u!1 &2118004978 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 777966390090854289, guid: f03f01e559694814c89d3a23e4b80738, type: 3}
@@ -402,14 +374,6 @@ PrefabInstance:
       propertyPath: m_LocalPosition.y
       value: -293
       objectReference: {fileID: 0}
-    - target: {fileID: 2970154652721057910, guid: 0da14fc95075319448e7ee6e15fa5102, type: 3}
-      propertyPath: menuUI
-      value: 
-      objectReference: {fileID: 1241381667}
-    - target: {fileID: 2970154652721057910, guid: 0da14fc95075319448e7ee6e15fa5102, type: 3}
-      propertyPath: firstMenuButton
-      value: 
-      objectReference: {fileID: 143849062}
     - target: {fileID: 4534280964845144288, guid: 0da14fc95075319448e7ee6e15fa5102, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
