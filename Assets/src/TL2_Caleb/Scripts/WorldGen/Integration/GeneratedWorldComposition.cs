@@ -1,4 +1,6 @@
 using System.Reflection;
+using EscapeThe90s.Contracts;
+using EscapeThe90s.Infrastructure.Unity;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -10,22 +12,17 @@ namespace EscapeThe90s.WorldGen.Integration
         public static bool IsGameplayStarted()
         {
             foreach (MonoBehaviour component in FindAllBehaviours())
-            {
-                if (component == null || component.GetType().Name != "GameStateManager") continue;
-                PropertyInfo currentState = component.GetType().GetProperty("CurrentState", BindingFlags.Instance | BindingFlags.Public);
-                object state = currentState == null ? null : currentState.GetValue(component, null);
-                return state != null && state.GetType().Name == "PlayingState";
-            }
-            return true; // Standalone world generation scenes have no team menu.
+                if (component is IGameplaySessionState state) return state.IsGameplayStarted;
+            return true;
         }
 
         public static bool HasTeamPlayerController(GameObject player)
-        { return player != null && player.GetComponent("TempPlayerController") != null; }
+        { return player != null && player.GetComponent<TempPlayerController>() != null; }
 
         public static void ConfigurePlayer(GameObject player, float moveSpeed)
         {
             if (player == null) return;
-            Component controller = player.GetComponent("TempPlayerController");
+            TempPlayerController controller = player.GetComponent<TempPlayerController>();
             if (controller != null)
             {
                 const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
@@ -43,13 +40,8 @@ namespace EscapeThe90s.WorldGen.Integration
             if (player.GetComponent<GeneratedPlayerPowerUpTarget>() == null)
                 player.AddComponent<GeneratedPlayerPowerUpTarget>();
 
-            foreach (MonoBehaviour component in FindAllBehaviours())
-            {
-                if (component == null || component.GetType().Name != "ServiceContainer") continue;
-                MethodInfo inject = component.GetType().GetMethod("InjectDynamicObject", BindingFlags.Instance | BindingFlags.Public);
-                if (inject != null) inject.Invoke(component, new object[] { player });
-                break;
-            }
+            DependencyScope scope = Object.FindAnyObjectByType<DependencyScope>(FindObjectsInactive.Include);
+            if (scope != null) scope.Inject(player);
         }
 
         internal static MonoBehaviour[] FindSceneBehaviours(Scene scene)

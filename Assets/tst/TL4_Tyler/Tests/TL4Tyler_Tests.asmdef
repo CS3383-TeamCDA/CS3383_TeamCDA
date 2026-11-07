@@ -9,10 +9,7 @@
         "Joe.Game",
         "TL6Assembly",
         "Unity.TextMeshPro",
-        "Tl2_Caleb",
-        "Chris.Game",
-        "TL2_Events",
-        "TL2_Dependencies"
+        "Chris.Game"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

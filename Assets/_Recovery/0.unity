@@ -144,7 +144,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 103019594}
-  - component: {fileID: 103019595}
   m_Layer: 0
   m_Name: TL3_Joe
   m_TagString: Untagged
@@ -168,20 +167,6 @@ Transform:
   - {fileID: 161730964}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &103019595
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 103019593}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 841df487653e0324dbf96b6f09fdf216, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Tl2_Caleb::SetChildActiveOnStart
-  childObject: {fileID: 161730963}
-  GameStateEvents: {fileID: 913560414}
 --- !u!1 &143849062 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 6627869569352318946, guid: f03f01e559694814c89d3a23e4b80738, type: 3}
@@ -241,7 +226,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 370685213}
-  - component: {fileID: 370685214}
   m_Layer: 0
   m_Name: PowerUpGenerator
   m_TagString: Untagged
@@ -265,22 +249,6 @@ Transform:
   - {fileID: 1244952786}
   m_Father: {fileID: 88439812}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &370685214
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 370685212}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 85fe487a9d4504547a396a48cf0aff6a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Tl2_Caleb::PowerUpGenerator
-  GameStateEvents: {fileID: 913560414}
-  manager: {fileID: 161730965}
-  type: 1
-  position: {fileID: 1244952786}
 --- !u!1 &476676553 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2070105918853878546, guid: a66b132e479126d44b98b286857d6fcb, type: 3}
@@ -375,7 +343,7 @@ GameObject:
   - component: {fileID: 913560413}
   - component: {fileID: 913560414}
   m_Layer: 0
-  m_Name: GameStateEventPublisher
+  m_Name: GameStateEventBridge
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -407,8 +375,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2f6dc31556f6cb14ab5ce9704244d233, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: '::'
-  GSM: {fileID: 675115780}
+  m_EditorClassIdentifier: EscapeThe90s.Composition::EscapeThe90s.Composition.GameStateEventBridge
 --- !u!1 &1244952785
 GameObject:
   m_ObjectHideFlags: 0
@@ -449,7 +416,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1598020894}
-  - component: {fileID: 1598020895}
   m_Layer: 0
   m_Name: LevelGenerationTrigger
   m_TagString: Untagged
@@ -472,20 +438,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 491617737138964615}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1598020895
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1598020893}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d3c1477342bc35e42bad08803837a0d5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Tl2_Caleb::LevelGenerationTrigger
-  _gameStateEvents: {fileID: 913560414}
-  _levelGeneratorPrefab: {fileID: 1252460810545174499, guid: 393e51e7d581f5b42b3a896eb7c108b7, type: 3}
 --- !u!1 &1638547876
 GameObject:
   m_ObjectHideFlags: 0
@@ -495,7 +447,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1638547877}
-  - component: {fileID: 1638547878}
   m_Layer: 0
   m_Name: InputHandler
   m_TagString: Untagged
@@ -518,41 +469,11 @@ Transform:
   m_Children: []
   m_Father: {fileID: 913319357}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1638547878
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1638547876}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ed3687bc654d122478f14dae1630fe1e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Tl2_Caleb::PlayerInputHandler
-  _playerInput: {fileID: 2076849843}
-  GameStateEvents: {fileID: 913560414}
-  firstMenuButton: {fileID: 143849062}
-  menuUI: {fileID: 2118004978}
 --- !u!1 &1735845065 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5459170070309453409, guid: a66b132e479126d44b98b286857d6fcb, type: 3}
   m_PrefabInstance: {fileID: 7658856733968496903}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1735845067
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1735845065}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 841df487653e0324dbf96b6f09fdf216, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: '::'
-  childObject: {fileID: 476676553}
-  GameStateEvents: {fileID: 913560414}
 --- !u!114 &2076849843 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8078339064981121793, guid: a66b132e479126d44b98b286857d6fcb, type: 3}

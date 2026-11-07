@@ -128,8 +128,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 275537928}
-  - component: {fileID: 275537930}
-  - component: {fileID: 275537929}
   m_Layer: 0
   m_Name: LevelGenerator
   m_TagString: Untagged
@@ -152,49 +150,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 310876763}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &275537929
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 275537927}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2664718663349284c874cf86d94aaa55, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: TL2_LevelGen::TL2_LevelGen.ChunkGenerator
-  worldSeed: 1337
-  baseSurfaceHeight: 3
-  dirtDepth: 124
-  heightNoiseScale: 0.05
-  heightVariance: 10
-  worldBottomY: -8
-  worldTopY: 128
-  airTileId: 0
-  stoneTileId: 1
-  dirtTileId: 2
-  grassTileId: 3
---- !u!114 &275537930
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 275537927}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6c520d14ea477ee4592306185280781b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: TL2_LevelGen::TL2_LevelGen.LevelGenerator
-  playerTransform: {fileID: 457964105}
-  generator: {fileID: 275537929}
-  rendererPass: {fileID: 841082315}
-  collisionPass: {fileID: 1412512144}
-  chunkWidth: 16
-  chunkHeight: 16
-  viewDistance: 3
-  chunksBehind: 2
 --- !u!1001 &310876762
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -247,18 +202,6 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 2970154652721057910, guid: 0da14fc95075319448e7ee6e15fa5102, type: 3}
-      propertyPath: menuUI
-      value: 
-      objectReference: {fileID: 1806805236}
-    - target: {fileID: 2970154652721057910, guid: 0da14fc95075319448e7ee6e15fa5102, type: 3}
-      propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2970154652721057910, guid: 0da14fc95075319448e7ee6e15fa5102, type: 3}
-      propertyPath: firstMenuButton
-      value: 
-      objectReference: {fileID: 1806805238}
     - target: {fileID: 3750003858013813186, guid: 0da14fc95075319448e7ee6e15fa5102, type: 3}
       propertyPath: m_IsActive
       value: 0
@@ -384,17 +327,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4534280964845144288, guid: 0da14fc95075319448e7ee6e15fa5102, type: 3}
   m_PrefabInstance: {fileID: 310876762}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &310876764 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 2970154652721057910, guid: 0da14fc95075319448e7ee6e15fa5102, type: 3}
-  m_PrefabInstance: {fileID: 310876762}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ed3687bc654d122478f14dae1630fe1e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Tl2_Caleb::PlayerInputHandler
 --- !u!1001 &457964103
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -545,7 +477,6 @@ GameObject:
   - component: {fileID: 841082318}
   - component: {fileID: 841082316}
   - component: {fileID: 841082317}
-  - component: {fileID: 841082315}
   m_Layer: 0
   m_Name: Rendering
   m_TagString: Untagged
@@ -553,20 +484,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &841082315
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 841082314}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9aa2a6c91239b7c4485779f9a5d4264d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: TL2_LevelGen::TL2_LevelGen.DualGridTilemapRenderer
-  targetTilemap: {fileID: 841082316}
-  tileSet: {fileID: 11400000, guid: c974816cc8de4054aa02b5a319ecafda, type: 2}
 --- !u!1839735485 &841082316
 Tilemap:
   m_ObjectHideFlags: 0
@@ -756,9 +673,7 @@ GameObject:
   - component: {fileID: 1412512151}
   - component: {fileID: 1412512145}
   - component: {fileID: 1412512150}
-  - component: {fileID: 1412512149}
   - component: {fileID: 1412512148}
-  - component: {fileID: 1412512144}
   - component: {fileID: 1412512147}
   - component: {fileID: 1412512146}
   m_Layer: 3
@@ -768,20 +683,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1412512144
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1412512143}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2c1e4db27b2af3d40987cc1eba2c24fb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: TL2_LevelGen::TL2_LevelGen.LogicalTilemapCollider
-  collisionTilemap: {fileID: 1412512145}
-  solidCollisionTile: {fileID: 11400000, guid: 130a4b8c2a6ea104aa91b9d26db4a3bc, type: 2}
 --- !u!1839735485 &1412512145
 Tilemap:
   m_ObjectHideFlags: 0
@@ -932,20 +833,6 @@ TilemapCollider2D:
   m_MaximumTileChangeCount: 1000
   m_ExtrusionFactor: 0
   m_UseDelaunayMesh: 0
---- !u!114 &1412512149
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1412512143}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9aa2a6c91239b7c4485779f9a5d4264d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: TL2_LevelGen::TL2_LevelGen.DualGridTilemapRenderer
-  targetTilemap: {fileID: 1412512145}
-  tileSet: {fileID: 11400000, guid: c974816cc8de4054aa02b5a319ecafda, type: 2}
 --- !u!483693784 &1412512150
 TilemapRenderer:
   serializedVersion: 2

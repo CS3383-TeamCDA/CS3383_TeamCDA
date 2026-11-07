@@ -1,22 +1,21 @@
 using UnityEngine;
-using TL2_Dependencies;
-using EscapeThe90s.Dependencies.Unity;
+using EscapeThe90s.Contracts;
+using EscapeThe90s.Infrastructure.Unity;
 
-public class PlayerSpawnNotifier : DependencyBehaviour,
-    EscapeThe90s.Contracts.IDependent<IGameStateEventPublisher>
+public class PlayerSpawnNotifier : DependencyBehaviour, IDependent<IEventBus>
 {
-    private IGameStateEventPublisher _publisher;
+    private IEventBus _events;
 
     
-    public void Inject(IGameStateEventPublisher publisher)
+    public void Inject(IEventBus events)
     {
-        if (publisher == null)
+        if (events == null)
         {
             Debug.LogError("PlayerSpawnNotifier: Missing event publisher.");
             return;
         }
-        _publisher = publisher;
+        _events = events;
     }
 
-    protected override void OnSetupComplete() => _publisher?.NotifyPlayerSpawned(transform);
+    protected override void OnSetupComplete() => _events?.Publish(new UnityPlayerSpawnedEvent(transform));
 }

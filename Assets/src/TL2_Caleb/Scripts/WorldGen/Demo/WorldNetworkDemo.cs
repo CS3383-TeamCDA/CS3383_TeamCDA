@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using EscapeThe90s.WorldGen;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace EscapeThe90s.WorldGen.Demo
 {
@@ -11,6 +12,8 @@ public class WorldNetworkDemo : MonoBehaviour
     public WorldGenSettings settings;
     public WorldArt art;
     public GameObject playerPrefab;
+    [Tooltip("Input Actions asset supplied by the game integration for the player prefab.")]
+    public InputActionAsset playerInputActions;
     [Tooltip("TL4 enemy prefabs in EnemyType order: Ground, Flying, Turret.")]
     public GameObject[] enemyPrefabsByKind;
     public StreetView streetView;
@@ -49,7 +52,13 @@ public class WorldNetworkDemo : MonoBehaviour
     {
         _streetView = streetView != null ? streetView : GetComponentInChildren<StreetView>();
         if (_streetView != null) _streetView.enabled = false;
-        if (player != null) player.gameObject.SetActive(false);
+        if (player != null)
+        {
+            // Keep the scene player from awakening with the stale input-asset reference
+            // serialized on the team prefab. Configure it through the demo integration first.
+            player.gameObject.SetActive(false);
+            ConfigurePlayerInput(player);
+        }
     }
 
     void Start() { TryInitializeAfterGameStarts(); }
@@ -142,8 +151,24 @@ public class WorldNetworkDemo : MonoBehaviour
         _player = rig.Player;
         _playerBody = rig.Body;
         _ownsPlayer = rig.OwnsPlayer;
+        ConfigurePlayerInput(_player);
         _cameraFollow = _cameraRig.Attach(_player, _streetView);
         _streetView.follow = _player;
+    }
+
+    void ConfigurePlayerInput(Transform target)
+    {
+        if (target == null) return;
+        PlayerInput input = target.GetComponent<PlayerInput>();
+        if (input == null) input = target.gameObject.AddComponent<PlayerInput>();
+
+        if (playerInputActions == null)
+        {
+            Debug.LogError("WorldNetworkDemo: Assign the InputSystem_Actions asset before starting the scene.", this);
+            return;
+        }
+
+        input.actions = playerInputActions;
     }
     void EnterStreet(Int2 from, Int2 to)
     {
