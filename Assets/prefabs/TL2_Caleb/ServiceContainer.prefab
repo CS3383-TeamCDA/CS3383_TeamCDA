@@ -43,6 +43,6 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1d26b2eefb82cee44923855097c1b1da, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: TL2_Dependencies::ServiceContainer
-  gsmPrefab: {fileID: 6800396567026249575, guid: 5d1b1729051c04a8288d64e5422a2a62, type: 3}
-  gsepPrefab: {fileID: 7076028926003751695, guid: ab4acb06a1802ce49be8836d93d3836c, type: 3}
+  m_EditorClassIdentifier: EscapeThe90s.Composition::EscapeThe90s.Composition.ServiceContainer
+  gameStateManagerPrefab: {fileID: 6800396567026249575, guid: 5d1b1729051c04a8288d64e5422a2a62, type: 3}
+  gameStateBridgePrefab: {fileID: 7076028926003751695, guid: ab4acb06a1802ce49be8836d93d3836c, type: 3}

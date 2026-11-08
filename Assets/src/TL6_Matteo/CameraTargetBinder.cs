@@ -1,16 +1,15 @@
 
 using UnityEngine;
 using Unity.Cinemachine;
-using TL2_Dependencies;
-using EscapeThe90s.Dependencies.Unity;
+using EscapeThe90s.Contracts;
+using EscapeThe90s.Infrastructure.Unity;
 
-public class CameraTargetBinder : DependencyBehaviour,
-    EscapeThe90s.Contracts.IDependent<IGameStateEventPublisher>
+public class CameraTargetBinder : DependencyBehaviour, IDependent<IEventBus>
 {
     [SerializeField] private CinemachineCamera _cinemachineCamera;
 
-    private IGameStateEventPublisher _publisher;
-    private bool _isSubscribed;
+    private IEventBus _events;
+    private System.IDisposable _subscription;
 
     protected override void Awake()
     {
@@ -20,16 +19,12 @@ public class CameraTargetBinder : DependencyBehaviour,
             _cinemachineCamera = GetComponent<CinemachineCamera>();
     }
 
-    public void Inject(IGameStateEventPublisher publisher)
+    public void Inject(IEventBus events)
     {
         // Remove our listener from any previous publisher.
         Unsubscribe();
-
-        _publisher = publisher;
-
-        // Subscribe if the component is currently active.
-        if (isActiveAndEnabled)
-            Subscribe();
+        _events = events;
+        if (isActiveAndEnabled) Subscribe();
     }
 
     protected override void OnEnabledAfterInitialization()
@@ -44,25 +39,15 @@ public class CameraTargetBinder : DependencyBehaviour,
 
     private void Subscribe()
     {
-        if (_isSubscribed || _publisher == null)
+        if (_subscription != null || _events == null)
             return;
-
-        _publisher.OnPlayerSpawned += HandlePlayerSpawned;
-        _isSubscribed = true;
-
-        if (_publisher.CurrentPlayer != null)
-        {
-            HandlePlayerSpawned(_publisher.CurrentPlayer);
-        }
+        _subscription = _events.Subscribe<UnityPlayerSpawnedEvent>(message => HandlePlayerSpawned(message.Player), true);
     }
 
     private void Unsubscribe()
     {
-        if (!_isSubscribed || _publisher == null)
-            return;
-
-        _publisher.OnPlayerSpawned -= HandlePlayerSpawned;
-        _isSubscribed = false;
+        _subscription?.Dispose();
+        _subscription = null;
     }
 
     private void HandlePlayerSpawned(Transform playerTransform)

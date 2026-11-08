@@ -42,7 +42,6 @@ GameObject:
   m_Component:
   - component: {fileID: 5587660915733383825}
   - component: {fileID: 7049231203684545854}
-  - component: {fileID: 206661646899978016}
   m_Layer: 0
   m_Name: InputManager
   m_TagString: Untagged
@@ -143,19 +142,3 @@ MonoBehaviour:
   m_DefaultActionMap: InGame
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 0}
---- !u!114 &206661646899978016
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6681258118229559876}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ed3687bc654d122478f14dae1630fe1e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Tl2_Caleb::PlayerInputHandler
-  _playerInput: {fileID: 7049231203684545854}
-  GameStateEvents: {fileID: 0}
-  firstMenuButton: {fileID: 0}
-  menuUI: {fileID: 0}

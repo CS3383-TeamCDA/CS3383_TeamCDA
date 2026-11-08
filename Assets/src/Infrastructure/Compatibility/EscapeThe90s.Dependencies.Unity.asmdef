@@ -1,0 +1,8 @@
+{
+    "name": "EscapeThe90s.Dependencies.Unity",
+    "rootNamespace": "EscapeThe90s.Dependencies.Unity",
+    "references": ["EscapeThe90s.Contracts", "EscapeThe90s.Infrastructure.Unity"],
+    "includePlatforms": [], "excludePlatforms": [], "allowUnsafeCode": false,
+    "overrideReferences": false, "precompiledReferences": [], "autoReferenced": true,
+    "defineConstraints": [], "versionDefines": [], "noEngineReferences": false
+}
