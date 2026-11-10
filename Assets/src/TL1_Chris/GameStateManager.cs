@@ -3,18 +3,28 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using EscapeThe90s.State;
 using EscapeThe90s.GameStates;
+using EscapeThe90s.Contracts;
 
 namespace EscapeThe90s
 {
-    public class GameStateManager : MonoBehaviour
+    public class GameStateManager : MonoBehaviour, IGameState
     {
+        #region Fields
+
+        private readonly StateMachine<GameState> machine = new StateMachine<GameState>();
+        private bool isRestarting;
+
+        #endregion
+
         #region Properties
 
         public static GameStateManager Instance { get; private set; }
-        private StateMachine<GameState> machine = new StateMachine<GameState>();
         public GameState CurrentState => machine.CurrentState;
         public GameState PreviousState => machine.PreviousState;
-        private bool isRestarting;
+
+        // Other features cannot reference the GameState classes, so IGameState reports GameStateType values.
+        public GameStateType CurrentStateType => GetStateType(CurrentState);
+        private GameStateType PreviousStateType => GetStateType(PreviousState);
 
         #endregion
 
@@ -22,13 +32,21 @@ namespace EscapeThe90s
 
         public event Action<GameState> OnStateChanged
         {
-            add { machine.OnStateChanged += value; }
-            remove { machine.OnStateChanged -= value; }
+            add
+            {
+                machine.OnStateChanged += value;
+            }
+            remove
+            {
+                machine.OnStateChanged -= value;
+            }
         }
+
+        public event Action<GameStateChange> OnStateTypeChanged;
 
         #endregion
 
-        #region private Methods
+        #region Unity Lifecycle
 
         private void Awake()
         {
@@ -39,6 +57,7 @@ namespace EscapeThe90s
             }
 
             Instance = this;
+            machine.OnStateChanged += HandleStateChanged;
 
             // This keeps the GameObject alive across scene changes
             DontDestroyOnLoad(gameObject);
@@ -57,13 +76,25 @@ namespace EscapeThe90s
             machine.Update();
         }
 
+        private void OnDestroy()
+        {
+            if (Instance != this)
+            {
+                return;
+            }
+
+            machine.OnStateChanged -= HandleStateChanged;
+            SceneManager.sceneLoaded -= OnRestartSceneLoaded;
+            Instance = null;
+        }
+
         #endregion
 
-        #region public Methods
+        #region State Requests
 
         public void RequestStart()
         {
-            if (CurrentState is MenuState)
+            if (CurrentStateType == GameStateType.Menu)
             {
                 machine.ChangeState(new PlayingState());
             }
@@ -71,7 +102,7 @@ namespace EscapeThe90s
 
         public void RequestPause()
         {
-            if (CurrentState is PlayingState)
+            if (CurrentStateType == GameStateType.Playing)
             {
                 machine.ChangeState(new PauseState());
             }
@@ -79,7 +110,7 @@ namespace EscapeThe90s
 
         public void RequestResume()
         {
-            if (CurrentState is PauseState && PreviousState is PlayingState)
+            if (CurrentStateType == GameStateType.Paused && PreviousStateType == GameStateType.Playing)
             {
                 machine.ChangeState(PreviousState);
             }
@@ -87,7 +118,7 @@ namespace EscapeThe90s
 
         public void RequestGameOver()
         {
-            if (CurrentState is PlayingState)
+            if (CurrentStateType == GameStateType.Playing)
             {
                 machine.ChangeState(new GameOverState());
             }
@@ -95,7 +126,7 @@ namespace EscapeThe90s
 
         public void RequestRestart()
         {
-            if (isRestarting || !(CurrentState is GameOverState || CurrentState is PauseState))
+            if (isRestarting || (CurrentStateType != GameStateType.GameOver && CurrentStateType != GameStateType.Paused))
             {
                 return;
             }
@@ -108,11 +139,31 @@ namespace EscapeThe90s
             ReloadActiveScene();
         }
 
+        public void RequestReturnToMenu()
+        {
+            if (CurrentStateType == GameStateType.Playing || CurrentStateType == GameStateType.Paused || CurrentStateType == GameStateType.GameOver)
+            {
+                machine.ChangeState(new MenuState());
+            }
+        }
+
+        public void RequestQuit()
+        {
+            if (CurrentStateType == GameStateType.Menu)
+            {
+                Application.Quit();
+            }
+        }
+
+        #endregion
+
+        #region Restart
+
         private void OnRestartSceneLoaded(Scene scene, LoadSceneMode mode)
         {
             SceneManager.sceneLoaded -= OnRestartSceneLoaded;
-            isRestarting = false;
             machine.ChangeState(new PlayingState());
+            isRestarting = false;
         }
 
         private static void ReloadActiveScene()
@@ -133,23 +184,26 @@ namespace EscapeThe90s
 #endif
         }
 
-        public void RequestQuit()
+        #endregion
+
+        #region Event Dispatch
+
+        private void HandleStateChanged(GameState state)
         {
-            if (CurrentState is MenuState)
-            {
-                Application.Quit();
-            }
+            GameStateType previous = PreviousStateType;
+            GameStateType current = CurrentStateType;
+
+            // A restart also leaves the paused state, but it begins a new run rather than resuming one.
+            bool isNewRun = current == GameStateType.Playing && (previous != GameStateType.Paused || isRestarting);
+
+            OnStateTypeChanged?.Invoke(new GameStateChange(previous, current, isNewRun));
         }
 
-        public void RequestReturnToMenu()
+        private static GameStateType GetStateType(GameState state)
         {
-            if (CurrentState is PlayingState || CurrentState is PauseState || CurrentState is GameOverState)
-            {
-                machine.ChangeState(new MenuState());
-            }
+            return state == null ? GameStateType.None : state.Type;
         }
 
         #endregion
-
     }
 }
