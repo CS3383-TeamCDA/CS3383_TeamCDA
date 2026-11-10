@@ -10,6 +10,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    # Should be plenty of time. Average when adding is about ~8 minutes for a build that passes
+    timeout-minutes: 20
+
     permissions:
       contents: read
       checks: write
