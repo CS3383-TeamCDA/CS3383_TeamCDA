@@ -26,7 +26,11 @@ namespace EscapeThe90s.MetaProgression
         public void AddCurrency(int amount)
         {
             if (amount > 0)
+            {
                 currency += amount;
+                hudController.UpdateCurrency(currency);
+            }
+                
         }
 
         /// <summary>Returns the stored level for the upgrade, or 0 if none exists.</summary>
