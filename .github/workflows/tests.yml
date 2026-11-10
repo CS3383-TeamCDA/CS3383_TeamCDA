@@ -21,14 +21,30 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Only restore a Library built from these exact project files. A partial
-      # (prefix) restore brings back stale import/script state from older commits,
-      # which is what broke builds until the cache version was bumped.
+      # Unity only re-imports assets whose contents or import settings changed, so a
+      # Library from an earlier commit can be reused safely as long as:
+      #   1. it was built with the same packages, project settings, and Unity version
+      #      (ProjectVersion.txt lives in ProjectSettings), which the restore key enforces;
+      #   2. compiled scripts are not reused (see the next step).
+      # The old setup restored any previous Library ("Library-v6-Linux-"), even one built
+      # with different packages or settings, which is why it needed manual version bumps.
+      # actions/cache only saves after a successful job, so a broken Library is never saved.
       - name: Cache Unity Library
+        id: library-cache
         uses: actions/cache@v4
         with:
           path: Library
-          key: Library-${{ runner.os }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          key: Library-${{ runner.os }}-${{ hashFiles('Packages/**', 'ProjectSettings/**') }}-${{ hashFiles('Assets/**') }}
+          restore-keys: |
+            Library-${{ runner.os }}-${{ hashFiles('Packages/**', 'ProjectSettings/**') }}-
+
+      # A Library restored from an older commit keeps its asset imports but always
+      # recompiles scripts, so stale assemblies (e.g. from a deleted or renamed .asmdef)
+      # can't break the run. An exact cache hit is the same commit, so it is kept whole.
+      - name: Drop cached script compilation
+        if: steps.library-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: rm -rf Library/ScriptAssemblies Library/Bee Library/BeeAssemblyBuilder Library/ScriptMapper
 
       - name: Free disk space
         uses: jlumbroso/free-disk-space@v1.3.1
