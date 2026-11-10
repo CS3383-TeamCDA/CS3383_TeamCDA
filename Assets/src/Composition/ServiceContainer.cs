@@ -34,7 +34,7 @@ namespace EscapeThe90s.Composition
                 // Only GameStateEventBridge needs this; remove it with the bridge once TL2 uses IGameState
                 Register(gameStateManager);
 
-                // Keep
+                // Keep 
                 Register<IGameState>(gameStateManager);
             }
             else Debug.LogError("ServiceContainer: GameStateManager could not be resolved or created.", this);
