@@ -1,7 +1,10 @@
 {
     "name": "Joe.Game",
     "rootNamespace": "",
-    "references": [ "EscapeThe90s.Contracts" ],
+    "references": [
+        "EscapeThe90s.Contracts",
+        "GUID:e79fff685693b3748abc147481561945"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

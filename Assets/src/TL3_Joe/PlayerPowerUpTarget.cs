@@ -11,9 +11,15 @@ namespace EscapeThe90s.PowerUps
 
         public Vector3 Position => transform.position;
 
+        private PlayerHealth health;
+
         private void Awake()
         {
             PickupRadius = basePickupRadius;
+            health = GetComponent<PlayerHealth>();
+            if (health == null)
+                Debug.LogWarning($"[PlayerPowerUpTarget] No PlayerHealth on {name}; Shield pickups will not heal.");
+
         }
 
         public void SetSpeedMultiplier(float multiplier)
@@ -27,8 +33,7 @@ namespace EscapeThe90s.PowerUps
         public void Heal(int amount)
         {
             Debug.Log($"[PlayerPowerUpTarget] Heal({amount})");
-            // TODO when TL6's script is in the project:
-            // GetComponent<PlayerHealth>().Heal(amount);
+            if (health != null) health.Heal(amount);
         }
 
         public void SetPickupRadius(float radius)
