@@ -47,7 +47,7 @@ public static class IntegratedWorldDemoSetup
             if (component == null) continue;
             string typeName = component.GetType().Name;
             if (typeName == "LevelGenerator" || typeName == "ChunkGenerator" ||
-                typeName == "GeneratedTerrainEnemyPopulation" || typeName == "PowerUpGenerator")
+                typeName == "GeneratedTerrainEnemyPopulation")
                 component.enabled = false;
         }
 

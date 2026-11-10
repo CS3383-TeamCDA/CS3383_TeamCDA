@@ -69,10 +69,12 @@ The original code remains in `Assets/_Archive/TL2_Caleb_Legacy`. Current TL2 sou
 
 ### Demo and team integration
 
-- `WorldNetworkDemo` in `Scripts/WorldGen/Demo/WorldNetworkDemo.cs`: waits for gameplay to start, creates the world/player, transitions between streets, draws the graph and route picker, and synchronizes enemies and powerups with streamed chunks. Important functions include `TryInitializeAfterGameStarts`, `IsGameplayStarted`, `CreateDemoBiomeRules`, `EnterStreet`, `EnsureAllDemoEnemyKinds`, `SyncStreetEnemies`, and `SyncStreetPowerUps`.
+- `WorldNetworkDemo` in `Scripts/WorldGen/Demo/WorldNetworkDemo.cs`: coordinates startup, street transitions, movement prompts, HUD, and map state.
+- `DemoWorldBootstrap`, `DemoPlayerRig`, and `StreetIntersectionController` separate seeded startup, player setup, and endpoint-specific route state; `RouteChooserView`, `DemoCameraRig`, and `WorldMapOverlay` own their respective display and camera roles.
 - `CameraFollow` in `Scripts/WorldGen/Demo/CameraFollow.cs`: follows the player, snaps the camera to pixel increments, and clamps it to `StreetView` bounds.
 - `DemoWalker` in `Scripts/WorldGen/Demo/DemoWalker.cs`: lightweight movement controller for standalone world-generation scenes; the integrated demo uses the existing team player.
 - `GeneratedPlayerPowerUpTarget` in `Scripts/WorldGen/Integration/GeneratedPlayerPowerUpTarget.cs`: implements the powerup target adapter. `SetSpeedMultiplier`, `Heal`, and `SetPickupRadius` forward powerup effects to the player.
+- `GeneratedStreetContent` and `GeneratedWorldComposition` in the Integration assembly handle chunk-driven enemy/pickup loading and all reflection-based cross-team composition.
 - `WorldNetworkDemoSetup` in `Scripts/WorldGen/Demo/Editor/WorldNetworkDemoSetup.cs` and `IntegratedWorldDemoSetup` in `Scripts/WorldGen/Demo/Editor/IntegratedWorldDemoSetup.cs`: create standalone and integrated demo setups. `CreateIntegratedDemo` copies the existing team demo scene before adding the generated-world driver.
 - `ShowcaseSetup` in `Scripts/WorldGen/Demo/Editor/ShowcaseSetup.cs`: creates the original visual showcase objects for Scene view inspection.
 - `RegionMapWindow`, `RegionMapRaster`, `WorldArtSetup`, and `IndexTextureImporter` provide editor map visualization, raster output, art asset setup, and indexed texture import.
@@ -97,17 +99,39 @@ This tranche does not change pinned generation hashes or add new cross-team cont
 - Split region link generation into surface-link selection and forced-subway handling, and split building placement into required, optional-special, and filler phases.
 - Kept random draws and their ordering in the same generation phases so this refactor does not intentionally alter generated output.
 
-The legacy hash checks still pass after M4–M6; the new metadata has a separate generation hash. The plan's plaza redesign and save/composition decisions remain open. Unity GameObject pool integration and terrain-stamp rendering are M7 work.
+The legacy hash checks still pass after M4–M6; the new metadata has a separate generation hash. The plan's plaza redesign and save/composition decisions remain open.
 
 ## Core foundations (M6)
 
 - Added `StreetKind`, `ChunkKind`, `TerrainStamp`, and deterministic stamp selection. Street kinds map to the already-configured short street-length range so the playable demo does not unexpectedly return to long streets. Stamps are bounded to chunk-local cells; gap width is a conservative placeholder until TL6 jump capability is available.
 - Added `IChunkGenerator` and `ChunkSpec`. `StreetGenerator` now produces chunk metadata and spawn locations alongside the legacy `ChunkData`; `ContentHash` remains the pinned legacy hash while `GenerationHash` includes the new metadata.
-- Added a reusable engine-free `ChunkPool<T>` keyed by kind with prewarm, reuse, and lifecycle counters. Unity GameObject activation and renderer reset still belong to M7.
+- Added a reusable engine-free `ChunkPool<T>` keyed by kind with prewarm, reuse, and lifecycle counters; M7 connects it to Unity `Chunk` objects.
 - Added smooth, rebasable `DifficultyProgression`, monotonic `LevelProgress`, and immutable `ChunkSpawnedInfo`/`ChunkId` data with once-per-active-load spawn and recycle events.
 - Added M6 EditMode fixtures for chunk metadata, pool reuse, progression, and immutable event payloads.
 
-M6 Core code compiles with the .NET compiler, and the engine-free determinism plus focused M6 checks pass. The NUnit fixtures have not been run in the Unity Editor yet. Unity's `StreetTerrain` renderer does not consume the new stamp geometry yet; that wiring is part of M7.
+M6 Core code compiles with the .NET compiler, and the engine-free determinism plus focused M6 checks pass. The NUnit fixtures have not been run in the Unity Editor yet.
+
+## Unity streaming integration (M7, implemented)
+
+- `StreetTerrain` applies generated chunk stamps to its height and gap grids. Gap columns render empty and are omitted from `TerrainColliders`; ramps and curbs alter the collision surface as well as the rendered terrain.
+- `StreetView` now publishes `ChunkSpawnedInfo` and `ChunkId` recycle notifications through its `Progress` property. Spawned data includes bounds, biome, difficulty/tier, chunk kind, and immutable spawn locations so enemy and pickup systems can follow terrain load/unload.
+- Added an abstract `Chunk` base with `GroundChunk`, `GapChunk`, `RampChunk`, and `PlazaChunk` implementations. `StreetView` pools concrete types by `ChunkKind`; the gap type explicitly leaves stamped gap columns empty.
+- Added `LevelStreamer` to calculate the streaming window from `IPlayerPositionSource`; `TransformPlayerPositionSource` adapts the Unity player transform without making Core depend on Unity.
+- `StreetView` advances monotonic run distance as its follow target moves, publishes chunk lifecycle events, and exposes pool hit metrics. The earlier Play Mode smoke run exercised recycling (`Created=6`, `PoolHits=8`, `Returned=2`) and rendered stairs with no gameplay Console errors. The user has since confirmed the current refactored project compiles and works in Play Mode.
+- Added Unity's `com.unity.pipeline` Editor package to enable live Editor control and smoke checks through the Unity CLI.
+- Intersection presentation remains the existing top-down chooser while the plaza decision is open.
+
+## Demo modularization (M8, implemented)
+
+- Split the playable demo into `DemoWorldBootstrap` (seeded world and start-node resolution), `DemoPlayerRig` (player setup), `StreetIntersectionController` (endpoint-specific exits and route selection), `RouteChooserView` (route graph UI), `DemoCameraRig` (bounded follow camera), and `WorldMapOverlay` (map rendering).
+- Moved enemy and pickup spawning and chunk lifecycle subscriptions into `GeneratedStreetContent`. It consumes the Contracts lifecycle events; `StreetView` remains the owner of loaded chunk objects and destroys them on recycle.
+- Moved game-start detection, player injection, TL6 player configuration, powerup target attachment, and TL3/TL4 reflection bridges into the existing WorldGen Integration assembly as the Composition boundary. Reflection searches in the demo and core world-generation code return no matches; all remaining worldgen integration reflection is under `Scripts/WorldGen/Integration/`.
+- `WorldNetworkDemo` now coordinates startup, street transitions, gameplay input, HUD, and map data. Existing team scripts remain unchanged. The demo assembly references Integration; Integration references Contracts, WorldGen Core/Unity, and its existing team assemblies, with no reverse reference to Demo.
+- `git diff --check` is clean. The user confirmed the current code compiles and works in Play Mode.
+## Shared assembly decision (D8, agreed by team)
+
+- Shared contracts now live under `Assets/src/Contracts` in the engine-independent `EscapeThe90s.Contracts` assembly. TL1–TL6 source and test asmdefs reference Contracts; TL2's level-progress, chunk identity, spawn-location, and player-boundary APIs are owned there.
+- Feature-to-feature references already present in the project have not yet been removed. M9 will map those edges with the team and move cross-feature wiring into Composition; adding a Contracts reference by itself does not eliminate existing cycles.
 
 ## Main files and assets
 

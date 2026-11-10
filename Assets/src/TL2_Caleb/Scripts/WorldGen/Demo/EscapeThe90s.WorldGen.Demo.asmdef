@@ -4,6 +4,8 @@
     "references": [
         "EscapeThe90s.WorldGen.Core",
         "EscapeThe90s.WorldGen.Unity",
+        "EscapeThe90s.WorldGen.Integration",
+        "EscapeThe90s.Contracts",
         "Unity.InputSystem"
     ],
     "includePlatforms": [],

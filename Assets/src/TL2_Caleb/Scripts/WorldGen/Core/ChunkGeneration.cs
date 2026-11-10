@@ -1,36 +1,9 @@
 using System;
 using System.Collections.Generic;
+using EscapeThe90s.Contracts;
 
 namespace EscapeThe90s.WorldGen
 {
-    public enum SpawnLocationKind { Enemy = 0, PowerUp, BuildingAnchor }
-
-    /// <summary>A normalized spawn point emitted with a chunk for downstream content systems.</summary>
-    public readonly struct SpawnLocation
-    {
-        public readonly SpawnLocationKind Kind;
-        public readonly float NormalizedX;
-        public readonly int SlotIndex;
-        public readonly int ContentKindIndex;
-        public readonly int AnchorIndex;
-
-        public SpawnLocation(SpawnLocationKind kind, float normalizedX, int slotIndex, int contentKindIndex, int anchorIndex)
-        {
-            Kind = kind;
-            NormalizedX = Clamp01(normalizedX);
-            SlotIndex = slotIndex;
-            ContentKindIndex = contentKindIndex;
-            AnchorIndex = anchorIndex;
-        }
-
-        static float Clamp01(float value)
-        {
-            if (float.IsNaN(value) || value <= 0f) return 0f;
-            if (value >= 1f) return 1f;
-            return value;
-        }
-    }
-
     /// <summary>Seeded terrain instruction in chunk-local cell coordinates. Height values are surface offsets.</summary>
     public readonly struct TerrainStamp
     {

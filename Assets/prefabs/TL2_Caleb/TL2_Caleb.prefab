@@ -9,7 +9,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4534280964845144288}
-  - component: {fileID: 6365047058369278287}
   m_Layer: 0
   m_Name: TL2_Caleb
   m_TagString: Untagged
@@ -39,19 +38,6 @@ Transform:
   - {fileID: 3162671517841816925}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &6365047058369278287
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1306314969548065260}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 841df487653e0324dbf96b6f09fdf216, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Tl2_Caleb::SetChildActiveOnStart
-  childObject: {fileID: 6158501637962087148}
 --- !u!1 &4384698178473636407
 GameObject:
   m_ObjectHideFlags: 0
@@ -61,7 +47,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2975846330447084976}
-  - component: {fileID: 8666439668398251331}
   m_Layer: 0
   m_Name: PowerUpGenerator
   m_TagString: Untagged
@@ -85,22 +70,6 @@ Transform:
   - {fileID: 3101872333202751764}
   m_Father: {fileID: 4534280964845144288}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8666439668398251331
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4384698178473636407}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 85fe487a9d4504547a396a48cf0aff6a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Tl2_Caleb::PowerUpGenerator
-  GameStateEvents: {fileID: 2914908739968955138}
-  manager: {fileID: 0}
-  type: 1
-  position: {fileID: 3101872333202751764}
 --- !u!1 &7286581655863401798
 GameObject:
   m_ObjectHideFlags: 0
@@ -140,10 +109,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 4534280964845144288}
     m_Modifications:
-    - target: {fileID: 206661646899978016, guid: a40142879fc1bb144bd21d3e35cdb552, type: 3}
-      propertyPath: GameStateEvents
-      value: 
-      objectReference: {fileID: 2914908739968955138}
     - target: {fileID: 2258311676414148054, guid: a40142879fc1bb144bd21d3e35cdb552, type: 3}
       propertyPath: m_LocalPosition.x
       value: 242.75818
@@ -193,17 +158,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a40142879fc1bb144bd21d3e35cdb552, type: 3}
---- !u!114 &2970154652721057910 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 206661646899978016, guid: a40142879fc1bb144bd21d3e35cdb552, type: 3}
-  m_PrefabInstance: {fileID: 3163266674229120854}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ed3687bc654d122478f14dae1630fe1e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Tl2_Caleb::PlayerInputHandler
 --- !u!4 &3796830009680343680 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2258311676414148054, guid: a40142879fc1bb144bd21d3e35cdb552, type: 3}
@@ -351,7 +305,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 7076028926003751695, guid: ab4acb06a1802ce49be8836d93d3836c, type: 3}
       propertyPath: m_Name
-      value: GameStateEventPublisher
+      value: GameStateEventBridge
       objectReference: {fileID: 0}
     - target: {fileID: 8262710586151627893, guid: ab4acb06a1802ce49be8836d93d3836c, type: 3}
       propertyPath: m_LocalPosition.x
@@ -413,7 +367,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2f6dc31556f6cb14ab5ce9704244d233, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: '::'
+  m_EditorClassIdentifier: EscapeThe90s.Composition::EscapeThe90s.Composition.GameStateEventBridge
 --- !u!1001 &6388385978824391310
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -466,10 +420,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 6665892039594888637, guid: 5366a3c3f2375a44b932634e8a7ad9ac, type: 3}
-      propertyPath: _inputHandler
-      value: 
-      objectReference: {fileID: 2970154652721057910}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

@@ -4,7 +4,8 @@
   "references": [
     "EscapeThe90s.WorldGen.Core",
     "EscapeThe90s.WorldGen.Unity",
-    "EscapeThe90s.WorldGen.Demo"
+    "EscapeThe90s.WorldGen.Demo",
+    "EscapeThe90s.Contracts"
   ],
   "includePlatforms": [ "Editor" ],
   "excludePlatforms": [],

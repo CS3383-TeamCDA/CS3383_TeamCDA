@@ -128,7 +128,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 103019594}
-  - component: {fileID: 103019595}
   m_Layer: 0
   m_Name: TL3_Joe
   m_TagString: Untagged
@@ -152,19 +151,6 @@ Transform:
   - {fileID: 161730964}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &103019595
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 103019593}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 841df487653e0324dbf96b6f09fdf216, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Tl2_Caleb::SetChildActiveOnStart
-  childObject: {fileID: 161730963}
 --- !u!1 &143849062 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 6627869569352318946, guid: f03f01e559694814c89d3a23e4b80738, type: 3}
@@ -222,17 +208,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4534280964845144288, guid: 0da14fc95075319448e7ee6e15fa5102, type: 3}
   m_PrefabInstance: {fileID: 491617737138964614}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &497186404 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 2970154652721057910, guid: 0da14fc95075319448e7ee6e15fa5102, type: 3}
-  m_PrefabInstance: {fileID: 491617737138964614}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ed3687bc654d122478f14dae1630fe1e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Tl2_Caleb::PlayerInputHandler
 --- !u!1 &526700979
 GameObject:
   m_ObjectHideFlags: 0
@@ -242,8 +217,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 526700980}
-  - component: {fileID: 526700982}
-  - component: {fileID: 526700981}
   m_Layer: 0
   m_Name: LevelGenerator
   m_TagString: Untagged
@@ -266,49 +239,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 492113629}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &526700981
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 526700979}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2664718663349284c874cf86d94aaa55, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: TL2_LevelGen::TL2_LevelGen.ChunkGenerator
-  worldSeed: 1337
-  baseSurfaceHeight: 3
-  dirtDepth: 124
-  heightNoiseScale: 0.05
-  heightVariance: 10
-  worldBottomY: -8
-  worldTopY: 128
-  airTileId: 0
-  stoneTileId: 1
-  dirtTileId: 2
-  grassTileId: 3
---- !u!114 &526700982
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 526700979}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6c520d14ea477ee4592306185280781b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: TL2_LevelGen::TL2_LevelGen.LevelGenerator
-  playerTransform: {fileID: 1693797396}
-  generator: {fileID: 526700981}
-  rendererPass: {fileID: 840844440}
-  collisionPass: {fileID: 1276232960}
-  chunkWidth: 16
-  chunkHeight: 16
-  viewDistance: 3
-  chunksBehind: 2
 --- !u!1 &650053035
 GameObject:
   m_ObjectHideFlags: 0
@@ -427,7 +357,6 @@ GameObject:
   - component: {fileID: 840844437}
   - component: {fileID: 840844439}
   - component: {fileID: 840844438}
-  - component: {fileID: 840844440}
   m_Layer: 0
   m_Name: Rendering
   m_TagString: Untagged
@@ -544,20 +473,6 @@ Tilemap:
     e31: 0
     e32: 0
     e33: 1
---- !u!114 &840844440
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 840844436}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9aa2a6c91239b7c4485779f9a5d4264d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: TL2_LevelGen::TL2_LevelGen.DualGridTilemapRenderer
-  targetTilemap: {fileID: 840844439}
-  tileSet: {fileID: 11400000, guid: c974816cc8de4054aa02b5a319ecafda, type: 2}
 --- !u!1 &1276232955
 GameObject:
   m_ObjectHideFlags: 0
@@ -569,9 +484,7 @@ GameObject:
   - component: {fileID: 1276232956}
   - component: {fileID: 1276232959}
   - component: {fileID: 1276232958}
-  - component: {fileID: 1276232957}
   - component: {fileID: 1276232963}
-  - component: {fileID: 1276232960}
   - component: {fileID: 1276232962}
   - component: {fileID: 1276232961}
   m_Layer: 3
@@ -596,20 +509,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 650053036}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1276232957
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1276232955}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9aa2a6c91239b7c4485779f9a5d4264d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: TL2_LevelGen::TL2_LevelGen.DualGridTilemapRenderer
-  targetTilemap: {fileID: 1276232959}
-  tileSet: {fileID: 11400000, guid: c974816cc8de4054aa02b5a319ecafda, type: 2}
 --- !u!483693784 &1276232958
 TilemapRenderer:
   serializedVersion: 2
@@ -704,20 +603,6 @@ Tilemap:
     e31: 0
     e32: 0
     e33: 1
---- !u!114 &1276232960
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1276232955}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2c1e4db27b2af3d40987cc1eba2c24fb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: TL2_LevelGen::TL2_LevelGen.LogicalTilemapCollider
-  collisionTilemap: {fileID: 1276232959}
-  solidCollisionTile: {fileID: 11400000, guid: 130a4b8c2a6ea104aa91b9d26db4a3bc, type: 2}
 --- !u!66 &1276232961
 CompositeCollider2D:
   m_ObjectHideFlags: 0
@@ -893,18 +778,6 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 2970154652721057910, guid: 0da14fc95075319448e7ee6e15fa5102, type: 3}
-      propertyPath: menuUI
-      value: 
-      objectReference: {fileID: 1939070259}
-    - target: {fileID: 2970154652721057910, guid: 0da14fc95075319448e7ee6e15fa5102, type: 3}
-      propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2970154652721057910, guid: 0da14fc95075319448e7ee6e15fa5102, type: 3}
-      propertyPath: firstMenuButton
-      value: 
-      objectReference: {fileID: 143849062}
     - target: {fileID: 3750003858013813186, guid: 0da14fc95075319448e7ee6e15fa5102, type: 3}
       propertyPath: m_IsActive
       value: 0

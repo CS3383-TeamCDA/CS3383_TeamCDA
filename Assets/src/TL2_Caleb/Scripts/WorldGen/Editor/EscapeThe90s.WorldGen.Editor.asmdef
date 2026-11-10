@@ -1,7 +1,7 @@
 {
     "name": "EscapeThe90s.WorldGen.Editor",
     "rootNamespace": "EscapeThe90s.WorldGen",
-    "references": [ "EscapeThe90s.WorldGen.Core", "EscapeThe90s.WorldGen.Unity" ],
+    "references": [ "EscapeThe90s.WorldGen.Core", "EscapeThe90s.WorldGen.Unity", "EscapeThe90s.Contracts" ],
     "includePlatforms": [ "Editor" ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

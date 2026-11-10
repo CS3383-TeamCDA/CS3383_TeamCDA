@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using EscapeThe90s.Contracts;
 
 namespace EscapeThe90s.WorldGen
 {
@@ -39,7 +40,7 @@ namespace EscapeThe90s.WorldGen
         {
             if (count < 0) throw new ArgumentOutOfRangeException("count");
             Stack<T> pool = GetPool(kind);
-            for (int i = 0; i < count; i++) pool.Push(Create(kind));
+            while (pool.Count < count) pool.Push(Create(kind));
         }
 
         public T Rent(ChunkKind kind)

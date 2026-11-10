@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using EscapeThe90s.Contracts;
 
 namespace EscapeThe90s.WorldGen
 {
@@ -52,66 +53,6 @@ namespace EscapeThe90s.WorldGen
             if (float.IsPositiveInfinity(difficulty) || difficulty >= maximum) return maximum;
             return difficulty;
         }
-    }
-
-    /// <summary>Stable identity for one streamed street chunk.</summary>
-    public readonly struct ChunkId : IEquatable<ChunkId>
-    {
-        public readonly StableId StreetId;
-        public readonly int Index;
-
-        public ChunkId(StableId streetId, int index) { StreetId = streetId; Index = index; }
-        public bool Equals(ChunkId other) { return StreetId.Equals(other.StreetId) && Index == other.Index; }
-        public override bool Equals(object obj) { return obj is ChunkId other && Equals(other); }
-        public override int GetHashCode() { unchecked { return StreetId.GetHashCode() * 397 ^ Index; } }
-    }
-
-    /// <summary>Engine-free world-space bounds included in chunk lifecycle events.</summary>
-    public readonly struct ChunkBounds
-    {
-        public readonly float MinX, MinY, MaxX, MaxY;
-        public ChunkBounds(float minX, float minY, float maxX, float maxY)
-        { MinX = minX; MinY = minY; MaxX = maxX; MaxY = maxY; }
-    }
-
-    /// <summary>Immutable event payload describing a chunk ready for dependent content systems.</summary>
-    public sealed class ChunkSpawnedInfo
-    {
-        readonly IReadOnlyList<SpawnLocation> _spawnLocations;
-
-        public ChunkId Id { get; private set; }
-        public ChunkBounds Bounds { get; private set; }
-        public float Difficulty { get; private set; }
-        public int Tier { get; private set; }
-        public int Biome { get; private set; }
-        public ChunkKind Kind { get; private set; }
-        public IReadOnlyList<SpawnLocation> SpawnLocations
-        { get { return _spawnLocations; } }
-
-        public ChunkSpawnedInfo(ChunkId id, ChunkBounds bounds, float difficulty, int tier, int biome,
-            ChunkKind kind, IReadOnlyList<SpawnLocation> spawnLocations)
-        {
-            Id = id;
-            Bounds = bounds;
-            Difficulty = DifficultyProgression.ClampDifficulty(difficulty);
-            Tier = Math.Max(0, tier);
-            Biome = biome;
-            Kind = kind;
-            int count = spawnLocations == null ? 0 : spawnLocations.Count;
-            var copy = new SpawnLocation[count];
-            for (int i = 0; i < count; i++) copy[i] = spawnLocations[i];
-            _spawnLocations = Array.AsReadOnly(copy);
-        }
-    }
-
-    /// <summary>Progress and chunk-lifecycle contract exposed by the level generator.</summary>
-    public interface ILevelProgress
-    {
-        float GetCurrentDistance();
-        float GetCurrentDifficulty();
-        void SetDifficulty(float difficulty);
-        event Action<ChunkSpawnedInfo> OnChunkSpawned;
-        event Action<ChunkId> OnChunkRecycled;
     }
 
     /// <summary>Tracks furthest progress and publishes each chunk's lifecycle once per active load.</summary>

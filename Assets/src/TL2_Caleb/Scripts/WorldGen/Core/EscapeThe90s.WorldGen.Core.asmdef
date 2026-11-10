@@ -1,7 +1,7 @@
 {
     "name": "EscapeThe90s.WorldGen.Core",
     "rootNamespace": "EscapeThe90s.WorldGen",
-    "references": [],
+    "references": [ "EscapeThe90s.Contracts" ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

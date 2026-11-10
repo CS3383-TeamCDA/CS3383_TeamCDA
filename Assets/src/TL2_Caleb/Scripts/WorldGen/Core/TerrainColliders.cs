@@ -11,7 +11,7 @@ namespace EscapeThe90s.WorldGen
 
     /// <summary>
     /// Physics shapes come from the DATA grid (exact cells), not from tile art, so collision never depends on how the dual-grid
-    /// tiles look. One deep slab under the street plus one box per run of equal-height bump columns.
+    /// tiles look. Adjacent columns with the same surface height share a deep box; gap columns have no collider.
     /// </summary>
     public static class TerrainColliders
     {
@@ -20,16 +20,16 @@ namespace EscapeThe90s.WorldGen
             int w = WorldConstants.ChunkWidthCells;
             int x0 = chunkIndex * w;
             var boxes = new List<ColliderBox>();
-            boxes.Add(new ColliderBox(0, w, -WorldConstants.SlabDepthCells, 0));
-
             int lx = 0;
             while (lx < w)
             {
-                int h = terrain.HeightAt(x0 + lx);
-                if (h <= 0) { lx++; continue; }
+                int worldX = x0 + lx;
+                if (terrain.IsGap(worldX)) { lx++; continue; }
+                int h = terrain.HeightAt(worldX);
                 int start = lx;
-                while (lx < w && terrain.HeightAt(x0 + lx) == h) lx++;
-                boxes.Add(new ColliderBox(start, lx, 0, h));
+                while (lx < w && !terrain.IsGap(x0 + lx) && terrain.HeightAt(x0 + lx) == h) lx++;
+                int bottom = System.Math.Min(-WorldConstants.SlabDepthCells, h - WorldConstants.SlabDepthCells);
+                boxes.Add(new ColliderBox(start, lx, bottom, h));
             }
             return boxes;
         }

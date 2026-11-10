@@ -1,5 +1,6 @@
 using System;
 using EscapeThe90s.WorldGen;
+using EscapeThe90s.Contracts;
 using NUnit.Framework;
 
 namespace EscapeThe90s.WorldGen.Tests
@@ -40,7 +41,7 @@ namespace EscapeThe90s.WorldGen.Tests
             int spawned = 0, recycled = 0;
             progress.OnChunkSpawned += _ => spawned++;
             progress.OnChunkRecycled += _ => recycled++;
-            var id = new ChunkId(new StableId(12), 3);
+            var id = new ChunkId(12UL, 3);
             var info = new ChunkSpawnedInfo(id, new ChunkBounds(0f, 0f, 32f, 8f), 0.6f, 0, 1,
                 ChunkKind.Ground, new SpawnLocation[0]);
 
@@ -56,7 +57,7 @@ namespace EscapeThe90s.WorldGen.Tests
         public void ChunkSpawnedInfo_ExposesReadOnlyLocations()
         {
             var location = new SpawnLocation(SpawnLocationKind.Enemy, 0.5f, 0, 1, -1);
-            var info = new ChunkSpawnedInfo(new ChunkId(new StableId(7), 0),
+            var info = new ChunkSpawnedInfo(new ChunkId(7UL, 0),
                 new ChunkBounds(0f, 0f, 32f, 8f), 0.25f, 0, 0, ChunkKind.Ground,
                 new[] { location });
             var list = info.SpawnLocations as System.Collections.Generic.IList<SpawnLocation>;

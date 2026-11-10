@@ -2,6 +2,10 @@
     "name": "EscapeThe90s.WorldGen.Integration",
     "rootNamespace": "EscapeThe90s.WorldGen.Integration",
     "references": [
+        "EscapeThe90s.Contracts",
+        "EscapeThe90s.WorldGen.Core",
+        "EscapeThe90s.WorldGen.Unity",
+        "EscapeThe90s.Infrastructure.Unity",
         "GUID:48ead3c22fc9e4b97bc5183622b0c2aa",
         "GUID:e79fff685693b3748abc147481561945"
     ],
