@@ -1,9 +1,12 @@
+using EscapeThe90s.Contracts;
 using UnityEngine;
 
 namespace EscapeThe90s.GameStates
 {
     public class GameOverState : GameState
     {
+        public override GameStateType Type => GameStateType.GameOver;
+
         private float previousTimeScale = 1f;
         private CursorLockMode previousCursorLockMode = CursorLockMode.None;
         private bool previousCursorVisible = true;

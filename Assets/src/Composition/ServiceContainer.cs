@@ -29,7 +29,14 @@ namespace EscapeThe90s.Composition
             EventBus eventBus = new EventBus();
             GameStateEventBridge bridge = ResolveBridge();
 
-            if (gameStateManager != null) Register(gameStateManager);
+            if (gameStateManager != null)
+            {
+                // Only GameStateEventBridge needs this; remove it with the bridge once TL2 uses IGameState
+                Register(gameStateManager);
+
+                // Keep
+                Register<IGameState>(gameStateManager);
+            }
             else Debug.LogError("ServiceContainer: GameStateManager could not be resolved or created.", this);
 
             Register<IEventBus>(eventBus);

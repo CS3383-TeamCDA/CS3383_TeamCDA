@@ -17,6 +17,9 @@ These rules are the authoritative summary for code review and AI-assisted work:
 8. Add comments only when they explain non-obvious intent or reasoning.
 9. Use regions to organize substantial class sections when they improve navigation.
 10. Do not add unrelated formatting or refactoring to a change.
+11. Share code with other teams only through `EscapeThe90s.Contracts`; never
+    reference another teammates assembly.
+12. Get shared services through `IDependent<T>` injection instead of singletons.
 
 ## Naming
 
@@ -141,18 +144,14 @@ Expose state through appropriate properties or methods when needed.
 
 ## Namespaces
 
-The project will utilize the namespace "EscapeThe90s". Try to subdivide the namspace the best you can based on you features. If you have the features of levels and power-ups. Use these following as an exxample:
+All code uses the root namespace `EscapeThe90s`. Subdivide it by feature, for
+example `EscapeThe90s.Levels` or `EscapeThe90s.PowerUps`.
 
 ```csharp
 namespace EscapeThe90s.Levels
 {
     public class LevelController
     {
-        public void CurrentLevel()
-        {
-            // Code here
-        }
-
         public void UpdateLevel()
         {
             // Code here
@@ -161,25 +160,53 @@ namespace EscapeThe90s.Levels
 }
 ```
 
-or...
+Shared namespaces already in use:
 
-```csharp
-namespace EscapeThe90s.PowerUps
-{
-    public class PowerUps
-    {
-        public void Update()
-        {
-            // Code here
-        }
+| Namespace                          | Contents                                                 |
+| ---------------------------------- | -------------------------------------------------------- |
+| `EscapeThe90s.Contracts`           | Shared interfaces, event structs, and data types         |
+| `EscapeThe90s.Infrastructure`      | Engine-neutral mechanisms such as `EventBus`             |
+| `EscapeThe90s.Infrastructure.Unity`| `DependencyBehaviour`, `DependencyScope`, Unity messages |
+| `EscapeThe90s.Composition`         | `ServiceContainer` and adapters that wire teams together |
 
-        public void Swap()
-        {
-            // Code here
-        }
-    }
-}
+Do not put feature code in these namespaces.
+
+## Architecture and Dependencies
+
+Each team's code lives in its own assembly (`.asmdef`) under `Assets/src/TLx_Name`.
+Team assemblies must not reference each other. Features communicate only through
+the shared layers below.
+
 ```
+Team assemblies ──► EscapeThe90s.Contracts ◄── Infrastructure
+                              ▲
+                     EscapeThe90s.Composition (wires concrete types to contracts)
+```
+
+| Layer          | Location                     | May reference                          |
+| -------------- | ---------------------------- | -------------------------------------- |
+| Contracts      | `Assets/src/Contracts`       | Nothing (no UnityEngine)               |
+| Infrastructure | `Assets/src/Infrastructure`  | Contracts                              |
+| Team features  | `Assets/src/TLx_Name`        | Contracts, Infrastructure.Unity        |
+| Composition    | `Assets/src/Composition`     | Everything it needs to wire            |
+
+Rules:
+
+1. To expose something to another team, add an interface or event to
+   Contracts. Do not ask other teams to reference your assembly.
+2. Contracts must not use `UnityEngine` (`noEngineReferences` is enabled). Use
+   plain C# types or the shared structs such as `WorldPosition2D`.
+3. Get shared services through `IDependent<T>` injection, not singletons such
+   as `GameStateManager.Instance` and not `FindObjectOfType`.
+4. A provider may expose notifications as C# `event` members on its contract
+   (for example `IGameState.OnStateTypeChanged`) or as `readonly struct` events on
+   `IEventBus`. Event signatures may only use types defined in Contracts or
+   plain C# types. `IGameStateEventPublisher` is obsolete; use `IGameState`.
+5. Do not rename or remove members of an existing contract without agreement
+   from every team that uses it. Prefer adding a new member or a new interface.
+6. Keep each interface small and focused on what its consumers need.
+
+See [CONTRACTS_GUIDE.md](CONTRACTS_GUIDE.md) for step-by-step instructions.
 
 ## Comments
 
@@ -196,7 +223,9 @@ When reviewing a change, evaluate issues in this order:
 2. Safety and reliability: crashes, invalid state, data loss, and security risks.
 3. Testing: missing or inadequate tests for changed behavior.
 4. Maintainability: unclear design, excessive duplication, and difficult-to-follow code.
-5. Style: violations of the naming, type, scope, comment, and region rules in this document.
+5. Architecture: team assemblies referencing each other, Unity types in
+   Contracts, or singletons used where injection is available.
+6. Style: violations of the naming, type, scope, comment, and region rules in this document.
 
 Report only actionable findings supported by the code or tests. Do not report
 style preferences that are not defined here. For each finding, include the
@@ -212,5 +241,9 @@ found, state that explicitly and mention any remaining test gaps or uncertainty.
 - Every scope has braces, with opening braces on their own line.
 - Comments explain intent rather than narrating code.
 - Regions, if used, improve navigation and contain related code.
+- New cross-team APIs are contracts in `EscapeThe90s.Contracts` with no Unity types.
+- Shared services are injected through `IDependent<T>`, and new providers are
+  registered in `ServiceContainer`.
+- Existing contract members were not renamed or removed.
 - The change does not include unrelated refactoring or formatting.
 - The project builds and relevant tests pass.
