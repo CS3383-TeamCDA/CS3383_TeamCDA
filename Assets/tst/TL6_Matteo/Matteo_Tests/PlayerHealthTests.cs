@@ -178,4 +178,160 @@ public class PlayerHealthTests
 
         Assert.AreEqual(0, deathCount);
     }
+
+
+    [Test]
+    public void IncreasingMaxHealthAlsoIncreasesCurrentHealth()
+    {
+        _health.TakeDamage(40); // 60/100
+        _health.SetMaxHealth(125);
+
+        Assert.AreEqual(125, _health.MaxHealth);
+        Assert.AreEqual(85, _health.CurrentHealth);
+    }
+
+    [Test]
+    public void IncreasingMaxHealthAtFullHealthKeepsPlayerFull()
+    {
+        _health.SetMaxHealth(125);
+
+        Assert.AreEqual(125, _health.MaxHealth);
+        Assert.AreEqual(125, _health.CurrentHealth);
+    }
+
+    [Test]
+    public void MaxHealthCannotBeDecreased()
+    {
+        _health.SetMaxHealth(75);
+
+        Assert.AreEqual(100, _health.MaxHealth);
+        Assert.AreEqual(100, _health.CurrentHealth);
+    }
+
+    [Test]
+    public void InvalidMaxHealthIsIgnored()
+    {
+        _health.SetMaxHealth(0);
+        _health.SetMaxHealth(-50);
+
+        Assert.AreEqual(100, _health.MaxHealth);
+        Assert.AreEqual(100, _health.CurrentHealth);
+    }
+
+    [Test]
+    public void MaxHealthChangePublishesHealthChangedEvent()
+    {
+        int eventCount = 0;
+        int reportedCurrent = -1;
+        int reportedMax = -1;
+
+        _health.OnHealthChanged += (current, max) =>
+        {
+            eventCount++;
+            reportedCurrent = current;
+            reportedMax = max;
+        };
+
+        _health.SetMaxHealth(125);
+
+        Assert.AreEqual(1, eventCount);
+        Assert.AreEqual(125, reportedCurrent);
+        Assert.AreEqual(125, reportedMax);
+    }
+
+
+    [Test]
+    public void IsDeadReturnsTrueWhenHealthReachesZero()
+    {
+        Assert.IsFalse(_health.IsDead);
+
+        _health.TakeDamage(100);
+
+        Assert.IsTrue(_health.IsDead);
+    }
+
+    [Test]
+    public void ResetHealthRestoresFullHealth()
+    {
+        _health.TakeDamage(75);
+        _health.ResetHealth();
+
+        Assert.AreEqual(100, _health.CurrentHealth);
+        Assert.IsFalse(_health.IsDead);
+    }
+
+    [Test]
+    public void ResetHealthPreservesMaxHealthUpgrades()
+    {
+        _health.SetMaxHealth(150);
+        _health.TakeDamage(80);
+        _health.ResetHealth();
+
+        Assert.AreEqual(150, _health.MaxHealth);
+        Assert.AreEqual(150, _health.CurrentHealth);
+    }
+
+    [Test]
+    public void ResetHealthPublishesHealthChangedEvent()
+    {
+        int eventCount = 0;
+        int reportedCurrent = -1;
+        int reportedMax = -1;
+
+        _health.TakeDamage(50);
+
+        _health.OnHealthChanged += (current, max) =>
+        {
+            eventCount++;
+            reportedCurrent = current;
+            reportedMax = max;
+        };
+
+        _health.ResetHealth();
+
+        Assert.AreEqual(1, eventCount);
+        Assert.AreEqual(100, reportedCurrent);
+        Assert.AreEqual(100, reportedMax);
+    }
+
+    [Test]
+    public void IncreaseMaxHealthAddsSpecifiedAmount()
+    {
+        _health.TakeDamage(40);
+        _health.IncreaseMaxHealth(25);
+
+        Assert.AreEqual(125, _health.MaxHealth);
+        Assert.AreEqual(85, _health.CurrentHealth);
+    }
+
+
+    [TestCase(0)]
+    [TestCase(-25)]
+    public void InvalidMaxHealthIncreaseIsIgnored(int amount)
+    {
+        int eventCount = 0;
+
+        _health.OnHealthChanged += (current, max) => eventCount++;
+
+        _health.IncreaseMaxHealth(amount);
+
+        Assert.AreEqual(100, _health.MaxHealth);
+        Assert.AreEqual(100, _health.CurrentHealth);
+        Assert.AreEqual(0, eventCount);
+    }
+
+    [Test]
+    public void ResetHealthAfterDeathRestoresPlayer()
+    {
+        _health.TakeDamage(100);
+
+        Assert.IsTrue(_health.IsDead);
+
+        _health.ResetHealth();
+
+        Assert.AreEqual(100, _health.CurrentHealth);
+        Assert.IsFalse(_health.IsDead);
+    }
+
+
 }
