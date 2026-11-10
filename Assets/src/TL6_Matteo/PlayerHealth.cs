@@ -1,4 +1,5 @@
 using System;
+using System.Security.Cryptography;
 using UnityEngine;
 
 public class PlayerHealth : MonoBehaviour
@@ -7,6 +8,7 @@ public class PlayerHealth : MonoBehaviour
 
     public int MaxHealth => _maxHealth;
     public int CurrentHealth { get; private set; }
+    public bool IsDead => CurrentHealth <= 0;
 
     public event Action<int, int> OnHealthChanged;
     public event Action OnPlayerDied;
@@ -46,6 +48,36 @@ public class PlayerHealth : MonoBehaviour
         }
 
     }
+
+    public void SetMaxHealth(int newMaxHealth)
+    {
+        if (newMaxHealth < 1 || newMaxHealth <= _maxHealth) return;
+
+        int difference = newMaxHealth - _maxHealth;
+
+        _maxHealth = newMaxHealth;
+
+        CurrentHealth = Mathf.Clamp(
+            CurrentHealth + difference,
+            0,
+            _maxHealth
+        );
+
+        OnHealthChanged?.Invoke(CurrentHealth, _maxHealth);
+    }
+
+    public void IncreaseMaxHealth(int amount)
+    {
+        if (amount<=0) return;
+        SetMaxHealth(_maxHealth + amount);
+    }
+
+    public void ResetHealth()
+    {
+        CurrentHealth = _maxHealth;
+        OnHealthChanged?.Invoke(CurrentHealth, _maxHealth);
+    }
+
 
     [ContextMenu("Test/Take 25 Damage")]
     private void TestDamage()
