@@ -2,11 +2,11 @@ using StateLogic = Assets.src.StateLogic;
 
 public class PlayerStateManager : StateLogic.StateManager
 {
-    public TempPlayerController Player { get; private set; }
+    public PlayerControllerTL6 Player { get; private set; }
 
     private MovementState _activeState;
 
-    public PlayerStateManager(TempPlayerController player)
+    public PlayerStateManager(PlayerControllerTL6 player)
     {
         Player = player;
     }
