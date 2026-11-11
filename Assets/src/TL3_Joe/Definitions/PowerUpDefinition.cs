@@ -1,3 +1,4 @@
+using EscapeThe90s.Contracts;
 using UnityEngine;
 
 namespace EscapeThe90s.PowerUps
