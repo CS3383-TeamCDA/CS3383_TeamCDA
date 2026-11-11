@@ -50,7 +50,10 @@ public class FlyingEnemyPursuitTests
         Assert.IsTrue(enemy.HasAggro);
         enemy.TakeDamage(enemy.MaxHealth);
         yield return new WaitForFixedUpdate();
-        Assert.AreEqual(Vector2.zero, enemy.GetComponent<Rigidbody2D>().linearVelocity);
+        Rigidbody2D defeatedBody = enemy.GetComponent<Rigidbody2D>();
+        Assert.AreEqual(0f, defeatedBody.linearVelocity.x);
+        Assert.Greater(defeatedBody.gravityScale, 0f);
+        Assert.LessOrEqual(defeatedBody.linearVelocity.y, 0f);
     }
 
     [UnityTest]

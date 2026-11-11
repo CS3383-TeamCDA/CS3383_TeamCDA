@@ -8,5 +8,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/GeneratedWorldGameDemo.unity
     guid: 293805837f113a242b6380f75843fb5a
+  - enabled: 0
+    path: Assets/Scenes/FinalGame.unity
+    guid: 7f43840e466d4812a93f005ff545e5e1
   m_configObjects:
     com.unity.dt.app-ui: {fileID: 11400000, guid: 1b1c20d82303e4b5781c3ef50ac1449f, type: 2}

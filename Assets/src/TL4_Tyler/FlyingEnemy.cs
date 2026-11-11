@@ -116,6 +116,13 @@ public class FlyingEnemy : EnemyBase
     public override void Move()
     {
         if (body == null || !body.simulated || body.bodyType != RigidbodyType2D.Dynamic) return;
+        if (IsDefeated)
+        {
+            // Stop flight control, but let the solid body fall and settle on terrain.
+            body.gravityScale = Mathf.Max(1f, body.gravityScale);
+            body.linearVelocity = new Vector2(0f, Mathf.Min(0f, body.linearVelocity.y));
+            return;
+        }
         if (attacks != null && attacks.IsMovementLocked)
         {
             body.linearVelocity = Vector2.zero;
@@ -145,7 +152,7 @@ public class FlyingEnemy : EnemyBase
             float targetSide = AggroTarget.position.x - transform.position.x;
             if (Mathf.Abs(targetSide) > .05f) SetFacingRight(targetSide > 0);
         }
-        body.linearVelocity = IsDefeated ? Vector2.zero : Vector2.MoveTowards(body.linearVelocity,
+        body.linearVelocity = Vector2.MoveTowards(body.linearVelocity,
             desired, Mathf.Max(0, acceleration) * Time.fixedDeltaTime);
         if (animationDriver != null) animationDriver.SetMoving(pursuing && body.linearVelocity.sqrMagnitude > .01f);
     }

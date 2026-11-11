@@ -224,10 +224,37 @@ public abstract class EnemyBase : MonoBehaviour
         if (hp == 0)
         {
             defeated = true;
+            ConfigureCorpseCollision();
             TryDropPowerUp();
             Defeated?.Invoke(this);
         }
         return defeated;
+    }
+
+    private void ConfigureCorpseCollision()
+    {
+        int corpseLayer = LayerMask.NameToLayer("Corpse");
+        Collider2D[] corpseColliders = GetComponentsInChildren<Collider2D>(true);
+        foreach (Transform child in GetComponentsInChildren<Transform>(true))
+        {
+            if (corpseLayer >= 0)
+            {
+                child.gameObject.layer = corpseLayer;
+            }
+        }
+
+        // Keep solid terrain contact, while excluding the player from corpse physics.
+        // The separate layer also prevents Default/Ground queries treating bodies as floors.
+        foreach (GameObject player in GameObject.FindGameObjectsWithTag("Player"))
+        {
+            foreach (Collider2D playerCollider in player.GetComponentsInChildren<Collider2D>(true))
+            {
+                foreach (Collider2D corpseCollider in corpseColliders)
+                {
+                    Physics2D.IgnoreCollision(corpseCollider, playerCollider);
+                }
+            }
+        }
     }
 
     private void TryDropPowerUp()

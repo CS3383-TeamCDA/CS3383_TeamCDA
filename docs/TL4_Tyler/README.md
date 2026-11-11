@@ -6,7 +6,9 @@ The public enemy API lives in
 [Contracts/TL4_Tyler](../../Assets/src/Contracts/TL4_Tyler/README.md).
 `EnemySpawner` implements `IEnemySpawner`; Composition registers the scene's
 spawner and adds `EnemyGameStateBinding` before dependency injection/activation.
-No final scene or prefab wiring is changed by this migration.
+The initial contract migration did not change scene wiring. The subsequent
+[final-scene integration setup](FINAL_SCENE_INTEGRATION.md) adds a candidate
+FinalGame scene and TL4 source prefabs.
 
 Other teams should receive `IEnemySpawner` through `IDependent<IEnemySpawner>`
 rather than referencing TL4Assembly. Subscribe to its defeat event to receive
@@ -69,3 +71,16 @@ removal of TL4's cross-team dependencies.
   instance; an isolated copy was blocked by sandbox socket permissions in Unity
   Package Manager. Run EditMode and PlayMode in Unity Test Runner before declaring
   the suite green and moving to final-scene assembly.
+
+## Enemy bodies and terrain
+
+Flying corpses stop flight control and gain gravity. Defeated enemies move to the
+Corpse layer so player ground queries do not treat them as platforms; their solid
+colliders ignore the currently active Player-tagged objects while still colliding
+with terrain. Player sprites already use the Player sorting layer above enemies.
+If future integration creates a new player while retaining existing corpses, its
+colliders must also ignore those corpses. Current restart destroys scene bodies.
+
+The Level1_Turret prefab now has a dynamic Rigidbody2D with horizontal motion and
+rotation frozen, plus a solid base collider. Gravity settles its approximate
+spawn height onto terrain instead of leaving it suspended over gaps.
