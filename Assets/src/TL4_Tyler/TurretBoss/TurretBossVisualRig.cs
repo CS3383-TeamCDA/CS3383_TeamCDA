@@ -38,7 +38,7 @@ public sealed class TurretBossVisualRig : MonoBehaviour
         public float Side;
         public Vector3 PlantedWorld, LiftWorld, LandingWorld;
         public bool Swinging;
-        public float SwingElapsed;
+        public float SwingElapsed, SwingDuration;
     }
     private readonly LegPose[] legPoses = new LegPose[4];
     // One foot at a time: alternate across the body instead of hopping in pairs.
@@ -50,6 +50,23 @@ public sealed class TurretBossVisualRig : MonoBehaviour
     private float motionTime;
     private float stepClock;
     private int nextFoot;
+    private bool combatMotionBound;
+    private TurretBossAttackState combatMotion;
+    private float combatElapsed;
+    public void SyncCombatMotion(TurretBossAttackState state, float elapsed)
+    {
+        if (combatMotionBound && combatMotion != state &&
+            (UsesAttackPose(combatMotion) || UsesAttackPose(state))) { ResetFooting(); }
+        combatMotionBound = true;
+        combatMotion = state;
+        combatElapsed = elapsed;
+    }
+    private static bool UsesAttackPose(TurretBossAttackState state)
+    {
+        return state == TurretBossAttackState.LungeWarning || state == TurretBossAttackState.Lunging ||
+            state == TurretBossAttackState.SpinWarning || state == TurretBossAttackState.Spinning ||
+            state == TurretBossAttackState.StompWarning || state == TurretBossAttackState.Stomping;
+    }
     private Transform turret;
     private Transform body;
     private Transform leftShutter;
@@ -372,11 +389,27 @@ public sealed class TurretBossVisualRig : MonoBehaviour
             AdvanceTransformation(delta);
             return;
         }
-        if (!GroundedWalkingEnabled || Mathf.Abs(localVelocity.x) > 1.5f) { ResetFooting(); }
-        bool walking = GroundedWalkingEnabled && (mobile || returningToBase) &&
-            Mathf.Abs(localVelocity.x) > 0.03f && Mathf.Abs(localVelocity.x) <= 1.5f;
-        float cycle = Mathf.Max(0.2f, walkCycleSeconds);
-        float swingSeconds = cycle * 0.21f;
+        if (combatMotionBound && mobile && UsesAttackPose(combatMotion))
+        {
+            PoseCombatAttack();
+            return;
+        }
+        if (!GroundedWalkingEnabled) { ResetFooting(); }
+        float speed = Mathf.Abs(localVelocity.x);
+        bool walking = GroundedWalkingEnabled && (mobile || returningToBase) && speed > 0.03f;
+        bool running = walking && speed > 1.5f;
+        // Shorter cycles at speed; diagonal support pairs keep fast movement within leg reach.
+        float cycle = walking ? Mathf.Min(walkCycleSeconds, Mathf.Max(0.12f, 0.8f / speed)) : walkCycleSeconds;
+        cycle = Mathf.Max(0.12f, cycle);
+        float swingSeconds = cycle * (running ? 0.42f : 0.21f);
+        if (running)
+        {
+            stepClock = Mathf.Min(stepClock, cycle * 0.5f);
+            foreach (LegPose leg in legPoses)
+            {
+                if (leg.Swinging) { leg.SwingDuration = Mathf.Min(leg.SwingDuration, swingSeconds); }
+            }
+        }
         float sway = Mathf.Sin(motionTime * 1.7f) * 0.035f;
         float bob = walking ? Mathf.Sin(motionTime / cycle * Mathf.PI * 4f) * 0.045f : Mathf.Sin(motionTime * 2.1f) * 0.018f;
         body.localPosition = new Vector3(sway, Mathf.Lerp(PlantedBodyHeight, MobileBodyHeight, deployment) + bob + BodyHeightOffset, 0f);
@@ -389,22 +422,20 @@ public sealed class TurretBossVisualRig : MonoBehaviour
         foreach (LegPose leg in legPoses) { footInFlight |= leg.Swinging; }
         if (walking && stepClock <= 0f && !footInFlight)
         {
-            LegPose leg = legPoses[StepOrder[nextFoot]];
-            nextFoot = (nextFoot + 1) % 4;
-            leg.Swinging = true;
-            leg.SwingElapsed = 0f;
-            leg.LiftWorld = leg.PlantedWorld;
-            Vector2 lead = new Vector2(Mathf.Clamp(localVelocity.x * cycle * 0.38f, -0.65f, 0.65f), 0f);
-            leg.LandingWorld = transform.TransformPoint(leg.RestAnkle + lead);
-            stepClock = cycle * 0.25f;
+            int stepIndex = running ? (nextFoot % 2) * 2 : nextFoot;
+            StartStep(legPoses[StepOrder[stepIndex]], localVelocity.x, cycle, swingSeconds);
+            if (running) { StartStep(legPoses[StepOrder[stepIndex + 1]], localVelocity.x, cycle, swingSeconds); }
+            nextFoot = (nextFoot + 1) % (running ? 2 : 4);
+            stepClock = cycle * (running ? 0.5f : 0.25f);
         }
+
         foreach (LegPose leg in legPoses)
         {
             Vector3 footWorld = leg.PlantedWorld;
             if (leg.Swinging)
             {
                 leg.SwingElapsed += delta;
-                float progress = Mathf.Clamp01(leg.SwingElapsed / swingSeconds);
+                float progress = Mathf.Clamp01(leg.SwingElapsed / Mathf.Max(0.01f, leg.SwingDuration));
                 float eased = progress * progress * (3f - 2f * progress);
                 footWorld = Vector3.Lerp(leg.LiftWorld, leg.LandingWorld, eased);
                 footWorld += transform.up * (stepHeight * Mathf.Sin(progress * Mathf.PI));
@@ -416,6 +447,83 @@ public sealed class TurretBossVisualRig : MonoBehaviour
             }
             Vector2 hip = leg.RestHip + new Vector2(sway, bob + BodyHeightOffset);
             PoseLeg(leg, hip, transform.InverseTransformPoint(footWorld));
+        }
+    }
+
+    private void StartStep(LegPose leg, float velocity, float cycle, float duration)
+    {
+        leg.Swinging = true;
+        leg.SwingElapsed = 0f;
+        leg.SwingDuration = duration;
+        leg.LiftWorld = leg.PlantedWorld;
+        Vector2 lead = new Vector2(Mathf.Clamp(velocity * cycle * 0.38f, -0.65f, 0.65f), 0f);
+        leg.LandingWorld = transform.TransformPoint(leg.RestAnkle + lead);
+    }
+
+    private void PoseCombatAttack()
+    {
+        float height = 0f;
+        float lean = 0f;
+        float phase = 0f;
+        bool spin = combatMotion == TurretBossAttackState.Spinning;
+        bool dash = combatMotion == TurretBossAttackState.Lunging;
+        if (combatMotion == TurretBossAttackState.LungeWarning)
+        {
+            float brace = Mathf.Clamp01(combatElapsed / TurretBossController.LungeWarningSeconds);
+            height = -0.16f * brace;
+            lean = -6f * brace;
+        }
+        else if (dash)
+        {
+            phase = Mathf.Clamp01(combatElapsed / TurretBossController.LungeSeconds);
+            height = -0.12f + 0.12f * Mathf.Sin(phase * Mathf.PI);
+            lean = 10f * Mathf.Sin(phase * Mathf.PI);
+        }
+        else if (combatMotion == TurretBossAttackState.SpinWarning)
+        {
+            height = -0.35f * Mathf.Clamp01(combatElapsed / TurretBossController.SpinWarningSeconds);
+            lean = Mathf.Sin(combatElapsed * 18f) * 2f;
+        }
+        else if (spin) { height = -0.65f; }
+        else if (combatMotion == TurretBossAttackState.StompWarning)
+        {
+            height = 0.22f * Mathf.SmoothStep(0f, 1f, combatElapsed / TurretBossController.StompWarningSeconds);
+        }
+        else if (combatMotion == TurretBossAttackState.Stomping)
+        {
+            height = -0.25f * Mathf.Exp(-combatElapsed * 9f);
+        }
+        body.localPosition = new Vector3(0f, MobileBodyHeight + BodyHeightOffset + height, 0f);
+        body.localRotation = Quaternion.Euler(0f, 0f, lean);
+        turret.localRotation = Quaternion.Euler(0f, 0f, -lean * 0.3f);
+        for (int index = 0; index < legPoses.Length; index++)
+        {
+            LegPose leg = legPoses[index];
+            Vector2 hip = leg.RestHip + Vector2.up * (height + BodyHeightOffset);
+            Vector2 ankle = transform.InverseTransformPoint(leg.PlantedWorld);
+            if (spin)
+            {
+                // A side-view rig cannot orbit four fixed-facing sprite limbs through the
+                // chassis without crossing their joints. Keep each chain on its own side.
+                bool far = index < 2;
+                float angle = combatElapsed * Mathf.PI * 8f + (far ? Mathf.PI : 0f);
+                float sweep = Mathf.Sin(angle);
+                float reach = (far ? 2.5f : 3f) + sweep * (far ? 0.14f : 0.18f);
+                Vector2 sweepTarget = new Vector2(leg.Side * reach,
+                    (far ? 0.48f : 0.32f) + Mathf.Cos(angle) * 0.04f);
+                float extend = Mathf.SmoothStep(0f, 1f, combatElapsed / 0.18f);
+                ankle = Vector2.Lerp(leg.RestAnkle, sweepTarget, extend);
+                // Hip stays attached to its original chassis socket; only knee/ankle sweep.
+                // Far limbs retain their existing rear render order and muted palette.
+            }
+            else if (dash)
+            {
+                // A committed burst has tucked, trailing legs rather than a sliding idle stance.
+                hip.x -= 0.15f;
+                ankle = leg.RestAnkle + new Vector2(-0.35f * Mathf.Sin(phase * Mathf.PI),
+                    0.22f * Mathf.Sin(phase * Mathf.PI));
+            }
+            PoseLeg(leg, hip, ankle);
         }
     }
 

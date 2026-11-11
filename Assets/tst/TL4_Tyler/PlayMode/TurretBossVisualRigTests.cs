@@ -73,6 +73,69 @@ public sealed class TurretBossVisualRigTests
             rig.AdvancePresentation(0.1f);
             for (int i = 0; i < 4; i++) { Assert.Less(Vector3.Distance(previous[i], ankles[i].position), 0.0001f); }
 
+            // Combat-speed travel must keep stepping, with at most one diagonal pair airborne.
+            int fastMovingFrames = 0;
+            foreach (float speed in new[] { 6f, -8f })
+            {
+                for (int tick = 0; tick < 240; tick++)
+                {
+                    for (int i = 0; i < 4; i++) { previous[i] = ankles[i].position; }
+                    root.transform.position += Vector3.right * (speed * delta);
+                    rig.AdvancePresentation(delta);
+                    int movingFeet = 0;
+                    for (int i = 0; i < 4; i++)
+                    {
+                        if (Vector3.Distance(previous[i], ankles[i].position) > 0.0001f) { movingFeet++; }
+                        Assert.AreEqual(new Vector2(0.91f, 1.35f).magnitude * 0.8f,
+                            Vector3.Distance(ankles[i].parent.position, ankles[i].position), 0.001f);
+                    }
+                    Assert.LessOrEqual(movingFeet, 2);
+                    if (movingFeet > 0) { fastMovingFrames++; }
+                }
+            }
+            Assert.Greater(fastMovingFrames, 200, "Combat speed must animate steps instead of resetting to a sliding stance.");
+            for (int tick = 0; tick < 60; tick++) { rig.AdvancePresentation(delta); }
+            Transform body = root.transform.Find("Body motion pivot");
+            rig.SyncCombatMotion(TurretBossAttackState.LungeWarning, TurretBossController.LungeWarningSeconds);
+            rig.AdvancePresentation(delta);
+            Assert.Less(body.localPosition.y, 2.4f, "Charge must brace low.");
+            rig.SyncCombatMotion(TurretBossAttackState.Lunging, TurretBossController.LungeSeconds * 0.5f);
+            rig.AdvancePresentation(delta);
+            Assert.Greater(Mathf.DeltaAngle(0f, body.localEulerAngles.z), 5f);
+            rig.SyncCombatMotion(TurretBossAttackState.Spinning, 0.1f);
+            rig.AdvancePresentation(delta);
+            Vector3 firstSpinFoot = ankles[0].localPosition;
+            Assert.Less(body.localPosition.y, 2f);
+            rig.SyncCombatMotion(TurretBossAttackState.Spinning, 0.3f);
+            rig.AdvancePresentation(delta);
+            Assert.Greater(Vector3.Distance(firstSpinFoot, ankles[0].localPosition), 0.1f,
+                "Spin legs must sweep rather than hold a standing pose.");
+            for (int frame = 0; frame <= 240; frame++)
+            {
+                rig.SyncCombatMotion(TurretBossAttackState.Spinning, frame / 60f);
+                rig.AdvancePresentation(delta);
+                for (int i = 0; i < 4; i++)
+                {
+                    float side = i % 2 == 0 ? -1f : 1f;
+                    Transform knee = ankles[i].parent;
+                    Transform hip = knee.parent;
+                    Assert.AreEqual(side * (i < 2 ? 0.75f : 1.1f), hip.localPosition.x, 0.0001f,
+                        "Spinning must not detach or orbit the hip socket.");
+                    Assert.Greater(legs.InverseTransformPoint(ankles[i].position).x * side, 0f,
+                        "Feet must never cross through the chassis to the opposite side.");
+                    Assert.Greater(legs.InverseTransformPoint(knee.position).x * side, 0f,
+                        "Knees must remain on their own side.");
+                    Assert.AreEqual(new Vector2(0.91f, 1.35f).magnitude * 0.8f,
+                        Vector3.Distance(knee.position, ankles[i].position), 0.001f);
+                }
+            }
+            rig.SyncCombatMotion(TurretBossAttackState.StompWarning, TurretBossController.StompWarningSeconds);
+            rig.AdvancePresentation(delta);
+            Assert.Greater(body.localPosition.y, 2.4f);
+            rig.SyncCombatMotion(TurretBossAttackState.Stomping, 0f);
+            rig.AdvancePresentation(delta);
+            Assert.Less(body.localPosition.y, 2.4f);
+            rig.SyncCombatMotion(TurretBossAttackState.MobileAssess, 0f);
             Assert.IsTrue(rig.PlayCannonAttack());
             Assert.IsTrue(rig.PlayLauncherShot(), "Launcher should animate independently during cannon charge.");
             Assert.IsFalse(rig.PlayCannonAttack(), "Repeated triggers must not restart an active charge.");

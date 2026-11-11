@@ -260,3 +260,40 @@ integration coverage exercises hidden legacy art, launcher triggers, cannon
 recoil, core exposure and transformation. Unity runtime execution and combat
 visual review are still pending; do not equate compilation with passing runtime
 tests. No FinalGame/Composition or other teams' files were changed.
+
+## Combat locomotion and attack poses
+
+Removed the high-speed standing-pose fallback. Gait period now adapts to actual
+root velocity (including the combat rig's half scale). Slow movement retains the
+one-foot crawl; above 1.5 local units/second diagonal pairs alternate with two
+support feet. Swing durations are stored per step and shorten on acceleration.
+Resting feet remain in world space; reversal and stopping continue through their
+current step. Numerical move/reverse/stop samples at 30/60/120 Hz stay within
+joint reach.
+
+The combat adapter now synchronizes explicit procedural poses to controller state
+and elapsed time: charge warning braces low, charge tucks/trails the legs and
+leans forward, spin warning crouches/coils, active spin sweeps four articulated
+legs in a low rotating pattern, and stomp rises then compresses sharply before
+settling. Attack exit resets planted anchors for the next stance/gait. Independent
+launcher and cannon clocks continue without being replaced by leg motion. Existing
+attack durations, damage, arena limits and core-opening rules are unchanged.
+
+Use TurretBossSandbox to review these combat animations. ArtPreview still provides
+the slow walk/weapon/transformation review. Death is still a held wreck pose.
+Added regression checks for combat-speed diagonal stepping and charge/spin/stomp
+poses. Source/test compilation passes; runtime tests and visual balancing remain
+pending. This supersedes the documented high-speed stance fallback.
+
+## Spin silhouette correction
+
+Removed the full horizontal hip/foot orbit that crossed fixed-facing leg sprites
+through the chassis. Spin now keeps all four hips in their original sockets and
+each knee/foot on its own side. Near and far pairs sweep low with a small opposing
+phase and a short extension blend; existing rear/front rendering order is retained.
+This is a readable side-view sweep with the current sprites, not a full 3D leg
+rotation. Combat timing, movement and damage are unchanged.
+
+Compilation passes. Numeric samples verify reach and side retention throughout
+four seconds, with matching regression assertions added. Runtime/visual review
+in TurretBossSandbox remains pending.

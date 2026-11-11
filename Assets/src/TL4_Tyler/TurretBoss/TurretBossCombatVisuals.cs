@@ -59,7 +59,8 @@ public sealed class TurretBossCombatVisuals : MonoBehaviour
         bool beam = state == TurretBossAttackState.BeamCharge || state == TurretBossAttackState.BeamFire;
         // The mobile legs crouch under the lowered cannon without returning to the abandoned base.
         rig.BodyHeightOffset = boss.IsMobilePhase && beam ? -1.23f : -0.15f;
-        rig.GroundedWalkingEnabled = state != TurretBossAttackState.Lunging && state != TurretBossAttackState.Spinning;
+        rig.GroundedWalkingEnabled = true;
+        rig.SyncCombatMotion(state, boss.StateElapsed);
         if (state == TurretBossAttackState.BeamCharge)
         {
             rig.SyncCannonTimeline(1.5f * Mathf.Clamp01(boss.StateElapsed / Mathf.Max(0.01f, boss.BeamChargeSeconds)));
