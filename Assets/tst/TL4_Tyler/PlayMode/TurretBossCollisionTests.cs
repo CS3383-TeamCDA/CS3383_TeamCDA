@@ -9,8 +9,8 @@ public sealed class TurretBossCollisionTests
     [TestCase(TurretBossAttackState.MissileWarning)]
     [TestCase(TurretBossAttackState.MissileDescent)]
     [TestCase(TurretBossAttackState.BeamCharge)]
-    [TestCase(TurretBossAttackState.LungeWarning)]
-    [TestCase(TurretBossAttackState.SpinWarning)]
+    [TestCase(TurretBossAttackState.ShortChargeWarning)]
+    [TestCase(TurretBossAttackState.LongChargeWarning)]
     public void TelegraphsAndAirbornePayloadsNeverDamage(TurretBossAttackState state)
     {
         GameObject root = new GameObject("Warning contact test");
@@ -128,6 +128,52 @@ public sealed class TurretBossCollisionTests
             Object.DestroyImmediate(root);
             if (square != null) { Object.DestroyImmediate(square); }
         }
+    }
+
+    [TestCase(TurretBossAttackState.ShortCharge)]
+    [TestCase(TurretBossAttackState.LongCharge)]
+    public void BossChargesUseNonzeroMeleeDamage(TurretBossAttackState state)
+    {
+        GameObject root = new GameObject("Charge damage regression");
+        Sprite square = Square();
+        try
+        {
+            PlayerHealth player = Player(root, out BoxCollider2D hurtbox);
+            player.transform.position = new Vector3(1.15f, 0.8f, 0f);
+            TurretBossAttackField field = root.AddComponent<TurretBossAttackField>();
+            field.Initialize(player, square);
+            GameObject actor = new GameObject("Boss");
+            actor.transform.SetParent(root.transform);
+            TurretBossController boss = actor.AddComponent<TurretBossController>();
+            boss.SetAttackMode(EnemyAttackMode.RangedOnly);
+            boss.Begin(player.transform, field, 1);
+            Assert.Greater(boss.MeleeDamage, 0);
+            field.SetBossOrigin(Vector2.zero, 1f, 3f);
+            field.SetState(state, 1.15f, boss.MeleeDamage);
+            if (state == TurretBossAttackState.ShortCharge) { field.ResolveShortCharge(0f, 0f, boss.MeleeDamage); }
+            else { field.ResolveLongCharge(0f, 0f, boss.MeleeDamage); }
+            Assert.Less(player.CurrentHealth, 100);
+        }
+        finally { Object.DestroyImmediate(root); Object.DestroyImmediate(square); }
+    }
+
+    [Test]
+    public void MobileLowBoltsLeaveCurrentBossPosition()
+    {
+        GameObject root = new GameObject("Mobile bolt regression");
+        Sprite square = Square();
+        try
+        {
+            PlayerHealth player = Player(root, out BoxCollider2D hurtbox);
+            TurretBossAttackField field = root.AddComponent<TurretBossAttackField>();
+            field.Initialize(player, square);
+            field.SetMobileFloorOrigin(true);
+            field.SetBossOrigin(new Vector2(-3f, 0.9f), 1f, 0f);
+            field.FireFloorShot(10);
+            field.Advance(0.3f);
+            Assert.AreEqual(90, player.CurrentHealth);
+        }
+        finally { Object.DestroyImmediate(root); Object.DestroyImmediate(square); }
     }
 
     private static PlayerHealth Player(GameObject parent, out BoxCollider2D hurtbox)

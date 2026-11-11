@@ -41,7 +41,11 @@ public sealed class TurretBossAttackField : MonoBehaviour
         visualRig = rig;
         floorMuzzle = rig != null ? rig.FloorMuzzle : null;
     }
-    private Vector2 FloorOrigin => floorMuzzle != null ? (Vector2)floorMuzzle.position
+    private bool mobileFloorOrigin;
+    public void SetMobileFloorOrigin(bool mobile) { mobileFloorOrigin = mobile; }
+    private Vector2 FloorOrigin => mobileFloorOrigin
+        ? new Vector2(bossOrigin.x + aimDirection * 0.95f, 0.25f)
+        : floorMuzzle != null ? (Vector2)floorMuzzle.position
         : new Vector2(bossOrigin.x + aimDirection * 1.5f, 0.25f);
     private Transform beamMuzzle;
     public void BindBeamMuzzle(Transform muzzle) { beamMuzzle = muzzle; }
@@ -83,14 +87,14 @@ public sealed class TurretBossAttackField : MonoBehaviour
         return separate;
     }
 
-    public void ResolveSpin(float fromX, float toX, int attackDamage)
+    public void ResolveLongCharge(float fromX, float toX, int attackDamage)
     {
-        if (state == TurretBossAttackState.Spinning) { ResolveCharge(fromX, toX, attackDamage); }
+        if (state == TurretBossAttackState.LongCharge) { ResolveCharge(fromX, toX, attackDamage); }
     }
 
-    public void ResolveLunge(float fromX, float toX, int attackDamage)
+    public void ResolveShortCharge(float fromX, float toX, int attackDamage)
     {
-        if (state == TurretBossAttackState.Lunging) { ResolveCharge(fromX, toX, attackDamage); }
+        if (state == TurretBossAttackState.ShortCharge) { ResolveCharge(fromX, toX, attackDamage); }
     }
 
     private void ResolveCharge(float fromX, float toX, int attackDamage)
@@ -106,7 +110,7 @@ public sealed class TurretBossAttackField : MonoBehaviour
     private void TryChargeContact()
     {
         if (hit || chargeBox == null || !chargeBox.enabled ||
-            (state != TurretBossAttackState.Lunging && state != TurretBossAttackState.Spinning) ||
+            (state != TurretBossAttackState.ShortCharge && state != TurretBossAttackState.LongCharge) ||
             player == null || player.IsDead) { return; }
         hit = true;
         player.TakeDamage(chargeDamage);
@@ -115,9 +119,9 @@ public sealed class TurretBossAttackField : MonoBehaviour
     private void DrawDashWake(float fromX, float toX)
     {
         if (Mathf.Abs(toX - fromX) > 0.001f) { dashDirection = Mathf.Sign(toX - fromX); }
-        float progress = state == TurretBossAttackState.Lunging
-            ? elapsed / TurretBossController.LungeSeconds : elapsed * 3f;
-        Skin(dashWake, vfx != null ? vfx.shockwaves : null, progress, state != TurretBossAttackState.Lunging);
+        float progress = state == TurretBossAttackState.ShortCharge
+            ? elapsed / TurretBossController.ShortChargeSeconds : elapsed * 3f;
+        Skin(dashWake, vfx != null ? vfx.shockwaves : null, progress, state != TurretBossAttackState.ShortCharge);
         dashWake.flipX = dashDirection < 0f;
         lastResolvedDashX = toX;
         Vector2 centerline = visualRig != null ? visualRig.BodyCenter : new Vector2(toX, 1f);
@@ -206,7 +210,7 @@ public sealed class TurretBossAttackField : MonoBehaviour
 
     public void SetState(TurretBossAttackState next, float targetX, int attackDamage)
     {
-        bool leavingDash = (state == TurretBossAttackState.Lunging || state == TurretBossAttackState.Spinning)
+        bool leavingDash = (state == TurretBossAttackState.ShortCharge || state == TurretBossAttackState.LongCharge)
             && dashWake != null && dashWake.enabled;
         Clear(true);
         if (leavingDash && next != TurretBossAttackState.Defeated && next != TurretBossAttackState.Transforming &&
@@ -221,7 +225,7 @@ public sealed class TurretBossAttackField : MonoBehaviour
             aftermath.Add(effect);
         }
         state = next;
-        if (next == TurretBossAttackState.Lunging || next == TurretBossAttackState.Spinning) { dashDirection = aimDirection; }
+        if (next == TurretBossAttackState.ShortCharge || next == TurretBossAttackState.LongCharge) { dashDirection = aimDirection; }
         elapsed = 0f;
         damage = attackDamage;
         hit = false;
@@ -284,7 +288,7 @@ public sealed class TurretBossAttackField : MonoBehaviour
     private void LateUpdate()
     {
         if (Time.deltaTime > 0f && dashWake != null && dashWake.enabled &&
-            (state == TurretBossAttackState.Lunging || state == TurretBossAttackState.Spinning))
+            (state == TurretBossAttackState.ShortCharge || state == TurretBossAttackState.LongCharge))
         {
             DrawDashWake(lastResolvedDashX, lastResolvedDashX);
         }
@@ -357,8 +361,8 @@ public sealed class TurretBossAttackField : MonoBehaviour
         Vector2 blastCenter = new Vector2(landingX, missileExploding ? 0.7f : 0.5f);
         bool animatedExplosion = vfx != null && vfx.explosions != null && vfx.explosions.Length > 0;
         Display(blast, blastCenter, blastSize, exploding && !animatedExplosion);
-        bool spinWarning = state == TurretBossAttackState.SpinWarning;
-        bool lungeWarning = state == TurretBossAttackState.LungeWarning || spinWarning;
+        bool spinWarning = state == TurretBossAttackState.LongChargeWarning;
+        bool lungeWarning = state == TurretBossAttackState.ShortChargeWarning || spinWarning;
         bool stompWarning = state == TurretBossAttackState.StompWarning;
         if (lungeWarning || stompWarning)
         {

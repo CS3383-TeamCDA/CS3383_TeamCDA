@@ -180,7 +180,7 @@ public sealed class TurretBossSandbox : MonoBehaviour
         {
             GUI.Label(new Rect(15f, 75f, 1000f, 30f), "Boss HP: " + boss.CurrentHealth + "/" + boss.MaxHealth + (boss.IsMobilePhase ? " | MOBILE | " : " | PLANTED | ") + boss.State + (boss.Launcher != null && boss.Launcher.IsActive ? " | Launcher: " + boss.Launcher.Stage : ""));
             GUI.Label(new Rect(15f, 105f, 1000f, 30f), boss.IsDefeated ? "VICTORY" :
-                (boss.CoreExposed ? "CORE OPEN - hit J" : "Jump leg spin and stomp waves / dodge launcher markers / duck the cannon"));
+                (boss.CoreExposed ? "CORE OPEN - hit J" : "Jump long charge and stomp waves / dodge launcher markers / duck the cannon"));
         }
     }
 

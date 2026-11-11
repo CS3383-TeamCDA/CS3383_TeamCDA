@@ -50,7 +50,7 @@ public sealed class TurretBossLegRig : MonoBehaviour
         }
     }
 
-    public void SetSpinPose(float progress)
+    public void SetLongChargePose(float progress)
     {
         for (int leg = 0; leg < 4; leg++)
         {

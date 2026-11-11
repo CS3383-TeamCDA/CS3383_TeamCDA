@@ -483,3 +483,16 @@ Runtime verification remains pending: the isolated editor failed AssetDatabase/
 UDS initialization, and desktop automation could read Unity but could not click
 its window. Run this test class in the Unity PlayMode Test Runner and replay the
 sandbox before treating physical behavior as verified.
+
+
+## Phase-two damage regression fix
+
+The turret prefab was RangedOnly, so EnemyBase.MeleeDamage returned zero for
+both charges and stomp. The prefab and Begin now use Both. Renamed Spinning /
+SpinWarning to LongCharge / LongChargeWarning, and Lunging / LungeWarning to
+ShortCharge / ShortChargeWarning, retaining enum numeric order and timings.
+Phase-two low bolts now spawn at the current boss X at ground height instead of
+the stationary platform muzzle left behind during transformation. Phase one
+continues to use its art muzzle. Added regressions for nonzero charge contact
+and mobile floor-bolt damage. Source/test compilation passes; runtime execution
+is still pending because the Unity runner could not initialize in this session.

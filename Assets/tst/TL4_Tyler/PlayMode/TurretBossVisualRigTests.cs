@@ -96,23 +96,23 @@ public sealed class TurretBossVisualRigTests
             Assert.Greater(fastMovingFrames, 200, "Combat speed must animate steps instead of resetting to a sliding stance.");
             for (int tick = 0; tick < 60; tick++) { rig.AdvancePresentation(delta); }
             Transform body = root.transform.Find("Body motion pivot");
-            rig.SyncCombatMotion(TurretBossAttackState.LungeWarning, TurretBossController.LungeWarningSeconds);
+            rig.SyncCombatMotion(TurretBossAttackState.ShortChargeWarning, TurretBossController.ShortChargeWarningSeconds);
             rig.AdvancePresentation(delta);
             Assert.Less(body.localPosition.y, 2.4f, "Charge must brace low.");
-            rig.SyncCombatMotion(TurretBossAttackState.Lunging, TurretBossController.LungeSeconds * 0.5f);
+            rig.SyncCombatMotion(TurretBossAttackState.ShortCharge, TurretBossController.ShortChargeSeconds * 0.5f);
             rig.AdvancePresentation(delta);
             Assert.Greater(Mathf.DeltaAngle(0f, body.localEulerAngles.z), 5f);
-            rig.SyncCombatMotion(TurretBossAttackState.Spinning, 0.1f);
+            rig.SyncCombatMotion(TurretBossAttackState.LongCharge, 0.1f);
             rig.AdvancePresentation(delta);
             Vector3 firstSpinFoot = ankles[0].localPosition;
             Assert.Less(body.localPosition.y, 2f);
-            rig.SyncCombatMotion(TurretBossAttackState.Spinning, 0.3f);
+            rig.SyncCombatMotion(TurretBossAttackState.LongCharge, 0.3f);
             rig.AdvancePresentation(delta);
             Assert.Greater(Vector3.Distance(firstSpinFoot, ankles[0].localPosition), 0.1f,
                 "Spin legs must sweep rather than hold a standing pose.");
             for (int frame = 0; frame <= 240; frame++)
             {
-                rig.SyncCombatMotion(TurretBossAttackState.Spinning, frame / 60f);
+                rig.SyncCombatMotion(TurretBossAttackState.LongCharge, frame / 60f);
                 rig.AdvancePresentation(delta);
                 for (int i = 0; i < 4; i++)
                 {
@@ -120,7 +120,7 @@ public sealed class TurretBossVisualRigTests
                     Transform knee = ankles[i].parent;
                     Transform hip = knee.parent;
                     Assert.AreEqual(side * (i < 2 ? 0.75f : 1.1f), hip.localPosition.x, 0.0001f,
-                        "Spinning must not detach or orbit the hip socket.");
+                        "LongCharge must not detach or orbit the hip socket.");
                     Assert.Greater(legs.InverseTransformPoint(ankles[i].position).x * side, 0f,
                         "Feet must never cross through the chassis to the opposite side.");
                     Assert.Greater(legs.InverseTransformPoint(knee.position).x * side, 0f,

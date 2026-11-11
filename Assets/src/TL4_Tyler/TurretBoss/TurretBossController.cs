@@ -6,8 +6,8 @@ public enum TurretBossAttackState
     FloorWarning, FloorVolley, GrenadeWarning, GrenadeFlight, GrenadeBlast,
     BeamCharge, BeamFire, Recovery, Defeated,
     MissileLaunch, MissileWarning, MissileDescent, MissileBlast,
-    Transforming, LungeWarning, Lunging, StompWarning, Stomping, Planting,
-    SpinWarning, Spinning, LauncherWait, PayloadWait, MobileAssess, Turning, Repositioning, FollowThrough, Disengaging
+    Transforming, ShortChargeWarning, ShortCharge, StompWarning, Stomping, Planting,
+    LongChargeWarning, LongCharge, LauncherWait, PayloadWait, MobileAssess, Turning, Repositioning, FollowThrough, Disengaging
 }
 
 /// <summary>Planted Siege Core prototype. All hazards are resolved by the separate attack field.</summary>
@@ -24,11 +24,12 @@ public sealed class TurretBossController : EnemyBase
     private TurretBossLauncher launcher;
     public TurretBossLauncher Launcher => launcher;
     public event System.Action<int> DamageTaken;
-    public const float SpinWarningSeconds = 1.2f;
-    public const float SpinSeconds = 4f;
+    public const float LongChargeWarningSeconds = 1.2f;
+    public const float LongChargeSeconds = 4f;
     [SerializeField, Min(0.1f)] private float chargeTriggerDistance = 3.5f;
     [SerializeField, Min(0.1f)] private float chargeCooldownSeconds = 4f;
-    [SerializeField, Min(0.1f)] private float spinSpeed = 4.5f;
+    [UnityEngine.Serialization.FormerlySerializedAs("spinSpeed")]
+    [SerializeField, Min(0.1f)] private float longChargeSpeed = 4.5f;
     private float chargeCooldown;
     private float facingDirection = -1f;
     private const float LeftMovementLimit = -8.4f;
@@ -49,8 +50,8 @@ public sealed class TurretBossController : EnemyBase
     public float RecoveryDuration => recoveryDuration;
     public const float RepositionSeconds = 0.7f;
     public const float DisengageSeconds = 0.65f;
-    private Vector3 lungeStart;
-    private float lungeDestination;
+    private Vector3 shortChargeStart;
+    private float chargeDestination;
     private float plantedY;
     private Rigidbody2D bossBody;
     private TurretBossBodyCollision solidBody;
@@ -59,8 +60,8 @@ public sealed class TurretBossController : EnemyBase
     public bool IsMobilePhase { get; private set; }
     public const float MobilePhaseThreshold = 0.4f;
     public const float TransformationSeconds = 2f;
-    public const float LungeWarningSeconds = 0.25f;
-    public const float LungeSeconds = 0.3f;
+    public const float ShortChargeWarningSeconds = 0.25f;
+    public const float ShortChargeSeconds = 0.3f;
     public const float StompWarningSeconds = 0.8f;
     public const float StompSeconds = 1.5f;
     public const float PlantSeconds = 1f;
@@ -75,6 +76,7 @@ public sealed class TurretBossController : EnemyBase
 
     public void Begin(Transform player, TurretBossAttackField attackField, int level, int? seed = null)
     {
+        SetAttackMode(EnemyAttackMode.Both);
         decisions = seed.HasValue ? new System.Random(seed.Value) : new System.Random();
         comboAttacks = 0;
         recoveryDuration = recoverySeconds;
@@ -130,7 +132,7 @@ public sealed class TurretBossController : EnemyBase
             case TurretBossAttackState.Disengaging:
                 float moveDuration = State == TurretBossAttackState.Repositioning ? RepositionSeconds : DisengageSeconds;
                 float moveProgress = Mathf.Clamp01(elapsed / moveDuration);
-                MoveBody(new Vector3(Mathf.SmoothStep(lungeStart.x, lungeDestination, moveProgress), plantedY + 0.9f, transform.position.z));
+                MoveBody(new Vector3(Mathf.SmoothStep(shortChargeStart.x, chargeDestination, moveProgress), plantedY + 0.9f, transform.position.z));
                 legs.SetPose(1f, Mathf.Sin(moveProgress * Mathf.PI * 4f));
                 if (elapsed >= moveDuration)
                 {
@@ -148,6 +150,8 @@ public sealed class TurretBossController : EnemyBase
             case TurretBossAttackState.FloorVolley:
                 if (shotsLaunched < 3 && elapsed >= shotsLaunched * 0.45f)
                 {
+                    field.SetMobileFloorOrigin(IsMobilePhase);
+                    field.SetBossOrigin(new Vector2(transform.position.x, 0f), facingDirection, chargeDestination);
                     field.FireFloorShot(RangedDamage);
                     shotsLaunched++;
                 }
@@ -165,31 +169,31 @@ public sealed class TurretBossController : EnemyBase
                 legs.SetPose(Mathf.Clamp01(elapsed / TransformationSeconds), 0f);
                 if (elapsed >= TransformationSeconds) { ChangeState(TurretBossAttackState.MobileAssess); }
                 break;
-            case TurretBossAttackState.LungeWarning:
-                MoveBody(new Vector3(transform.position.x, plantedY + 0.9f - 0.12f * Mathf.Clamp01(elapsed / LungeWarningSeconds), transform.position.z));
-                legs.SetPose(1f, -0.6f * Mathf.Clamp01(elapsed / LungeWarningSeconds));
-                if (elapsed >= LungeWarningSeconds) { ChangeState(TurretBossAttackState.Lunging); }
+            case TurretBossAttackState.ShortChargeWarning:
+                MoveBody(new Vector3(transform.position.x, plantedY + 0.9f - 0.12f * Mathf.Clamp01(elapsed / ShortChargeWarningSeconds), transform.position.z));
+                legs.SetPose(1f, -0.6f * Mathf.Clamp01(elapsed / ShortChargeWarningSeconds));
+                if (elapsed >= ShortChargeWarningSeconds) { ChangeState(TurretBossAttackState.ShortCharge); }
                 break;
-            case TurretBossAttackState.Lunging:
+            case TurretBossAttackState.ShortCharge:
                 float previousX = transform.position.x;
-                float progress = Mathf.Clamp01(elapsed / LungeSeconds);
-                MoveBody(new Vector3(Mathf.Lerp(lungeStart.x, lungeDestination, progress), plantedY + 0.9f, transform.position.z));
+                float progress = Mathf.Clamp01(elapsed / ShortChargeSeconds);
+                MoveBody(new Vector3(Mathf.Lerp(shortChargeStart.x, chargeDestination, progress), plantedY + 0.9f, transform.position.z));
                 legs.SetPose(1f, Mathf.Sin(progress * Mathf.PI * 4f));
-                field.ResolveLunge(previousX, transform.position.x, MeleeDamage);
-                if (elapsed >= LungeSeconds) { CompleteAttack(TurretBossAttackState.Lunging); }
+                field.ResolveShortCharge(previousX, transform.position.x, MeleeDamage);
+                if (elapsed >= ShortChargeSeconds) { CompleteAttack(TurretBossAttackState.ShortCharge); }
                 break;
-            case TurretBossAttackState.SpinWarning:
+            case TurretBossAttackState.LongChargeWarning:
                 legs.SetPose(1f, Mathf.Sin(elapsed * 12f) * 0.3f);
-                if (elapsed >= SpinWarningSeconds) { ChangeState(TurretBossAttackState.Spinning); }
+                if (elapsed >= LongChargeWarningSeconds) { ChangeState(TurretBossAttackState.LongCharge); }
                 break;
-            case TurretBossAttackState.Spinning:
-                float spinPreviousX = transform.position.x;
-                float spinProgress = Mathf.Clamp01(elapsed / SpinSeconds);
-                float spinX = Mathf.MoveTowards(spinPreviousX, lungeDestination, spinSpeed * deltaTime);
-                MoveBody(new Vector3(spinX, plantedY + 0.9f, transform.position.z));
-                legs.SetSpinPose(spinProgress);
-                field.ResolveSpin(spinPreviousX, transform.position.x, MeleeDamage);
-                if (elapsed >= SpinSeconds || Mathf.Abs(spinX - lungeDestination) < 0.01f) { CompleteAttack(TurretBossAttackState.Spinning); }
+            case TurretBossAttackState.LongCharge:
+                float longChargePreviousX = transform.position.x;
+                float longChargeProgress = Mathf.Clamp01(elapsed / LongChargeSeconds);
+                float longChargeX = Mathf.MoveTowards(longChargePreviousX, chargeDestination, longChargeSpeed * deltaTime);
+                MoveBody(new Vector3(longChargeX, plantedY + 0.9f, transform.position.z));
+                legs.SetLongChargePose(longChargeProgress);
+                field.ResolveLongCharge(longChargePreviousX, transform.position.x, MeleeDamage);
+                if (elapsed >= LongChargeSeconds || Mathf.Abs(longChargeX - chargeDestination) < 0.01f) { CompleteAttack(TurretBossAttackState.LongCharge); }
                 break;
             case TurretBossAttackState.StompWarning:
                 MoveBody(new Vector3(transform.position.x, plantedY + 0.9f + 0.25f * Mathf.Clamp01(elapsed / StompWarningSeconds), transform.position.z));
@@ -238,15 +242,15 @@ public sealed class TurretBossController : EnemyBase
             comboAttacks = 0;
             recoveryDuration = recoverySeconds;
         }
-        if (next == TurretBossAttackState.Lunging || next == TurretBossAttackState.Spinning || next == TurretBossAttackState.Stomping)
+        if (next == TurretBossAttackState.ShortCharge || next == TurretBossAttackState.LongCharge || next == TurretBossAttackState.Stomping)
         {
             comboAttacks++;
         }
         if (next == TurretBossAttackState.Repositioning || next == TurretBossAttackState.Disengaging)
         {
-            lungeStart = transform.position;
+            shortChargeStart = transform.position;
             float away = target.position.x < transform.position.x ? 1f : -1f;
-            lungeDestination = Mathf.Clamp(lungeStart.x + away * 2f, LeftMovementLimit, RightMovementLimit);
+            chargeDestination = Mathf.Clamp(shortChargeStart.x + away * 2f, LeftMovementLimit, RightMovementLimit);
         }
         if (next == TurretBossAttackState.FloorWarning)
         {
@@ -257,19 +261,19 @@ public sealed class TurretBossController : EnemyBase
             launcher.Cancel();
         }
         if (next == TurretBossAttackState.StompWarning ||
-            (next == TurretBossAttackState.Spinning && decisions.NextDouble() < 0.5))
+            (next == TurretBossAttackState.LongCharge && decisions.NextDouble() < 0.5))
         {
             launcher.SetOrigin(transform.position);
             launcher.TryStart(missileCycle ? TurretBossPayload.Grenades : TurretBossPayload.Missiles, RangedDamage, true);
         }
-        if (next == TurretBossAttackState.LungeWarning || next == TurretBossAttackState.SpinWarning)
+        if (next == TurretBossAttackState.ShortChargeWarning || next == TurretBossAttackState.LongChargeWarning)
         {
-            if (next == TurretBossAttackState.LungeWarning) { chargeCooldown = chargeCooldownSeconds; }
-            lungeStart = transform.position;
+            if (next == TurretBossAttackState.ShortChargeWarning) { chargeCooldown = chargeCooldownSeconds; }
+            shortChargeStart = transform.position;
             float direction = target.position.x < transform.position.x ? -1f : 1f;
-            lungeDestination = next == TurretBossAttackState.SpinWarning
+            chargeDestination = next == TurretBossAttackState.LongChargeWarning
                 ? (direction < 0f ? LeftMovementLimit : RightMovementLimit)
-                : Mathf.MoveTowards(lungeStart.x, Mathf.Clamp(lungeStart.x + direction * 3f, LeftMovementLimit, RightMovementLimit), 3f);
+                : Mathf.MoveTowards(shortChargeStart.x, Mathf.Clamp(shortChargeStart.x + direction * 3f, LeftMovementLimit, RightMovementLimit), 3f);
         }
         // Keep the charge telegraph, firing beam and body pointed the same way.
         if (next != TurretBossAttackState.BeamFire && next != TurretBossAttackState.MobileAssess &&
@@ -281,7 +285,7 @@ public sealed class TurretBossController : EnemyBase
         SpriteRenderer renderer = GetComponent<SpriteRenderer>();
         if (renderer != null) { renderer.flipX = aim < 0f; }
         if (IsMobilePhase && next != TurretBossAttackState.Transforming) { legs.SetPose(1f, 0f); }
-        field.SetBossOrigin(new Vector2(transform.position.x, 0f), aim, lungeDestination);
+        field.SetBossOrigin(new Vector2(transform.position.x, 0f), aim, chargeDestination);
         field.SetState(next, target != null ? target.position.x : 0f,
             next == TurretBossAttackState.Stomping ? MeleeDamage : RangedDamage);
     }
@@ -294,14 +298,14 @@ public sealed class TurretBossController : EnemyBase
         {
             return TurretBossAttackState.Repositioning;
         }
-        if (distance > 5f) { choice = TurretBossAttackState.SpinWarning; }
-        else if (PlayerTooClose && chargeCooldown <= 0f) { choice = TurretBossAttackState.LungeWarning; }
+        if (distance > 5f) { choice = TurretBossAttackState.LongChargeWarning; }
+        else if (PlayerTooClose && chargeCooldown <= 0f) { choice = TurretBossAttackState.ShortChargeWarning; }
         else { choice = TurretBossAttackState.StompWarning; }
         // Avoid the same opener twice when another attack fits the distance.
         if (choice == previousOpening && distance <= 5f)
         {
             choice = choice == TurretBossAttackState.StompWarning
-                ? TurretBossAttackState.SpinWarning : TurretBossAttackState.StompWarning;
+                ? TurretBossAttackState.LongChargeWarning : TurretBossAttackState.StompWarning;
         }
         previousOpening = choice;
         return choice;
@@ -318,24 +322,24 @@ public sealed class TurretBossController : EnemyBase
         float distance = Mathf.Abs(target.position.x - transform.position.x);
         // Pursuit can bring the target into charge range midway through a chain.
         // Re-evaluate proximity here rather than waiting until the next opener.
-        if (completedAttack == TurretBossAttackState.Spinning && comboAttacks < 3 &&
+        if (completedAttack == TurretBossAttackState.LongCharge && comboAttacks < 3 &&
             PlayerTooClose && chargeCooldown <= 0f)
         {
-            ChangeState(TurretBossAttackState.LungeWarning);
+            ChangeState(TurretBossAttackState.ShortChargeWarning);
             return;
         }
         bool extend = comboAttacks < 3 && completedAttack != TurretBossAttackState.Stomping &&
             decisions.NextDouble() < comboExtensionChance;
         if (extend)
         {
-            ChangeState(distance <= 4f ? TurretBossAttackState.StompWarning : TurretBossAttackState.SpinWarning);
+            ChangeState(distance <= 4f ? TurretBossAttackState.StompWarning : TurretBossAttackState.LongChargeWarning);
             return;
         }
         // Every completed chain earns an opening. More commitment means more punish time.
         recoveryDuration = recoverySeconds + heavyRecoveryBonus * comboAttacks +
             (completedAttack == TurretBossAttackState.Stomping ? heavyRecoveryBonus : 0f);
         finishWithBeam = distance > 4f && decisions.NextDouble() < 0.5;
-        ChangeState(completedAttack == TurretBossAttackState.Spinning && distance < 3f
+        ChangeState(completedAttack == TurretBossAttackState.LongCharge && distance < 3f
             ? TurretBossAttackState.Disengaging : TurretBossAttackState.LauncherWait);
     }
 
@@ -377,9 +381,9 @@ public sealed class TurretBossController : EnemyBase
     private void LateUpdate()
     {
         float lean = 0f;
-        if (State == TurretBossAttackState.LungeWarning) { lean = -facingDirection * 7f * Mathf.Clamp01(elapsed / LungeWarningSeconds); }
-        else if (State == TurretBossAttackState.Lunging) { lean = facingDirection * 9f; }
-        else if (State == TurretBossAttackState.SpinWarning) { lean = Mathf.Sin(elapsed * 16f) * 3f; }
+        if (State == TurretBossAttackState.ShortChargeWarning) { lean = -facingDirection * 7f * Mathf.Clamp01(elapsed / ShortChargeWarningSeconds); }
+        else if (State == TurretBossAttackState.ShortCharge) { lean = facingDirection * 9f; }
+        else if (State == TurretBossAttackState.LongChargeWarning) { lean = Mathf.Sin(elapsed * 16f) * 3f; }
         else if (State == TurretBossAttackState.FollowThrough) { lean = facingDirection * 6f * (1f - Mathf.Clamp01(elapsed / followThroughSeconds)); }
         else if (State == TurretBossAttackState.BeamFire) { lean = -facingDirection * 4f * Mathf.Exp(-elapsed * 8f); }
         transform.rotation = solidBody != null ? Quaternion.identity : Quaternion.Euler(0f, 0f, lean);

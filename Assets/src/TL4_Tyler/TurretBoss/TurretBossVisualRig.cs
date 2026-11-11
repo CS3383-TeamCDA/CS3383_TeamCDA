@@ -64,8 +64,8 @@ public sealed class TurretBossVisualRig : MonoBehaviour
     }
     private static bool UsesAttackPose(TurretBossAttackState state)
     {
-        return state == TurretBossAttackState.LungeWarning || state == TurretBossAttackState.Lunging ||
-            state == TurretBossAttackState.SpinWarning || state == TurretBossAttackState.Spinning ||
+        return state == TurretBossAttackState.ShortChargeWarning || state == TurretBossAttackState.ShortCharge ||
+            state == TurretBossAttackState.LongChargeWarning || state == TurretBossAttackState.LongCharge ||
             state == TurretBossAttackState.StompWarning || state == TurretBossAttackState.Stomping;
     }
     private Transform turret;
@@ -531,23 +531,23 @@ public sealed class TurretBossVisualRig : MonoBehaviour
         float height = 0f;
         float lean = 0f;
         float phase = 0f;
-        bool spin = combatMotion == TurretBossAttackState.Spinning;
-        bool dash = combatMotion == TurretBossAttackState.Lunging;
-        if (combatMotion == TurretBossAttackState.LungeWarning)
+        bool spin = combatMotion == TurretBossAttackState.LongCharge;
+        bool dash = combatMotion == TurretBossAttackState.ShortCharge;
+        if (combatMotion == TurretBossAttackState.ShortChargeWarning)
         {
-            float brace = Mathf.Clamp01(combatElapsed / TurretBossController.LungeWarningSeconds);
+            float brace = Mathf.Clamp01(combatElapsed / TurretBossController.ShortChargeWarningSeconds);
             height = -0.16f * brace;
             lean = -6f * brace;
         }
         else if (dash)
         {
-            phase = Mathf.Clamp01(combatElapsed / TurretBossController.LungeSeconds);
+            phase = Mathf.Clamp01(combatElapsed / TurretBossController.ShortChargeSeconds);
             height = -0.12f + 0.12f * Mathf.Sin(phase * Mathf.PI);
             lean = 10f * Mathf.Sin(phase * Mathf.PI);
         }
-        else if (combatMotion == TurretBossAttackState.SpinWarning)
+        else if (combatMotion == TurretBossAttackState.LongChargeWarning)
         {
-            height = -0.35f * Mathf.Clamp01(combatElapsed / TurretBossController.SpinWarningSeconds);
+            height = -0.35f * Mathf.Clamp01(combatElapsed / TurretBossController.LongChargeWarningSeconds);
             lean = Mathf.Sin(combatElapsed * 18f) * 2f;
         }
         else if (spin) { height = -0.65f; }
