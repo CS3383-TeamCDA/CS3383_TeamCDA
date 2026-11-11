@@ -72,6 +72,75 @@ public sealed class TurretBossVisualRigTests
             for (int i = 0; i < 4; i++) { previous[i] = ankles[i].position; }
             rig.AdvancePresentation(0.1f);
             for (int i = 0; i < 4; i++) { Assert.Less(Vector3.Distance(previous[i], ankles[i].position), 0.0001f); }
+
+            Assert.IsTrue(rig.PlayCannonAttack());
+            Assert.IsTrue(rig.PlayLauncherShot(), "Launcher should animate independently during cannon charge.");
+            Assert.IsFalse(rig.PlayCannonAttack(), "Repeated triggers must not restart an active charge.");
+            rig.AdvancePresentation(0f);
+            Assert.IsTrue(rig.IsLauncherAnimating);
+            rig.AdvancePresentation(0.75f);
+            Assert.IsFalse(rig.IsLauncherAnimating);
+            Assert.IsTrue(rig.IsCannonAnimating, "Launcher completion must not cancel the cannon.");
+            rig.AdvancePresentation(0.85f);
+            Assert.Less(rig.Cannon.localPosition.x, 0.45f, "Firing should recoil the cannon.");
+            rig.AdvancePresentation(0.7f);
+            Assert.IsFalse(rig.IsCannonAnimating);
+            Assert.AreEqual(0.45f, rig.Cannon.localPosition.x, 0.0001f);
+            rig.SetExposed(false);
+            Transform shutter = root.transform.Find("Body motion pivot/Left core shutter");
+            rig.AnimateCore(true);
+            rig.AdvancePresentation(0.15f);
+            Assert.That(shutter.localPosition.x, Is.InRange(-0.95f, -0.35f));
+            float halfOpen = shutter.localPosition.x;
+            rig.AnimateCore(false);
+            Assert.AreEqual(halfOpen, shutter.localPosition.x, "Reversing shutters should not snap.");
+            rig.AdvancePresentation(0.3f);
+            Assert.AreEqual(-0.34f, shutter.localPosition.x, 0.0001f);
+            rig.SetForm(false);
+            Assert.AreEqual(0f, rig.Deployment);
+            Assert.IsFalse(legs.gameObject.activeSelf);
+            rig.TransitionToForm(true);
+            Assert.IsTrue(rig.IsTransforming);
+            rig.AdvancePresentation(0f);
+            Assert.AreEqual(0f, rig.Deployment, "Paused time must freeze the transition.");
+            rig.AdvancePresentation(0.5f);
+            Assert.AreEqual(0.25f, rig.Deployment, 0.001f);
+            Vector3 beforeReverse = root.transform.Find("Body motion pivot").localPosition;
+            rig.TransitionToForm(false);
+            Assert.AreEqual(beforeReverse, root.transform.Find("Body motion pivot").localPosition,
+                "Reversing must not snap the body to a different pose.");
+            rig.AdvancePresentation(0.5f);
+            Assert.IsFalse(rig.IsTransforming);
+            Assert.AreEqual(0f, rig.Deployment);
+            Assert.IsFalse(legs.gameObject.activeSelf);
+            rig.TransitionToForm(true);
+            rig.AdvancePresentation(2f);
+            Assert.IsFalse(rig.IsTransforming);
+            Assert.AreEqual(1f, rig.Deployment);
+            Assert.IsTrue(legs.gameObject.activeSelf);
+            Assert.IsTrue(root.transform.Find("Planted base skirt").gameObject.activeSelf,
+                "The docking base must remain on the floor after deployment.");
+            Transform dockingBase = root.transform.Find("Planted base skirt");
+            Vector3 basePosition = dockingBase.position;
+            root.transform.position += Vector3.right * 0.1f;
+            rig.AdvancePresentation(0.1f);
+            Assert.Less(Vector3.Distance(basePosition, dockingBase.position), 0.0001f,
+                "Walking away must leave the base behind.");
+            Assert.AreEqual(1f, dockingBase.GetComponent<SpriteRenderer>().color.a);
+            rig.TransitionToForm(false);
+            for (int tick = 0; tick < 180; tick++) { rig.AdvancePresentation(1f / 60f); }
+            Assert.Less(Vector3.Distance(basePosition, root.transform.position), 0.0001f,
+                "Retraction must return to the docking base before folding in.");
+            Assert.AreEqual(0f, rig.Deployment);
+            rig.TransitionToForm(true);
+            rig.AdvancePresentation(2f);
+            for (int i = 0; i < 4; i++) { previous[i] = ankles[i].position; }
+            rig.AdvancePresentation(0.1f);
+            for (int i = 0; i < 4; i++)
+            {
+                Assert.Less(Vector3.Distance(previous[i], ankles[i].position), 0.0001f,
+                    "Transformation completion should hand off to grounded idle without a foot jump.");
+            }
         }
         finally
         {

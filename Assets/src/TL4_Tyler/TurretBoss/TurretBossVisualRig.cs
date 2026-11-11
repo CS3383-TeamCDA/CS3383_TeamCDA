@@ -10,6 +10,24 @@ public sealed class TurretBossVisualRig : MonoBehaviour
     [SerializeField] private bool exposed;
     [SerializeField, Min(0.2f)] private float walkCycleSeconds = 1.5f;
     [SerializeField, Min(0f)] private float stepHeight = 0.28f;
+    [SerializeField, Min(0.1f)] private float transformationSeconds = 2f;
+    private const float PlantedBodyHeight = 1.32f;
+    private const float MobileBodyHeight = 2.4f;
+    [SerializeField, Min(0.05f)] private float shutterSlideSeconds = 0.3f;
+    private float shutterOpening;
+    private float cannonClock = -1f;
+    private float launcherClock = -1f;
+    private SpriteRenderer muzzleEnergy;
+    public bool IsCannonAnimating => cannonClock >= 0f;
+    public bool IsLauncherAnimating => launcherClock >= 0f;
+    private float deployment;
+    private bool formInitialized;
+    private bool baseParked;
+    private Vector3 baseWorldPosition;
+    private bool returningToBase;
+    public bool IsMobile => mobile;
+    public bool IsTransforming => returningToBase || (formInitialized && !Mathf.Approximately(deployment, mobile ? 1f : 0f));
+    public float Deployment => deployment;
     private sealed class LegPose
     {
         public Transform Hip, Knee, Ankle, Upper, Lower;
@@ -49,20 +67,122 @@ public sealed class TurretBossVisualRig : MonoBehaviour
     public void SetForm(bool isMobile)
     {
         mobile = isMobile;
+        returningToBase = false;
+        deployment = mobile ? 1f : 0f;
+        formInitialized = true;
         if (body == null) { return; }
-        body.localPosition = new Vector3(0f, mobile ? 2.4f : 1.5f, 0f);
+        body.localPosition = new Vector3(0f, mobile ? MobileBodyHeight : PlantedBodyHeight, 0f);
         legs.SetActive(mobile);
         plantedBase.SetActive(!mobile);
         ResetFooting();
+        SetAssemblyVisibility();
+    }
+
+    public void TransitionToForm(bool isMobile)
+    {
+        if (body == null) { Build(); }
+        if (!formInitialized) { SetForm(mobile); }
+        mobile = isMobile;
+        if (!baseParked)
+        {
+            baseWorldPosition = transform.position;
+            baseParked = true;
+        }
+        returningToBase = !mobile && Vector3.Distance(transform.position, baseWorldPosition) > 0.03f;
+        // A repeated/reversed request continues from the current deployment without snapping.
+        if (legs != null) { legs.SetActive(true); }
+        if (plantedBase != null) { plantedBase.SetActive(true); }
     }
 
     public void SetExposed(bool value)
     {
         exposed = value;
-        if (leftShutter == null) { return; }
-        // Reactor is unobstructed when these two solid plates slide aside.
-        leftShutter.localPosition = new Vector3(exposed ? -0.96f : -0.34f, 0f, 0f);
-        rightShutter.localPosition = new Vector3(exposed ? 0.96f : 0.34f, 0f, 0f);
+        shutterOpening = value ? 1f : 0f;
+        ApplyShutters();
+    }
+
+    public void AnimateCore(bool value) { exposed = value; }
+
+    public bool PlayCannonAttack()
+    {
+        if (Cannon == null || IsCannonAnimating) { return false; }
+        cannonClock = 0f;
+        return true;
+    }
+
+    public bool PlayLauncherShot()
+    {
+        if (Launcher == null || IsLauncherAnimating) { return false; }
+        launcherClock = 0f;
+        return true;
+    }
+
+    private void ApplyShutters()
+    {
+        if (leftShutter == null || rightShutter == null) { return; }
+        float opening = Mathf.SmoothStep(0f, 1f, shutterOpening);
+        leftShutter.localPosition = new Vector3(Mathf.Lerp(-0.34f, -0.96f, opening), 0f, 0f);
+        rightShutter.localPosition = new Vector3(Mathf.Lerp(0.34f, 0.96f, opening), 0f, 0f);
+    }
+
+    private void EnsureMuzzleEnergy()
+    {
+        if (Muzzle == null) { return; }
+        Transform existing = Muzzle.Find("Cannon muzzle energy");
+        Transform energy = existing != null ? existing : Part(5, "Cannon muzzle energy", Muzzle, Vector2.zero, 0.12f, 30);
+        energy.localRotation = Quaternion.Euler(0f, 0f, 90f);
+        muzzleEnergy = energy.GetComponent<SpriteRenderer>();
+        muzzleEnergy.enabled = false;
+    }
+
+    private void AdvanceWeapons(float delta)
+    {
+        shutterOpening = Mathf.MoveTowards(shutterOpening, exposed ? 1f : 0f,
+            delta / Mathf.Max(0.05f, shutterSlideSeconds));
+        ApplyShutters();
+        if (muzzleEnergy == null) { EnsureMuzzleEnergy(); }
+        float recoil = 0f;
+        float glow = 0f;
+        if (IsCannonAnimating)
+        {
+            cannonClock += delta;
+            if (cannonClock < 1.5f)
+            {
+                float charge = cannonClock / 1.5f;
+                glow = charge * (0.55f + 0.15f * Mathf.Sin(cannonClock * 32f));
+            }
+            else if (cannonClock < 2.2f)
+            {
+                float fire = cannonClock - 1.5f;
+                recoil = 0.22f * Mathf.Clamp01(fire / 0.04f) * Mathf.Exp(-fire * 6f);
+                glow = 1f - 0.2f * Mathf.Sin(fire * 45f);
+            }
+            else { cannonClock = -1f; }
+        }
+        Cannon.localPosition = new Vector3(0.45f - recoil, 0.75f, 0f);
+        if (muzzleEnergy != null)
+        {
+            muzzleEnergy.enabled = glow > 0.01f;
+            muzzleEnergy.transform.localScale = Vector3.one * (0.08f + glow * 0.14f);
+            muzzleEnergy.color = new Color(1f, 0.75f + glow * 0.25f, 0.75f + glow * 0.25f, Mathf.Clamp01(glow));
+        }
+        float launcherKick = 0f;
+        float launcherBrace = 0f;
+        if (IsLauncherAnimating)
+        {
+            launcherClock += delta;
+            if (launcherClock < 0.15f) { launcherBrace = Mathf.SmoothStep(0f, 1f, launcherClock / 0.15f); }
+            else if (launcherClock < 0.65f)
+            {
+                float fire = launcherClock - 0.15f;
+                launcherBrace = Mathf.Exp(-fire * 7f);
+                launcherKick = Mathf.Clamp01(fire / 0.025f) * Mathf.Exp(-fire * 10f);
+            }
+            else { launcherClock = -1f; }
+        }
+        Launcher.localPosition = new Vector3(-0.95f - launcherKick * 0.08f, 0.72f - launcherKick * 0.12f, 0f);
+        Launcher.localRotation = Quaternion.Euler(0f, 0f, launcherBrace * -6f);
+        Launcher.GetComponent<SpriteRenderer>().color = Color.Lerp(Color.white, new Color(1f, 0.85f, 0.45f), launcherKick * 0.55f);
     }
 
     private void Build()
@@ -91,6 +211,7 @@ public sealed class TurretBossVisualRig : MonoBehaviour
         Part(0, "Purple dome and optic", turret, Vector2.zero, 1f, 25);
         Cannon = Part(2, "Cannon recoil pivot", turret, new Vector2(0.45f, 0.75f), 0.78f, 26);
         Muzzle = Node("Beam muzzle", Cannon, new Vector2(2.72f, 0f));
+        EnsureMuzzleEnergy();
         Part(4, "Launcher bracket", turret, new Vector2(-0.85f, 0.55f), 0.55f, 23);
         Launcher = Part(3, "Independent launcher pivot", turret, new Vector2(-0.95f, 0.72f), 0.65f, 24);
         LauncherMuzzle = Node("Payload muzzle", Launcher, new Vector2(0.35f, 1.45f));
@@ -149,6 +270,7 @@ public sealed class TurretBossVisualRig : MonoBehaviour
         if (Cannon == null || Launcher == null) { return false; }
         Muzzle = Cannon.Find("Beam muzzle");
         LauncherMuzzle = Launcher.Find("Payload muzzle");
+        EnsureMuzzleEnergy();
         for (int index = 0; index < 4; index++)
         {
             Transform hip = legRoot.GetChild(index);
@@ -168,6 +290,7 @@ public sealed class TurretBossVisualRig : MonoBehaviour
         }
         ResetFooting();
         SetExposed(exposed);
+        if (!formInitialized) { SetForm(mobile); }
         return true;
     }
 
@@ -203,6 +326,20 @@ public sealed class TurretBossVisualRig : MonoBehaviour
                 return;
             }
         }
+        AdvanceWeapons(delta);
+        if (returningToBase)
+        {
+            transform.position = Vector3.MoveTowards(transform.position, baseWorldPosition, 0.65f * delta);
+            if (Vector3.Distance(transform.position, baseWorldPosition) < 0.001f)
+            {
+                returningToBase = false;
+                ResetFooting();
+            }
+        }
+        if (baseParked && plantedBase != null)
+        {
+            plantedBase.transform.position = baseWorldPosition;
+        }
         if (Vector3.Distance(previousPosition, transform.position) > 2f || previousScale != transform.lossyScale)
         {
             ResetFooting();
@@ -211,16 +348,22 @@ public sealed class TurretBossVisualRig : MonoBehaviour
         Vector2 localVelocity = transform.InverseTransformVector(worldVelocity);
         previousPosition = transform.position;
         motionTime += delta;
-        bool walking = mobile && Mathf.Abs(localVelocity.x) > 0.03f;
+        if (!formInitialized) { SetForm(mobile); }
+        if (IsTransforming && !returningToBase)
+        {
+            AdvanceTransformation(delta);
+            return;
+        }
+        bool walking = (mobile || returningToBase) && Mathf.Abs(localVelocity.x) > 0.03f;
         float cycle = Mathf.Max(0.2f, walkCycleSeconds);
         float swingSeconds = cycle * 0.21f;
         float sway = Mathf.Sin(motionTime * 1.7f) * 0.035f;
         float bob = walking ? Mathf.Sin(motionTime / cycle * Mathf.PI * 4f) * 0.045f : Mathf.Sin(motionTime * 2.1f) * 0.018f;
-        body.localPosition = new Vector3(sway, (mobile ? 2.4f : 1.5f) + bob, 0f);
+        body.localPosition = new Vector3(sway, Mathf.Lerp(PlantedBodyHeight, MobileBodyHeight, deployment) + bob, 0f);
         body.localRotation = Quaternion.Euler(0f, 0f, Mathf.Sin(motionTime * 1.7f) * (walking ? 0.7f : 0.35f));
         // Upper assembly lags the chassis slightly without moving either weapon off its mount.
         turret.localRotation = Quaternion.Euler(0f, 0f, -Mathf.Sin(motionTime * 1.7f - 0.25f) * 0.35f);
-        if (!mobile) { return; }
+        if (!mobile && !returningToBase) { return; }
         stepClock -= delta;
         bool footInFlight = false;
         foreach (LegPose leg in legPoses) { footInFlight |= leg.Swinging; }
@@ -253,6 +396,55 @@ public sealed class TurretBossVisualRig : MonoBehaviour
             }
             Vector2 hip = leg.RestHip + new Vector2(sway, bob);
             PoseLeg(leg, hip, transform.InverseTransformPoint(footWorld));
+        }
+    }
+
+    private void AdvanceTransformation(float delta)
+    {
+        deployment = Mathf.MoveTowards(deployment, mobile ? 1f : 0f,
+            delta / Mathf.Max(0.1f, transformationSeconds));
+        // Unfold the feet first, then push the chassis clear of its physical docking base.
+        float lift = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.3f, 1f, deployment));
+        // Brace before lifting and settle as the feet take the load.
+        float brace = Mathf.Sin(deployment * Mathf.PI * 2f) * 0.06f;
+        body.localPosition = new Vector3(0f, Mathf.Lerp(PlantedBodyHeight, MobileBodyHeight, lift) - brace, 0f);
+        body.localRotation = Quaternion.Euler(0f, 0f, Mathf.Sin(deployment * Mathf.PI * 2f) * 1.5f);
+        turret.localRotation = Quaternion.Euler(0f, 0f, -Mathf.Sin(deployment * Mathf.PI * 2f));
+        for (int index = 0; index < legPoses.Length; index++)
+        {
+            LegPose leg = legPoses[index];
+            float progress = Mathf.InverseLerp(0.02f + index * 0.04f, 0.48f + index * 0.04f, deployment);
+            progress = Mathf.SmoothStep(0f, 1f, progress);
+            Vector2 foldedHip = new Vector2(leg.Side * 0.6f, 1.15f);
+            Vector2 foldedAnkle = new Vector2(leg.Side * 1.05f, 0.65f);
+            Vector2 plantedHip = leg.RestHip - Vector2.up * ((MobileBodyHeight - PlantedBodyHeight) * (1f - lift));
+            PoseLeg(leg, Vector2.Lerp(foldedHip, plantedHip, progress),
+                Vector2.Lerp(foldedAnkle, leg.RestAnkle, progress));
+        }
+        SetAssemblyVisibility();
+        if (!IsTransforming) { SetForm(mobile); }
+    }
+
+    private void SetAssemblyVisibility()
+    {
+        if (plantedBase == null || legs == null) { return; }
+        legs.SetActive(deployment > 0f);
+        plantedBase.SetActive(baseParked || deployment < 1f);
+        // Keep the solid docking skirt on the floor. Nothing shrinks or dissolves.
+        plantedBase.transform.position = baseParked ? baseWorldPosition : transform.position;
+        // Keep the docking socket low enough to clear the bare reactor in the planted pose.
+        // Preserve its footprint; only the vertical profile is reduced.
+        plantedBase.transform.localScale = new Vector3(1.18f, 0.54f, 1f);
+        SpriteRenderer skirt = plantedBase.GetComponent<SpriteRenderer>();
+        Color baseColor = skirt.color;
+        baseColor.a = 1f;
+        skirt.color = baseColor;
+        skirt.sortingOrder = 19; // Platform sits behind chassis/core (20–22), in front of the far legs (10–12).
+        foreach (SpriteRenderer renderer in legs.GetComponentsInChildren<SpriteRenderer>(true))
+        {
+            Color color = renderer.color;
+            color.a = 1f;
+            renderer.color = color;
         }
     }
 

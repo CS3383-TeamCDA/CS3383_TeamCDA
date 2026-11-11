@@ -18,7 +18,7 @@ public sealed class TurretBossArtPreview : MonoBehaviour
         planted = Instantiate(visualPrefab, new Vector3(-4.5f, 0f, 0f), Quaternion.identity, transform);
         planted.SetForm(false);
         mobile = Instantiate(visualPrefab, new Vector3(4f, 0f, 0f), Quaternion.identity, transform);
-        mobile.SetForm(true);
+        mobile.SetForm(false);
         Camera camera = Camera.main;
         if (camera == null)
         {
@@ -53,13 +53,27 @@ public sealed class TurretBossArtPreview : MonoBehaviour
         float horizontal = (keyboard.dKey.isPressed || keyboard.rightArrowKey.isPressed ? 1f : 0f) -
             (keyboard.aKey.isPressed || keyboard.leftArrowKey.isPressed ? 1f : 0f);
         Vector3 position = mobile.transform.localPosition;
-        position.x = Mathf.Clamp(position.x + horizontal * previewWalkSpeed * Time.deltaTime, 2f, 6f);
+        if (mobile.IsMobile && !mobile.IsTransforming)
+        {
+            position.x = Mathf.Clamp(position.x + horizontal * previewWalkSpeed * Time.deltaTime, 2f, 6f);
+        }
         mobile.transform.localPosition = position;
+        if (keyboard.tKey.wasPressedThisFrame) { mobile.TransitionToForm(!mobile.IsMobile); }
+        if (keyboard.bKey.wasPressedThisFrame)
+        {
+            planted.PlayCannonAttack();
+            mobile.PlayCannonAttack();
+        }
+        if (keyboard.lKey.wasPressedThisFrame)
+        {
+            planted.PlayLauncherShot();
+            mobile.PlayLauncherShot();
+        }
         if (keyboard.spaceKey.wasPressedThisFrame)
         {
             exposed = !exposed;
-            planted.SetExposed(exposed);
-            mobile.SetExposed(exposed);
+            planted.AnimateCore(exposed);
+            mobile.AnimateCore(exposed);
         }
         if (keyboard.fKey.wasPressedThisFrame)
         {
@@ -76,7 +90,7 @@ public sealed class TurretBossArtPreview : MonoBehaviour
 
     private void OnGUI()
     {
-        GUI.Label(new Rect(20f, 20f, 1000f, 30f), "SIEGE CORE ART PREVIEW | Left: planted | Right: mobile | A/D: walk mobile form | Space: shutters | F: mirror");
-        GUI.Label(new Rect(20f, 50f, 1000f, 30f), "Procedural idle + planted-foot crawl preview. Release A/D to settle; combat remains separate.");
+        GUI.Label(new Rect(20f, 20f, 1000f, 30f), "SIEGE CORE ART PREVIEW | Left: reference | Right: transform preview | A/D: walk | T: transform right boss | Space: shutters | F: mirror");
+        GUI.Label(new Rect(20f, 50f, 1000f, 30f), "B: cannon charge/fire | L: launcher shot (independent) | Space: slide shutters | T: deploy/return");
     }
 }

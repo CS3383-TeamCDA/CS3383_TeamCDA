@@ -85,3 +85,67 @@ while a preview instance already exists. Existing hierarchy objects are reused.
 Regression coverage simulates cleared turret/leg runtime fields and checks that
 recovery does not duplicate the assembly. Compilation passed; runtime execution
 remains pending. Restart Play Mode after this update and clear earlier errors.
+
+## Reversible transformation preview
+
+T now toggles the right-hand preview boss between planted and mobile forms over
+two seconds. The chassis braces/lifts, legs unfold in a staggered sequence, and
+the existing base skirt retracts/scales/fades into the body. This is procedural
+presentation with the current art, not dedicated hatch sprites. Pressing T again
+reverses continuously from the current deployment. Movement is blocked in the
+preview during transition or while planted. Completion resets ground anchors
+for seamless idle/crawl handoff. Space shutters and F mirror remain available.
+
+Regression checks cover scaled-time freeze, mid-transition reversal, endpoint
+visibility and planted feet after completion. Source/test compilation and numeric
+reach checks pass; Unity runtime execution and visual review remain pending.
+Combat visuals and phase timing are unchanged; transformation combat binding
+and attack/death presentation remain future work.
+
+## Physical docking-base revision (current transformation)
+
+Replaced the skirt shrink/fade with a solid persistent docking base. Legs unfold
+first and plant outside its rim, then push the body upward. The base and legs
+remain opaque. The front rim occludes tucked machinery instead of using alpha.
+The base stays at its original world position when the boss walks away. Press T
+again to walk back to the base before folding down; reversing a transition still
+continues from its current pose. Right preview now starts planted so the first T
+shows deployment. Existing direct SetForm(true) can still initialize a mobile
+assembly without an abandoned base; animated deployment parks the physical base.
+
+Source/test compilation and sampled joint reach checks pass. Regression coverage
+now expects the base to persist, remain opaque and stay behind during walking,
+with docking before retraction. Unity runtime/visual verification remains pending.
+This supersedes earlier notes describing disappearing/retracting skirt art.
+
+## Core clearance correction
+
+The physical base now retains its 1.18 horizontal scale with a lower 0.54 vertical
+profile. Its opaque front rim stays below the exposed reactor in the planted
+pose, while still hiding folded machinery near the floor. Body height, shutters,
+leg stance and deployment timing are unchanged. Source compilation passes;
+visual clearance should be reviewed with Space in the restarted art preview.
+
+## Planted body seating
+
+Lowered the planted chassis from 1.5 to 1.32 units and placed the platform behind
+the chassis/core/shutters. Mobile height and standing stance remain unchanged.
+Idle, direct setup and transformation share the same height constants, including
+the tucked hip offset. This closes the floating gap without obscuring the core.
+Compilation passed; final overlap is a visual preview check.
+
+## Weapon and core presentation preview
+
+B previews the cannon's 1.5-second charge and 0.7-second firing/recoil cycle on
+both assemblies. A small energy glow uses the existing bare-core sprite at the
+muzzle; this is presentation, not a damaging beam or final VFX. L independently
+previews launcher bracing, kick and settling. Both weapons can animate together
+while idle, walking or transforming without taking over the leg track. Repeated
+triggers on a busy weapon are ignored. Space now slides the two core shutters
+over 0.3 seconds and can reverse mid-slide. SetExposed remains an immediate
+setup API; AnimateCore is the interpolated presentation API. No combat damage,
+projectiles or shared integration was changed.
+
+Updated regression coverage checks concurrent clocks, restart suppression, pause,
+recoil restoration and reversible shutters. Source and test compilation pass;
+Unity runtime tests and visual review are still pending.
