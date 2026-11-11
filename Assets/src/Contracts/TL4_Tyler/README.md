@@ -38,3 +38,6 @@ injects each runtime-created enemy through the scene DependencyScope before
 publishing OnEnemySpawned. Standalone scenes need a scope/service to enable drops.
 TL4 no longer references Joe.Game. EnemyProjectile/EnemyAttackAnimations still use
 TL6 PlayerHealth for collider-based damage pending TL6's health contract.
+
+Boss encounter API: see IBossEncounter.cs and
+[the TL4 boss guide](../../../../docs/TL4_Tyler/BOSS_ENCOUNTER.md).

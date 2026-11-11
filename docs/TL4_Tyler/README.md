@@ -87,3 +87,9 @@ colliders must also ignore those corpses. Current restart destroys scene bodies.
 The Level1_Turret prefab now has a dynamic Rigidbody2D with horizontal motion and
 rotation frozen, plus a solid base collider. Gravity settles its approximate
 spawn height onto terrain instead of leaving it suspended over gaps.
+
+## Boss prototype
+
+See [Boss encounter setup and controls](BOSS_ENCOUNTER.md). The standalone scene is
+`Assets/Scenes/TL4_Tyler/BossSandbox.unity`; final-scene registration remains a
+separate integration-owner task.

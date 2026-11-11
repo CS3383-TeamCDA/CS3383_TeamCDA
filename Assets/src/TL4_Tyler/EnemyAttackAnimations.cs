@@ -39,6 +39,14 @@ public class EnemyAttackAnimations : MonoBehaviour
     public event Action<EnemyAttackAnimation> AttackTriggered;
     public event Action SequenceCompleted;
 
+    public void ConfigureCadence(float meleeInterval, float rangedInterval, float followUpChance)
+    {
+        meleeCooldown = Mathf.Max(0.1f, meleeInterval);
+        rangedCooldown = Mathf.Max(0.1f, rangedInterval);
+        secondMeleeChance = Mathf.Clamp01(followUpChance);
+        secondShotChance = Mathf.Clamp01(followUpChance);
+    }
+
     private void Awake()
     {
         enemy = GetComponent<EnemyBase>();
