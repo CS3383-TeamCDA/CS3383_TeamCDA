@@ -157,3 +157,37 @@ launcher. Its Initialize accepts an optional local RNG seed for repeatable tests
 world-seed integration remains future work. No global Unity random state is used.
 Added seeded regression coverage for shot counts, varying gaps, completion and
 cancellation. Source and test assemblies compile; runtime execution is pending.
+
+## Reactive mobile combat (current behavior)
+
+This replaces the earlier fixed mobile-loop description above. After transforming
+or finishing a core opening, the boss assesses for 0.3 seconds. It turns with a
+0.4-second leg tell if the player crossed behind its committed facing. At more
+than five units it pursues with spin; within 3.5 units it prefers charge if its
+cooldown is ready; otherwise it prefers stomp. At less than 1.5 units with charge
+on cooldown it first takes a non-damaging step away. Viable close/mid-range openers
+avoid immediate repeats. Phase one retains the introductory sequence.
+
+Each mobile attack ends in 0.35 seconds of visible settling. Charge or spin may
+extend into stomp if the player is close, or spin pursuit if distant (65% chance).
+Chains cap at three attacks; stomp always finishes the chain. A spin ending near
+the player may disengage with a non-damaging step. All follow-up attacks retain
+their own wind-ups. The launcher can overlap spin (50% chance) or stomp and still
+uses variable barrages. Payloads must finish before any core opening or beam.
+
+The boss plants after a chain and usually exposes its core directly; at distance
+it sometimes adds a beam instead. Recovery is 2.5 seconds plus 0.65 per committed
+mobile attack, plus another 0.65 if the chain ends in stomp. It never cancels an
+earned opening to react to proximity. Planted beam facing stays locked.
+
+Placeholder motion now includes charge bracing/forward lean, spin vibration,
+stomp lift/slam, post-attack settling and cannon recoil. These are procedural
+prototype tells, not final animation assets. Controller Inspector fields tune
+assessment, turning, follow-through, extension chance and recovery bonus.
+`Begin` accepts an optional seed for repeatable local decisions and barrages;
+production world-seed wiring is still a separate integration task.
+
+Decision and mobile-loop regression coverage was updated for distance/cooldown,
+repeat avoidance, follow-through, bounded chains, launcher/beam exclusion and
+longer guaranteed recovery. Source and test assemblies compile; Unity runtime
+execution and visual balancing remain pending.

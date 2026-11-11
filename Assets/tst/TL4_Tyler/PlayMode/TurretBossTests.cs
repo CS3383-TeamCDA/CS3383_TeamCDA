@@ -6,6 +6,40 @@ using UnityEngine.TestTools;
 public class TurretBossTests
 {
     [Test]
+    public void MobileOpeningsReactToDistanceCooldownAndRepeatHistory()
+    {
+        GameObject root = new GameObject("Decision test");
+        Sprite square = Sprite.Create(Texture2D.whiteTexture, new Rect(0f, 0f, 1f, 1f), Vector2.zero, 1f);
+        try
+        {
+            GameObject target = new GameObject("Target");
+            target.transform.SetParent(root.transform);
+            target.AddComponent<BoxCollider2D>();
+            PlayerHealth health = target.AddComponent<PlayerHealth>();
+            TurretBossAttackField field = root.AddComponent<TurretBossAttackField>();
+            field.Initialize(health, square);
+            TurretBossController boss = root.AddComponent<TurretBossController>();
+            boss.Begin(target.transform, field, 1, 17);
+            var flags = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+            var select = typeof(TurretBossController).GetMethod("SelectOpening", flags);
+            target.transform.position = Vector3.left * 7f;
+            Assert.AreEqual(TurretBossAttackState.SpinWarning, select.Invoke(boss, new object[] { true }));
+            target.transform.position = Vector3.left * 2f;
+            Assert.AreEqual(TurretBossAttackState.LungeWarning, select.Invoke(boss, new object[] { true }));
+            Assert.AreEqual(TurretBossAttackState.StompWarning, select.Invoke(boss, new object[] { true }),
+                "A repeated close-range opener should change attacks.");
+            typeof(TurretBossController).GetField("chargeCooldown", flags).SetValue(boss, 2f);
+            target.transform.position = Vector3.left;
+            Assert.AreEqual(TurretBossAttackState.Repositioning, select.Invoke(boss, new object[] { true }));
+        }
+        finally
+        {
+            Object.DestroyImmediate(root);
+            Object.DestroyImmediate(square);
+        }
+    }
+
+    [Test]
     public void VariableBarragesUseOneToFiveShotsAndWaitWithoutFinishingEarly()
     {
         GameObject root = new GameObject("Variable barrage test");
@@ -209,41 +243,44 @@ public class TurretBossTests
             target.transform.position = root.transform.position + Vector3.left * 2f;
             boss.Advance(TurretBossController.TransformationSeconds);
             Assert.Greater(root.transform.position.y, 0.8f);
-            for (int cycle = 0; cycle < 2; cycle++)
+            Assert.AreEqual(TurretBossAttackState.MobileAssess, boss.State);
+            // Force extensions so this regression covers heavier chains deterministically.
+            typeof(TurretBossController).GetField("comboExtensionChance",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(boss, 1f);
+            int recoveries = 0;
+            bool sawFollowThrough = false;
+            bool sawPursuit = false;
+            bool sawLauncher = false;
+            bool sawExtendedCombo = false;
+            for (int tick = 0; tick < 2000 && recoveries < 2; tick++)
             {
-                Assert.AreEqual(TurretBossAttackState.LungeWarning, boss.State);
-                float startX = root.transform.position.x;
-                boss.Advance(TurretBossController.LungeWarningSeconds);
-                boss.Advance(0f);
-                Assert.AreEqual(startX, root.transform.position.x);
-                boss.Advance(TurretBossController.LungeSeconds);
-                Assert.AreEqual(TurretBossAttackState.SpinWarning, boss.State);
-                Assert.That(root.transform.position.x, Is.InRange(-8.4f, 3.3f));
-                boss.Advance(TurretBossController.SpinWarningSeconds);
-                Assert.AreEqual(TurretBossAttackState.Spinning, boss.State);
-                float spinStartX = root.transform.position.x;
-                boss.Advance(TurretBossController.SpinSeconds);
-                Assert.That(root.transform.position.x, Is.InRange(-8.4f, 3.3f));
-                Assert.Greater(Mathf.Abs(root.transform.position.x - spinStartX), 2f,
-                    "Spin continues beyond the old two-unit hop.");
-                Assert.AreEqual(TurretBossAttackState.StompWarning, boss.State);
-                Assert.IsTrue(boss.Launcher.IsActive);
-                boss.Advance(TurretBossController.StompWarningSeconds);
-                Assert.IsTrue(boss.Launcher.IsActive, "Launcher survives the body changing to stomp.");
-                boss.Advance(TurretBossController.StompSeconds);
-                Assert.AreEqual(TurretBossAttackState.LauncherWait, boss.State);
-                for (int tick = 0; tick < 200 && boss.Launcher.IsActive; tick++) { boss.Advance(0.1f); }
-                Assert.IsFalse(boss.Launcher.IsActive);
-                Assert.AreEqual(TurretBossAttackState.Planting, boss.State);
-                boss.Advance(TurretBossController.PlantSeconds);
-                Assert.AreEqual(TurretBossAttackState.BeamCharge, boss.State);
-                Assert.AreEqual(0f, root.transform.position.y, 0.01f);
-                boss.Advance(1.5f);
-                boss.Advance(0.7f);
-                Assert.IsTrue(boss.CoreExposed);
-                target.transform.position = root.transform.position + Vector3.right * 2f;
-                boss.Advance(2.5f);
+                target.transform.position = new Vector3(-5f, 0.8f, 0f);
+                boss.Advance(0.1f);
+                Assert.LessOrEqual(boss.ComboAttacks, 3, "Combo length must be bounded.");
+                sawFollowThrough |= boss.State == TurretBossAttackState.FollowThrough;
+                sawPursuit |= boss.State == TurretBossAttackState.Spinning;
+                sawLauncher |= boss.Launcher.IsActive;
+                sawExtendedCombo |= boss.ComboAttacks > 1;
+                Assert.AreNotEqual(TurretBossAttackState.FloorWarning, boss.State);
+                Assert.AreNotEqual(TurretBossAttackState.FloorVolley, boss.State);
+                if (boss.State == TurretBossAttackState.BeamCharge || boss.State == TurretBossAttackState.BeamFire)
+                {
+                    Assert.IsFalse(boss.Launcher.IsActive, "Beam must wait for launcher completion.");
+                }
+                if (boss.CoreExposed)
+                {
+                    Assert.IsFalse(boss.Launcher.IsActive, "Earned openings must be free of leftover payloads.");
+                    Assert.Greater(boss.RecoveryDuration, 2.5f);
+                    recoveries++;
+                    boss.Advance(boss.RecoveryDuration);
+                    Assert.AreEqual(TurretBossAttackState.MobileAssess, boss.State);
+                }
             }
+            Assert.AreEqual(2, recoveries, "Chains must eventually give the player an opening.");
+            Assert.IsTrue(sawFollowThrough);
+            Assert.IsTrue(sawPursuit);
+            Assert.IsTrue(sawLauncher);
+            Assert.IsTrue(sawExtendedCombo);
             Object.DestroyImmediate(root);
             yield return null;
         }

@@ -152,3 +152,15 @@ launcher. Its Initialize accepts an optional local RNG seed for repeatable tests
 world-seed integration remains future work. No global Unity random state is used.
 Added seeded regression coverage for shot counts, varying gaps, completion and
 cancellation. Source and test assemblies compile; runtime execution is pending.
+
+## Continuation update — reactive mobile combat
+
+Implemented situational mobile openings, turn/reposition tells, capped branching
+combos, follow-through/disengage, and heavier-chain recovery bonuses. Spin may now
+also launch a barrage. Beam is a situational ranged finisher, not mandatory each
+cycle. All launcher payloads finish before beam or core exposure. Full current
+behavior is documented in README's "Reactive mobile combat" section, superseding
+the old fixed-loop descriptions. Added procedural lean/brace/lift/slam/recoil
+motion. Begin accepts an optional RNG seed; no world-seed integration yet.
+Updated regression tests; source/test compilation passes. Unity runtime and visual
+verification remain pending. Only TL4-owned files were modified.
