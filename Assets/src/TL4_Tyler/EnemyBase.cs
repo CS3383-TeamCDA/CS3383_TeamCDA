@@ -1,3 +1,4 @@
+using EscapeThe90s.Contracts;
 using System;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -20,6 +21,7 @@ public abstract class EnemyBase : MonoBehaviour
     [FormerlySerializedAs("hp"), FormerlySerializedAs("healthPoints")]
     [SerializeField, Min(1)] private int baseHealth = 100;
     [SerializeField, Min(0)] private int baseCoins = 5;
+    [SerializeField, Min(0)] private int scoreValue = 0;
     [SerializeField, Min(0)] private int baseMeleeDamage = 10;
     [SerializeField, Min(0)] private int baseRangedDamage = 8;
 
@@ -67,6 +69,7 @@ public abstract class EnemyBase : MonoBehaviour
     public int Level => Mathf.Max(1, level);
     public int MaxHealth => Scale(baseHealth, healthPerLevel, 1);
     public int CurrentHealth { get { EnsureInitialized(); return hp; } }
+    public int ScoreValue => Mathf.Max(0, scoreValue);
     public int CoinReward => Scale(baseCoins, coinsPerLevel, 0);
     public bool CanMelee => attackMode == EnemyAttackMode.MeleeOnly || attackMode == EnemyAttackMode.Both;
     public bool CanRanged => attackMode == EnemyAttackMode.RangedOnly || attackMode == EnemyAttackMode.Both;

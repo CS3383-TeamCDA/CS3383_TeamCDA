@@ -1,3 +1,4 @@
+using EscapeThe90s.Contracts;
 using NUnit.Framework;
 using UnityEngine;
 

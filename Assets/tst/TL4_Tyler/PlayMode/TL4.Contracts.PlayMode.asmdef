@@ -1,0 +1,12 @@
+{
+    "name": "TL4.Contracts.PlayMode",
+    "references": [
+        "TL4Assembly",
+        "EscapeThe90s.Contracts",
+        "EscapeThe90s.Infrastructure.Unity"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "autoReferenced": false
+}

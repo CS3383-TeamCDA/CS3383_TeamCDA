@@ -1,7 +1,7 @@
 {
     "name": "EscapeThe90s.Composition",
     "rootNamespace": "EscapeThe90s.Composition",
-    "references": ["EscapeThe90s.Contracts", "EscapeThe90s.Infrastructure", "EscapeThe90s.Infrastructure.Unity", "EscapeThe90s.Dependencies.Unity", "GUID:443c6ba2ba607374f916ce67442a29cd"],
+    "references": ["EscapeThe90s.Contracts", "EscapeThe90s.Infrastructure", "EscapeThe90s.Infrastructure.Unity", "EscapeThe90s.Dependencies.Unity", "GUID:443c6ba2ba607374f916ce67442a29cd", "TL4Assembly"],
     "includePlatforms": [], "excludePlatforms": [], "allowUnsafeCode": false,
     "overrideReferences": false, "precompiledReferences": [], "autoReferenced": true,
     "defineConstraints": [], "versionDefines": [], "noEngineReferences": false

@@ -39,6 +39,20 @@ namespace EscapeThe90s.Composition
             }
             else Debug.LogError("ServiceContainer: GameStateManager could not be resolved or created.", this);
 
+            // One scene-owned TL4 spawner is exposed to all contract consumers.
+            foreach (EnemySpawner spawner in FindObjectsByType<EnemySpawner>(FindObjectsInactive.Include))
+            {
+                if (spawner.gameObject.scene != gameObject.scene) continue;
+                if (_services.ContainsKey(typeof(IEnemySpawner)))
+                {
+                    Debug.LogError("ServiceContainer: multiple scene EnemySpawners; use one shared provider.", this);
+                    continue;
+                }
+                Register<IEnemySpawner>(spawner);
+                if (spawner.GetComponent<EnemyGameStateBinding>() == null)
+                    spawner.gameObject.AddComponent<EnemyGameStateBinding>();
+            }
+
             Register<IEventBus>(eventBus);
             if (bridge != null)
             {
