@@ -74,3 +74,22 @@ The scene and both extracted prefabs passed YAML parsing, unique object-ID check
 local-reference resolution and checks of newly introduced external asset references.
 No C# scripts were changed. These checks do not replace Unity importing and playing
 the scene. Unity runtime and Test Runner verification remain pending.
+
+## TL3 power-up migration
+
+FinalGame inherits PowerUpSystem's definition array directly from Joe's source
+prefab. Its TL4 copied-definition overrides were removed. Joe controls pickup
+prefabs, visuals, effects and manager settings. Enemy drops and generated pickups
+now call IPowerUpSpawner. Runtime enemies and GeneratedStreetContent receive the
+service through the scene DependencyScope.
+
+Generated pickups are now owned and cleaned up by TL3's manager, not registered as
+terrain chunk children. The current void SpawnPowerUp contract does not expose
+handles or chunk-release operations. Chunk/route-specific cleanup would require
+an agreed extension from TL3; this integration no longer inspects spawned pickups,
+changes their sorting order, or changes private despawn settings by reflection.
+
+The obsolete TL4 GameDemoPowerUps copies have been removed. The three older demo/
+test scenes that referenced them now inherit Joe's source PowerUpSystem definitions
+as well. The player-effect adapter remains until TL3/TL6 provide their shared
+target/player contracts.

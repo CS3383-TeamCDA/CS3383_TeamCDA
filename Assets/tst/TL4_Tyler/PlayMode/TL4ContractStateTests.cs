@@ -138,6 +138,53 @@ public class TL4ContractStateTests
         }
     }
 
+    [UnityTest]
+    public IEnumerator SpawnedEnemyReceivesPowerUpContractAndDropsOnce()
+    {
+        GameObject root = new GameObject("Drop scope");
+        EnemyBase enemy = null;
+        try
+        {
+            DependencyScope scope = root.AddComponent<DependencyScope>();
+            FakePowerUps powerUps = new FakePowerUps();
+            scope.Register<IPowerUpSpawner>(powerUps);
+            EnemySpawner spawner = root.AddComponent<EnemySpawner>();
+            enemy = spawner.CreateEnemy(EnemyType.Ground, new Vector3(7f, 3f, 0f));
+            typeof(EnemyBase).GetField("powerUpDropChance", System.Reflection.BindingFlags.Instance |
+                System.Reflection.BindingFlags.NonPublic).SetValue(enemy, 1f);
+            enemy.TakeDamage(enemy.MaxHealth);
+            enemy.TakeDamage(100);
+            Assert.AreEqual(1, powerUps.SpawnCount);
+            Assert.AreEqual(7f, powerUps.Position.X);
+            Assert.AreEqual(3f, powerUps.Position.Y);
+            yield return null;
+        }
+        finally
+        {
+            if (enemy != null)
+            {
+                UnityEngine.Object.DestroyImmediate(enemy.gameObject);
+            }
+            UnityEngine.Object.DestroyImmediate(root);
+        }
+    }
+
+    private sealed class FakePowerUps : IPowerUpSpawner
+    {
+        public int SpawnCount { get; private set; }
+        public WorldPosition2D Position { get; private set; }
+        public event Action<PowerUpCollectedInfo> OnPowerUpCollected
+        {
+            add { }
+            remove { }
+        }
+        public void SpawnPowerUp(WorldPosition2D position, PowerUpType type)
+        {
+            SpawnCount++;
+            Position = position;
+        }
+    }
+
     private sealed class FakeGameState : IGameState
     {
         public GameStateType CurrentStateType { get; private set; } = GameStateType.Menu;

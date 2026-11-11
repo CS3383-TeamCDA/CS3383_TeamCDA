@@ -2,6 +2,7 @@ using EscapeThe90s.Contracts;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using EscapeThe90s.Infrastructure.Unity;
 
 [DefaultExecutionOrder(10000)]
 public class EnemySpawner : MonoBehaviour, IEnemySpawner
@@ -187,6 +188,11 @@ public class EnemySpawner : MonoBehaviour, IEnemySpawner
                     break;
             }
 
+        }
+        DependencyScope scope = FindAnyObjectByType<DependencyScope>();
+        if (scope != null && scope.gameObject.scene == gameObject.scene)
+        {
+            scope.Inject(enemy.gameObject);
         }
         enemy.SetLevel(SpawnLevel);
         enemy.Defeated += HandleEnemyDefeated;

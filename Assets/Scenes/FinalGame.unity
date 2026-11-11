@@ -726,18 +726,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: PowerUpSystem
       objectReference: {fileID: 0}
-    - target: {fileID: 4658501563113643857, guid: 8cd7852918e60449398ff348cc48361a, type: 3}
-      propertyPath: 'definitionAssets.Array.data[0]'
-      value: 
-      objectReference: {fileID: 11400000, guid: ac80ceaacea1496680eb017bc46617d8, type: 2}
-    - target: {fileID: 4658501563113643857, guid: 8cd7852918e60449398ff348cc48361a, type: 3}
-      propertyPath: 'definitionAssets.Array.data[1]'
-      value: 
-      objectReference: {fileID: 11400000, guid: de545309cadc424cb5b9d2c61120190f, type: 2}
-    - target: {fileID: 4658501563113643857, guid: 8cd7852918e60449398ff348cc48361a, type: 3}
-      propertyPath: 'definitionAssets.Array.data[2]'
-      value: 
-      objectReference: {fileID: 11400000, guid: d190732d07664d459d87301afe6567a6, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

@@ -52,10 +52,13 @@ Standalone TL4 scenes do not need game-state services unless the binding is adde
 
 ## Remaining dependencies
 
-TL6's shared player-health contract and TL3's shared power-up contract are not yet
-present. Damage and drop implementations retain their existing working concrete
-calls and assembly references pending those interfaces. This is not yet a complete
-removal of TL4's cross-team dependencies.
+EnemyBase receives TL3's IPowerUpSpawner through IDependent injection; EnemySpawner
+injects runtime-created enemies through the scene DependencyScope. TL4 no longer
+references Joe.Game. Standalone demos must register IPowerUpSpawner and inject
+enemies if they need drops; there is no manager-search fallback.
+
+TL6's player-health contract is still pending. Melee/projectile damage retains its
+existing concrete PlayerHealth calls and TL6Assembly reference.
 
 ## Verification
 

@@ -33,6 +33,8 @@ The concrete EnemySpawner retains its old two-argument OnEnemyDefeated and
 OnCoinsAwarded events for existing consumers. New consumers use the interface event.
 EnemyType now lives in EscapeThe90s.Contracts; import that namespace.
 
-Pending external contracts: EnemyBase still calls TL3 PowerUpManager for drops;
-EnemyProjectile/EnemyAttackAnimations still use TL6 PlayerHealth for collider-based
-damage. Keep Joe.Game and TL6Assembly references until their owners supply contracts.
+EnemyBase consumes TL3 IPowerUpSpawner through IDependent injection. EnemySpawner
+injects each runtime-created enemy through the scene DependencyScope before
+publishing OnEnemySpawned. Standalone scenes need a scope/service to enable drops.
+TL4 no longer references Joe.Game. EnemyProjectile/EnemyAttackAnimations still use
+TL6 PlayerHealth for collider-based damage pending TL6's health contract.

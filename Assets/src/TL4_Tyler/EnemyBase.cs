@@ -2,14 +2,13 @@ using EscapeThe90s.Contracts;
 using System;
 using UnityEngine;
 using UnityEngine.Serialization;
-using EscapeThe90s.PowerUps;
 
 public enum EnemyMovementType { Static, Flying, Ground }
 public enum EnemyAttackMode { MeleeOnly, RangedOnly, Both }
 public enum EnemyAggroRange { Close, Medium, Far }
 public enum EnemyAwareness { Low, High }
 
-public abstract class EnemyBase : MonoBehaviour
+public abstract class EnemyBase : MonoBehaviour, IDependent<IPowerUpSpawner>
 {
     private static readonly PowerUpType[] dropTypes = (PowerUpType[])Enum.GetValues(typeof(PowerUpType));
 
@@ -28,8 +27,12 @@ public abstract class EnemyBase : MonoBehaviour
     [Header("Power-up drops")]
     [Tooltip("Chance of one random power-up on defeat: 0 = never, 1 = always.")]
     [SerializeField, Range(0f, 1f)] private float powerUpDropChance = .2f;
-    [Tooltip("Optional. If empty, uses the active PowerUpManager in the scene.")]
-    [SerializeField] private PowerUpManager powerUpManager;
+    private IPowerUpSpawner powerUps;
+
+    public void Inject(IPowerUpSpawner dependency)
+    {
+        powerUps = dependency;
+    }
 
     [Header("Added per level")]
     [SerializeField, Min(0)] private int healthPerLevel = 20;
@@ -262,13 +265,11 @@ public abstract class EnemyBase : MonoBehaviour
         if (powerUpDropChance <= 0f) return;
         if (powerUpDropChance < 1f && UnityEngine.Random.value >= powerUpDropChance) return;
 
-        if (powerUpManager == null)
-            powerUpManager = FindFirstObjectByType<PowerUpManager>();
-
-        if (powerUpManager != null && powerUpManager.isActiveAndEnabled)
+        if (powerUps != null)
         {
             PowerUpType type = dropTypes[UnityEngine.Random.Range(0, dropTypes.Length)];
-            powerUpManager.SpawnPowerUp(transform.position, type);
+            Vector3 position = transform.position;
+            powerUps.SpawnPowerUp(new WorldPosition2D(position.x, position.y), type);
         }
     }
 }
