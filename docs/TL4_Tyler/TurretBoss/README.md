@@ -362,3 +362,29 @@ the stationary platform muzzle left behind during transformation. Phase one
 continues to use its art muzzle. Added regressions for nonzero charge contact
 and mobile floor-bolt damage. Source/test compilation passes; runtime execution
 is still pending because the Unity runner could not initialize in this session.
+
+
+## First fight-rhythm tuning pass
+
+Mobile openers use seeded distance-based weights instead of deterministic
+alternation. Previous openers receive one quarter weight; distant targets get
+pursuit, while close targets permit short charge/stomp. Short charge retains
+its 0.25-second warning and cooldown. Chains cap at two body attacks; the
+long-to-short extension now rolls its chance rather than always extending.
+Very close targets suppress generic extensions. Follow-through is 0.45 seconds.
+Long charge warning/duration are 0.7/2.8 seconds. Base core recovery is 1.6
+seconds plus 0.4 per committed attack and another 0.4 after stomp. Phase-one
+floor warning is 0.7 seconds, volley exit 2 seconds, beam warning 1.1 seconds.
+Launcher 1–5 shot variation is unchanged. Source compilation and diff checks
+pass; feel and existing behavior tests still require Unity PlayMode validation.
+
+
+## Rapid phase-two barrage and charge contact
+
+Phase-two barrages keep 1–5 payloads but schedule starts every 0.3–0.4 seconds.
+Each payload owns an independent warning/flight/blast track, so launching no
+longer waits for the previous explosion. Parent stays active until every track
+finishes; cancellation clears all tracks. Phase-one serial volleys are unchanged.
+Long charge movement is multiplied by 1.3 and exits into follow-through on its
+first player hit. The field exposes its existing single-hit latch to the body
+controller. Source/test compilation passes; gameplay verification is pending.

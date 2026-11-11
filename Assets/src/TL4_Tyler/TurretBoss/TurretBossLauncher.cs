@@ -6,10 +6,12 @@ public enum TurretBossPayload { Grenades, Missiles }
 /// <summary>Independent launcher track: body state changes never cancel its in-flight payload.</summary>
 public sealed class TurretBossLauncher : MonoBehaviour
 {
-    [SerializeField, Min(0f)] private float minimumShotGap = 0.15f;
-    [SerializeField, Min(0f)] private float maximumShotGap = 0.85f;
+    [SerializeField, Min(0f)] private float minimumShotGap = 0.3f;
+    [SerializeField, Min(0f)] private float maximumShotGap = 0.4f;
     private System.Random random;
     private bool variableBarrage;
+    private bool singlePayload;
+    private readonly System.Collections.Generic.List<TurretBossLauncher> flights = new System.Collections.Generic.List<TurretBossLauncher>();
     public int PlannedShotCount { get; private set; }
     public float NextShotDelay { get; private set; }
     private TurretBossAttackField field;
@@ -49,11 +51,17 @@ public sealed class TurretBossLauncher : MonoBehaviour
         if (IsActive || field == null || target == null) { return false; }
         IsActive = true;
         variableBarrage = varyBarrage;
-        PlannedShotCount = variableBarrage ? random.Next(1, 6) : 3;
+        PlannedShotCount = singlePayload ? 1 : variableBarrage ? random.Next(1, 6) : 3;
         remaining = PlannedShotCount;
         NextShotDelay = 0f;
         payload = kind;
         damage = attackDamage;
+        if (variableBarrage)
+        {
+            elapsed = 0f;
+            LaunchPayload();
+            return true;
+        }
         Enter(kind == TurretBossPayload.Missiles ? TurretBossAttackState.MissileLaunch : TurretBossAttackState.GrenadeWarning);
         return true;
     }
@@ -62,6 +70,20 @@ public sealed class TurretBossLauncher : MonoBehaviour
     {
         if (!IsActive || delta <= 0f || float.IsNaN(delta) || float.IsInfinity(delta)) { return; }
         elapsed += delta;
+        if (variableBarrage)
+        {
+            foreach (TurretBossLauncher flight in flights) { flight.Advance(delta); }
+            // Launch cadence is independent of each payload's warning/flight/blast lifetime.
+            while (remaining > 0 && elapsed >= NextShotDelay)
+            {
+                elapsed -= NextShotDelay;
+                LaunchPayload();
+            }
+            bool flying = false;
+            foreach (TurretBossLauncher flight in flights) { flying |= flight.IsActive; }
+            if (remaining == 0 && !flying) { Cancel(); }
+            return;
+        }
         switch (Stage)
         {
             case TurretBossAttackState.PayloadWait:
@@ -104,6 +126,27 @@ public sealed class TurretBossLauncher : MonoBehaviour
         }
     }
 
+    private void LaunchPayload()
+    {
+        TurretBossAttackField track = field.CreateLauncherField();
+        TurretBossLauncher flight = track.gameObject.AddComponent<TurretBossLauncher>();
+        flight.singlePayload = true;
+        flight.Initialize(track, target, random.Next());
+        flight.BindVisualMuzzle(visualMuzzle);
+        flight.SetOrigin(origin);
+        flight.OnStageChanged += stage =>
+        {
+            if (stage == TurretBossAttackState.Defeated) { return; }
+            Stage = stage;
+            OnStageChanged?.Invoke(stage);
+        };
+        flights.Add(flight);
+        flight.TryStart(payload, damage);
+        remaining--;
+        NextShotDelay = Mathf.Lerp(Mathf.Max(0.01f, minimumShotGap),
+            Mathf.Max(Mathf.Max(0.01f, minimumShotGap), maximumShotGap), (float)random.NextDouble());
+    }
+
     private void Enter(TurretBossAttackState next)
     {
         Stage = next;
@@ -115,6 +158,13 @@ public sealed class TurretBossLauncher : MonoBehaviour
 
     public void Cancel()
     {
+        foreach (TurretBossLauncher flight in flights)
+        {
+            if (flight == null) { continue; }
+            flight.Cancel();
+            Destroy(flight.gameObject);
+        }
+        flights.Clear();
         IsActive = false;
         Stage = TurretBossAttackState.Defeated;
         if (field != null) { field.Clear(); }

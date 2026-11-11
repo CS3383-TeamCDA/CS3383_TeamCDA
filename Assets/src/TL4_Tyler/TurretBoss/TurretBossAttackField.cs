@@ -23,6 +23,7 @@ public sealed class TurretBossAttackField : MonoBehaviour
     private float landingX;
     private int damage;
     private bool hit;
+    public bool ChargeHitPlayer => hit && (state == TurretBossAttackState.ShortCharge || state == TurretBossAttackState.LongCharge);
     private SpriteRenderer beam;
     private Material warningBeamMaterial;
     private MaterialPropertyBlock beamProperties;

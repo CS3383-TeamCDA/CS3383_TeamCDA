@@ -13,9 +13,9 @@ public enum TurretBossAttackState
 /// <summary>Planted Siege Core prototype. All hazards are resolved by the separate attack field.</summary>
 public sealed class TurretBossController : EnemyBase
 {
-    [SerializeField] private float floorWarningSeconds = 1f;
-    [SerializeField] private float beamChargeSeconds = 1.5f;
-    [SerializeField] private float recoverySeconds = 2.5f;
+    [SerializeField] private float floorWarningSeconds = 0.7f;
+    [SerializeField] private float beamChargeSeconds = 1.1f;
+    [SerializeField] private float recoverySeconds = 1.6f;
     private Transform target;
     private TurretBossAttackField field;
     private float elapsed;
@@ -24,8 +24,8 @@ public sealed class TurretBossController : EnemyBase
     private TurretBossLauncher launcher;
     public TurretBossLauncher Launcher => launcher;
     public event System.Action<int> DamageTaken;
-    public const float LongChargeWarningSeconds = 1.2f;
-    public const float LongChargeSeconds = 4f;
+    public const float LongChargeWarningSeconds = 0.7f;
+    public const float LongChargeSeconds = 2.8f;
     [SerializeField, Min(0.1f)] private float chargeTriggerDistance = 3.5f;
     [SerializeField, Min(0.1f)] private float chargeCooldownSeconds = 4f;
     [UnityEngine.Serialization.FormerlySerializedAs("spinSpeed")]
@@ -35,11 +35,11 @@ public sealed class TurretBossController : EnemyBase
     private const float LeftMovementLimit = -8.4f;
     private const float RightMovementLimit = 3.3f;
     private bool PlayerTooClose => Mathf.Abs(target.position.x - transform.position.x) <= chargeTriggerDistance;
-    [SerializeField, Min(0.05f)] private float assessmentSeconds = 0.3f;
+    [SerializeField, Min(0.05f)] private float assessmentSeconds = 0.22f;
     [SerializeField, Min(0.05f)] private float turnSeconds = 0.4f;
-    [SerializeField, Min(0.05f)] private float followThroughSeconds = 0.35f;
-    [SerializeField, Range(0f, 1f)] private float comboExtensionChance = 0.65f;
-    [SerializeField, Min(0f)] private float heavyRecoveryBonus = 0.65f;
+    [SerializeField, Min(0.05f)] private float followThroughSeconds = 0.45f;
+    [SerializeField, Range(0f, 1f)] private float comboExtensionChance = 0.5f;
+    [SerializeField, Min(0f)] private float heavyRecoveryBonus = 0.4f;
     private System.Random decisions;
     private int comboAttacks;
     private float recoveryDuration;
@@ -155,7 +155,7 @@ public sealed class TurretBossController : EnemyBase
                     field.FireFloorShot(RangedDamage);
                     shotsLaunched++;
                 }
-                if (elapsed >= 3.5f)
+                if (elapsed >= 2f)
                 {
                     launcher.TryStart(missileCycle ? TurretBossPayload.Missiles : TurretBossPayload.Grenades, RangedDamage);
                     ChangeState(TurretBossAttackState.LauncherWait);
@@ -189,11 +189,11 @@ public sealed class TurretBossController : EnemyBase
             case TurretBossAttackState.LongCharge:
                 float longChargePreviousX = transform.position.x;
                 float longChargeProgress = Mathf.Clamp01(elapsed / LongChargeSeconds);
-                float longChargeX = Mathf.MoveTowards(longChargePreviousX, chargeDestination, longChargeSpeed * deltaTime);
+                float longChargeX = Mathf.MoveTowards(longChargePreviousX, chargeDestination, longChargeSpeed * 1.3f * deltaTime);
                 MoveBody(new Vector3(longChargeX, plantedY + 0.9f, transform.position.z));
                 legs.SetLongChargePose(longChargeProgress);
                 field.ResolveLongCharge(longChargePreviousX, transform.position.x, MeleeDamage);
-                if (elapsed >= LongChargeSeconds || Mathf.Abs(longChargeX - chargeDestination) < 0.01f) { CompleteAttack(TurretBossAttackState.LongCharge); }
+                if (field.ChargeHitPlayer || elapsed >= LongChargeSeconds || Mathf.Abs(longChargeX - chargeDestination) < 0.01f) { CompleteAttack(TurretBossAttackState.LongCharge); }
                 break;
             case TurretBossAttackState.StompWarning:
                 MoveBody(new Vector3(transform.position.x, plantedY + 0.9f + 0.25f * Mathf.Clamp01(elapsed / StompWarningSeconds), transform.position.z));
@@ -298,15 +298,17 @@ public sealed class TurretBossController : EnemyBase
         {
             return TurretBossAttackState.Repositioning;
         }
-        if (distance > 5f) { choice = TurretBossAttackState.LongChargeWarning; }
-        else if (PlayerTooClose && chargeCooldown <= 0f) { choice = TurretBossAttackState.ShortChargeWarning; }
-        else { choice = TurretBossAttackState.StompWarning; }
-        // Avoid the same opener twice when another attack fits the distance.
-        if (choice == previousOpening && distance <= 5f)
-        {
-            choice = choice == TurretBossAttackState.StompWarning
-                ? TurretBossAttackState.LongChargeWarning : TurretBossAttackState.StompWarning;
-        }
+        // Distance constrains the options; weights add variation without arbitrary attacks.
+        float shortWeight = chargeCooldown <= 0f && PlayerTooClose ? 3f : 0f;
+        float longWeight = distance > 5f ? 5f : distance > 2.5f ? 2f : 0.4f;
+        float stompWeight = distance <= 4f ? 2.5f : 0f;
+        if (previousOpening == TurretBossAttackState.ShortChargeWarning) { shortWeight *= 0.25f; }
+        if (previousOpening == TurretBossAttackState.LongChargeWarning) { longWeight *= 0.25f; }
+        if (previousOpening == TurretBossAttackState.StompWarning) { stompWeight *= 0.25f; }
+        float roll = (float)decisions.NextDouble() * (shortWeight + longWeight + stompWeight);
+        choice = roll < shortWeight ? TurretBossAttackState.ShortChargeWarning
+            : roll < shortWeight + longWeight ? TurretBossAttackState.LongChargeWarning
+            : TurretBossAttackState.StompWarning;
         previousOpening = choice;
         return choice;
     }
@@ -322,14 +324,14 @@ public sealed class TurretBossController : EnemyBase
         float distance = Mathf.Abs(target.position.x - transform.position.x);
         // Pursuit can bring the target into charge range midway through a chain.
         // Re-evaluate proximity here rather than waiting until the next opener.
-        if (completedAttack == TurretBossAttackState.LongCharge && comboAttacks < 3 &&
-            PlayerTooClose && chargeCooldown <= 0f)
+        if (completedAttack == TurretBossAttackState.LongCharge && comboAttacks < 2 &&
+            PlayerTooClose && chargeCooldown <= 0f && decisions.NextDouble() < comboExtensionChance)
         {
             ChangeState(TurretBossAttackState.ShortChargeWarning);
             return;
         }
-        bool extend = comboAttacks < 3 && completedAttack != TurretBossAttackState.Stomping &&
-            decisions.NextDouble() < comboExtensionChance;
+        bool extend = comboAttacks < 2 && completedAttack != TurretBossAttackState.Stomping &&
+            decisions.NextDouble() < comboExtensionChance && distance > 1.5f;
         if (extend)
         {
             ChangeState(distance <= 4f ? TurretBossAttackState.StompWarning : TurretBossAttackState.LongChargeWarning);

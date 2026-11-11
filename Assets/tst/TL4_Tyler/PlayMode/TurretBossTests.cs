@@ -94,17 +94,19 @@ public class TurretBossTests
                     int planned = launcher.PlannedShotCount;
                     Assert.That(planned, Is.InRange(1, 5));
                     counts.Add(planned);
-                    for (int step = 0; step < 40 && launcher.IsActive; step++)
+                    Assert.That(launcher.NextShotDelay, Is.InRange(0.3f, 0.4f));
+                    gaps.Add(launcher.NextShotDelay);
+                    launcher.Advance(0.4f);
+                    if (planned > 1)
                     {
-                        if (launcher.Stage == TurretBossAttackState.PayloadWait)
-                        {
-                            Assert.IsTrue(launcher.IsActive, "Body must wait through the random gap.");
-                            Assert.That(launcher.NextShotDelay, Is.InRange(0.15f, 0.85f));
-                            gaps.Add(launcher.NextShotDelay);
-                            launcher.Advance(launcher.NextShotDelay * 0.5f);
-                            Assert.AreEqual(TurretBossAttackState.PayloadWait, launcher.Stage);
-                        }
-                        launcher.Advance(10f);
+                        Assert.GreaterOrEqual(root.GetComponentsInChildren<TurretBossLauncher>().Length, 3,
+                            "A second payload must start before the first finishes its flight.");
+                    }
+                    for (int step = 0; step < 1000 && launcher.IsActive; step++)
+                    {
+                        Assert.That(launcher.NextShotDelay, Is.InRange(0.3f, 0.4f));
+                        gaps.Add(launcher.NextShotDelay);
+                        launcher.Advance(0.01f);
                     }
                     Assert.IsFalse(launcher.IsActive);
                     Assert.AreEqual(planned, fired);
