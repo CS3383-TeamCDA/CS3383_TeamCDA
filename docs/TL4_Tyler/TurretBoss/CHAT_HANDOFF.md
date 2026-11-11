@@ -164,3 +164,22 @@ the old fixed-loop descriptions. Added procedural lean/brace/lift/slam/recoil
 motion. Begin accepts an optional RNG seed; no world-seed integration yet.
 Updated regression tests; source/test compilation passes. Unity runtime and visual
 verification remain pending. Only TL4-owned files were modified.
+
+## Continuation update — modular art preparation
+
+Approved base and modular artwork generated. User requested a bare exposed reactor
+without cage; corrected transparent atlas includes it. Leg pieces corrected to
+separate thigh/shin links. Added named slices/custom pivots, reusable runtime visual
+rig prefab, and isolated TurretBossArtPreview scene (Space shutters, F mirror).
+See ART_ASSEMBLY.md for file paths and validation limits. Combat visuals remain
+unchanged. Production animation and gameplay binding are still future work.
+
+## Continuation update — idle and walking
+
+User approved the revised bent-knee standing pose. Added procedural idle weight
+shift, upper assembly lag and a one-foot-at-a-time world-anchored crawl to the
+visual rig. Art preview A/D or arrows now translates the mobile form; Space
+shutters and F mirroring remain. Feet finish their current step on release.
+See ART_ASSEMBLY.md. Source/tests compile and numerical reach check passes;
+Unity runtime tests and visual playtest remain pending. Combat art binding and
+transform/attack/death animations remain future work.
