@@ -33,6 +33,10 @@ public class PlayerControllerTL6 : MonoBehaviour
     public float DashDuration => _dashDuration;
     public bool DisableGravityDuringDash => _disableGravityDuringDash;
 
+
+    public int FacingDirection = 1;
+    public bool AirDashAvailable { get; private set; } = true;
+
     private PlayerStateManager _stateManager;
 
     void Awake()
@@ -60,6 +64,7 @@ public class PlayerControllerTL6 : MonoBehaviour
         _stateManager.FixedUpdate();
     }
 
+    //JUMPING
     public bool IsGrounded()
     {
         Bounds b = _collider.bounds;
@@ -75,5 +80,24 @@ public class PlayerControllerTL6 : MonoBehaviour
         return Physics2D.OverlapBox(
             center, size, 0f, _groundLayer
         ) != null;
+    }
+
+    //DASHING
+    public void UpdateFacingDirection(float inputX)
+    {
+        if (inputX > 0f)
+            FacingDirection = 1;
+        else if (inputX < 0f)
+            FacingDirection = -1;
+    }
+
+    public void ConsumeAirDash()
+    {
+        AirDashAvailable = false;
+    }
+
+    public void ResetAirDash()
+    {
+        AirDashAvailable = true;
     }
 }
