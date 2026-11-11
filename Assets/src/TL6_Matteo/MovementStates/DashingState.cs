@@ -24,22 +24,7 @@ public class DashingState : MovementState
         _originalGravityScale = rb.gravityScale;
 
         // Choose a direction based on player input.
-        float inputX = player.Input.Movement.x;
-
-        if (!Mathf.Approximately(inputX, 0f))
-        {
-            _dashDirection = Mathf.Sign(inputX);
-        }
-        else if (!Mathf.Approximately(rb.linearVelocity.x, 0f))
-        {
-            // Fall back to current movement direction.
-            _dashDirection = Mathf.Sign(rb.linearVelocity.x);
-        }
-        else
-        {
-            // Default to right if stationary.
-            _dashDirection = 1f;
-        }
+        _dashDirection = player.FacingDirection;
 
         if (player.DisableGravityDuringDash)
         {

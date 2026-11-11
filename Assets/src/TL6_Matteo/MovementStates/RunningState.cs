@@ -18,6 +18,8 @@ public class RunningState : MovementState
 
         PlayerControllerTL6 player = manager.Player;
 
+        player.UpdateFacingDirection(player.Input.Movement.x);
+
         if (player.Input.JumpJustPressed && player.IsGrounded())
         {
             manager.ChangeState(new JumpingState());
@@ -28,6 +30,7 @@ public class RunningState : MovementState
             manager.ChangeState(new DashingState());
             return;
         }
+
     }
 
     public override void FixedTick(PlayerStateManager manager)

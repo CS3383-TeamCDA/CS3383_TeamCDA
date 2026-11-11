@@ -37,15 +37,19 @@ public class JumpingState : MovementState
 
         PlayerControllerTL6 player = manager.Player;
 
+        player.UpdateFacingDirection(player.Input.Movement.x);
+
         // Return to running when the player lands.
         if (player.Rb.linearVelocity.y <= 0f &&
             player.IsGrounded())
         {
+            player.ResetAirDash();
             manager.ChangeState(new RunningState());
         }
 
-        if (player.Input.DashJustPressed)
+        if (player.Input.DashJustPressed && player.AirDashAvailable)
         {
+            player.ConsumeAirDash();
             manager.ChangeState(new DashingState());
             return;
         }

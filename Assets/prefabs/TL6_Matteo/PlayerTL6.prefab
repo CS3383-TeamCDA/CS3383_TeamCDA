@@ -62,6 +62,10 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 0
   _groundCheckDistance: 0.05
+  _dashSpeed: 16
+  _dashDuration: 0.2
+  _disableGravityDuringDash: 1
+  FacingDirection: 0
 --- !u!50 &2713222599689475892
 Rigidbody2D:
   serializedVersion: 5
@@ -212,6 +216,10 @@ MonoBehaviour:
       m_Calls: []
     m_ActionId: befec034-68e6-4814-b9ad-58aeb54a2472
     m_ActionName: UI/TrackedDeviceOrientation
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: f8e6bc3c-82ed-4dba-be51-91e7f8c7ec7b
+    m_ActionName: 'InGame/Dash[/Keyboard/shift]'
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: InGame
