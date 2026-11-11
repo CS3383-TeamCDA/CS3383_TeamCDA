@@ -31,6 +31,30 @@ public class TurretBossTests
             typeof(TurretBossController).GetField("chargeCooldown", flags).SetValue(boss, 2f);
             target.transform.position = Vector3.left;
             Assert.AreEqual(TurretBossAttackState.Repositioning, select.Invoke(boss, new object[] { true }));
+            typeof(TurretBossController).GetField("chargeCooldown", flags).SetValue(boss, 0f);
+            typeof(TurretBossController).GetField("completedAttack", flags).SetValue(boss, TurretBossAttackState.Spinning);
+            typeof(TurretBossController).GetField("comboAttacks", flags).SetValue(boss, 1);
+            var followUp = typeof(TurretBossController).GetMethod("ChooseFollowUp", flags);
+            followUp.Invoke(boss, null);
+            Assert.AreEqual(TurretBossAttackState.LungeWarning, boss.State,
+                "Closing to melee range after pursuit should trigger charge without waiting for a new combo.");
+            boss.Advance(TurretBossController.LungeWarningSeconds);
+            Assert.AreEqual(TurretBossAttackState.Lunging, boss.State);
+            float beforeCharge = boss.transform.position.x;
+            boss.Advance(TurretBossController.LungeSeconds);
+            Assert.Less(boss.transform.position.x, beforeCharge, "Selected charge must actually dash toward the player.");
+            Assert.AreEqual(TurretBossAttackState.FollowThrough, boss.State);
+            typeof(TurretBossController).GetField("comboAttacks", flags).SetValue(boss, 3);
+            typeof(TurretBossController).GetField("chargeCooldown", flags).SetValue(boss, 0f);
+            typeof(TurretBossController).GetField("completedAttack", flags).SetValue(boss, TurretBossAttackState.Spinning);
+            followUp.Invoke(boss, null);
+            Assert.AreNotEqual(TurretBossAttackState.LungeWarning, boss.State,
+                "Proximity charge must not bypass the combo cap.");
+            typeof(TurretBossController).GetField("comboAttacks", flags).SetValue(boss, 1);
+            typeof(TurretBossController).GetField("chargeCooldown", flags).SetValue(boss, 2f);
+            followUp.Invoke(boss, null);
+            Assert.AreNotEqual(TurretBossAttackState.LungeWarning, boss.State,
+                "Pursuit follow-up must respect charge cooldown.");
         }
         finally
         {

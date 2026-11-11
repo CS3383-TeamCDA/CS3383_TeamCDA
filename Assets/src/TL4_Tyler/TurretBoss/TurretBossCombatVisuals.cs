@@ -33,8 +33,11 @@ public sealed class TurretBossCombatVisuals : MonoBehaviour
         TurretBossLegRig oldLegs = boss.GetComponent<TurretBossLegRig>();
         if (oldLegs != null) { oldLegs.PresentationVisible = false; }
         field.BindBeamMuzzle(rig.Muzzle);
+        field.BindBodyAnchors(rig);
         launcher.BindVisualMuzzle(rig.LauncherMuzzle);
         launcher.OnStageChanged += OnLauncherStage;
+        boss.DamageTaken += OnDamageTaken;
+        rig.SetHealthFraction((float)boss.CurrentHealth / Mathf.Max(1, boss.MaxHealth));
         previousState = boss.State;
         previousCore = boss.CoreExposed;
         bound = true;
@@ -43,6 +46,13 @@ public sealed class TurretBossCombatVisuals : MonoBehaviour
     private void Update()
     {
         if (!bound || boss == null || rig == null) { return; }
+        if (boss.IsDefeated)
+        {
+            rig.BeginDeath();
+            Unbind();
+            return;
+        }
+        rig.SetHealthFraction((float)boss.CurrentHealth / Mathf.Max(1, boss.MaxHealth));
         FollowController();
         TurretBossAttackState state = boss.State;
         if (state != previousState)
@@ -67,13 +77,7 @@ public sealed class TurretBossCombatVisuals : MonoBehaviour
         }
         else if (state == TurretBossAttackState.BeamFire) { rig.SyncCannonTimeline(1.5f + boss.StateElapsed); }
         else { rig.SyncCannonTimeline(-1f); }
-        if (boss.IsDefeated)
-        {
-            rig.CancelWeaponAnimations();
-            rig.SetExposed(false);
-            rig.enabled = false; // Hold the wreck pose until dedicated death art is added.
-            Unbind();
-        }
+
     }
 
     private void FollowController()
@@ -91,9 +95,18 @@ public sealed class TurretBossCombatVisuals : MonoBehaviour
         }
     }
 
+    private void OnDamageTaken(int amount)
+    {
+        if (rig != null && boss != null)
+        {
+            rig.PlayDamageFeedback((float)boss.CurrentHealth / Mathf.Max(1, boss.MaxHealth));
+        }
+    }
+
     private void Unbind()
     {
         if (launcher != null) { launcher.OnStageChanged -= OnLauncherStage; }
+        if (boss != null) { boss.DamageTaken -= OnDamageTaken; }
         bound = false;
     }
 

@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4fcd2ad9146d43c2a4edebc2bf9050b9, type: 3}
+  m_Name: SiegeCoreAttackVfx
+  m_EditorClassIdentifier: TL4Assembly::TurretBossVfxSet
+  continuousBeam: {fileID: 2100000, guid: 678f9b8f53354c9dbda3aa26512c3048, type: 2}
+  beam:
+  - {fileID: 21310000, guid: 023472987c624802901dea862ccf46d3, type: 3}
+  - {fileID: 21310002, guid: 023472987c624802901dea862ccf46d3, type: 3}
+  - {fileID: 21310004, guid: 023472987c624802901dea862ccf46d3, type: 3}
+  - {fileID: 21310006, guid: 023472987c624802901dea862ccf46d3, type: 3}
+  - {fileID: 21310008, guid: 023472987c624802901dea862ccf46d3, type: 3}
+  - {fileID: 21310010, guid: 023472987c624802901dea862ccf46d3, type: 3}
+  - {fileID: 21310012, guid: 023472987c624802901dea862ccf46d3, type: 3}
+  - {fileID: 21310014, guid: 023472987c624802901dea862ccf46d3, type: 3}
+  grenades:
+  - {fileID: 21310016, guid: 023472987c624802901dea862ccf46d3, type: 3}
+  - {fileID: 21310018, guid: 023472987c624802901dea862ccf46d3, type: 3}
+  - {fileID: 21310020, guid: 023472987c624802901dea862ccf46d3, type: 3}
+  - {fileID: 21310022, guid: 023472987c624802901dea862ccf46d3, type: 3}
+  rockets:
+  - {fileID: 21310024, guid: 023472987c624802901dea862ccf46d3, type: 3}
+  - {fileID: 21310026, guid: 023472987c624802901dea862ccf46d3, type: 3}
+  - {fileID: 21310028, guid: 023472987c624802901dea862ccf46d3, type: 3}
+  - {fileID: 21310030, guid: 023472987c624802901dea862ccf46d3, type: 3}
+  explosions:
+  - {fileID: 21310032, guid: 023472987c624802901dea862ccf46d3, type: 3}
+  - {fileID: 21310034, guid: 023472987c624802901dea862ccf46d3, type: 3}
+  - {fileID: 21310036, guid: 023472987c624802901dea862ccf46d3, type: 3}
+  - {fileID: 21310038, guid: 023472987c624802901dea862ccf46d3, type: 3}
+  - {fileID: 21310040, guid: 023472987c624802901dea862ccf46d3, type: 3}
+  - {fileID: 21310042, guid: 023472987c624802901dea862ccf46d3, type: 3}
+  - {fileID: 21310044, guid: 023472987c624802901dea862ccf46d3, type: 3}
+  - {fileID: 21310046, guid: 023472987c624802901dea862ccf46d3, type: 3}
+  shockwaves:
+  - {fileID: 21310048, guid: 023472987c624802901dea862ccf46d3, type: 3}
+  - {fileID: 21310050, guid: 023472987c624802901dea862ccf46d3, type: 3}
+  - {fileID: 21310052, guid: 023472987c624802901dea862ccf46d3, type: 3}
+  - {fileID: 21310054, guid: 023472987c624802901dea862ccf46d3, type: 3}
+  - {fileID: 21310056, guid: 023472987c624802901dea862ccf46d3, type: 3}
+  - {fileID: 21310058, guid: 023472987c624802901dea862ccf46d3, type: 3}
+  - {fileID: 21310060, guid: 023472987c624802901dea862ccf46d3, type: 3}
+  - {fileID: 21310062, guid: 023472987c624802901dea862ccf46d3, type: 3}

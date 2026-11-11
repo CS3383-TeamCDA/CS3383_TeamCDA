@@ -6,6 +6,7 @@ public sealed class TurretBossVisualRig : MonoBehaviour
     // Atlas order: dome, chassis, barrel, launcher, mount, core, shutters L/R,
     // planted base, upper leg, lower leg, foot.
     [SerializeField] private Sprite[] parts;
+    [SerializeField] private Material damageMaterial;
     [SerializeField] private bool mobile;
     [SerializeField] private bool exposed;
     [SerializeField, Min(0.2f)] private float walkCycleSeconds = 1.5f;
@@ -77,7 +78,56 @@ public sealed class TurretBossVisualRig : MonoBehaviour
     public Transform Launcher { get; private set; }
     public Transform Muzzle { get; private set; }
     public Transform LauncherMuzzle { get; private set; }
+    public Transform FloorMuzzle { get; private set; }
+    public Vector2 BodyCenter => body != null ? (Vector2)body.position : (Vector2)transform.position;
+
+    public Vector2 LeadingFootPosition(float direction)
+    {
+        Vector2 position = transform.position;
+        bool found = false;
+        foreach (LegPose leg in legPoses)
+        {
+            if (leg == null) { continue; }
+            Vector2 foot = leg.Ankle.position;
+            if (!found || (foot.x - position.x) * direction > 0f) { position = foot; found = true; }
+        }
+        // Include the visible toe beyond the ankle joint, scaled with the assembly.
+        position.x += direction * Mathf.Abs(transform.lossyScale.x) * 0.5f;
+        position.y = transform.position.y;
+        return position;
+    }
+
+    private void EnsureFloorPort()
+    {
+        if (plantedBase == null) { return; }
+        Transform port = plantedBase.transform.Find("Low firing port");
+        if (port == null) { port = Part(2, "Low firing port", plantedBase.transform, new Vector2(1.2f, 0.9f), 0.2f, 26); }
+        FloorMuzzle = port.Find("Floor bolt muzzle");
+        if (FloorMuzzle == null) { FloorMuzzle = Node("Floor bolt muzzle", port, new Vector2(2.72f, 0f)); }
+    }
     public bool IsExposed => exposed;
+    public bool IsDead { get; private set; }
+    public bool DeathComplete => IsDead && deathElapsed >= 1.6f;
+    public float HitFlash => Mathf.Clamp01(hitRemaining / 0.14f);
+    private float healthFraction = 1f;
+    private float hitRemaining;
+    private float damageTime;
+    private float sparkCountdown;
+    private float deathElapsed;
+    private Vector3 deathStartBody;
+    private Quaternion deathStartRotation;
+    private readonly Vector2[] deathHips = new Vector2[4];
+    private readonly Vector2[] deathAnkles = new Vector2[4];
+    private SpriteRenderer[] damageRenderers;
+    private MaterialPropertyBlock damageProperties;
+    private sealed class Spark
+    {
+        public SpriteRenderer Visual;
+        public Vector3 Position, Velocity;
+        public float Remaining, Lifetime;
+    }
+    private Spark[] sparks;
+
 
     private void Awake() { Build(); }
 
@@ -100,6 +150,7 @@ public sealed class TurretBossVisualRig : MonoBehaviour
 
     public void TransitionToForm(bool isMobile)
     {
+        if (IsDead) { return; }
         if (body == null) { Build(); }
         if (!formInitialized) { SetForm(mobile); }
         mobile = isMobile;
@@ -125,7 +176,7 @@ public sealed class TurretBossVisualRig : MonoBehaviour
 
     public bool PlayCannonAttack()
     {
-        if (Cannon == null || IsCannonAnimating) { return false; }
+        if (IsDead || Cannon == null || IsCannonAnimating) { return false; }
         cannonExternallyDriven = false;
         cannonClock = 0f;
         return true;
@@ -147,7 +198,7 @@ public sealed class TurretBossVisualRig : MonoBehaviour
 
     public bool PlayLauncherShot(bool immediate = false)
     {
-        if (Launcher == null || IsLauncherAnimating) { return false; }
+        if (IsDead || Launcher == null || IsLauncherAnimating) { return false; }
         launcherClock = immediate ? 0.15f : 0f;
         return true;
     }
@@ -251,6 +302,7 @@ public sealed class TurretBossVisualRig : MonoBehaviour
         Launcher = Part(3, "Independent launcher pivot", turret, new Vector2(-0.95f, 0.72f), 0.65f, 24);
         LauncherMuzzle = Node("Payload muzzle", Launcher, new Vector2(0.35f, 1.45f));
         plantedBase = Part(8, "Planted base skirt", transform, Vector2.zero, 1.18f, 15).gameObject;
+        EnsureFloorPort();
         legs = Node("Four articulated legs", transform, Vector2.zero).gameObject;
         for (int index = 0; index < 4; index++)
         {
@@ -300,6 +352,7 @@ public sealed class TurretBossVisualRig : MonoBehaviour
             legRoot == null || baseRoot == null || legRoot.childCount != 4) { return false; }
         legs = legRoot.gameObject;
         plantedBase = baseRoot.gameObject;
+        EnsureFloorPort();
         Cannon = turret.Find("Cannon recoil pivot");
         Launcher = turret.Find("Independent launcher pivot");
         if (Cannon == null || Launcher == null) { return false; }
@@ -345,7 +398,14 @@ public sealed class TurretBossVisualRig : MonoBehaviour
         }
     }
 
-    private void LateUpdate() { AdvancePresentation(Time.deltaTime); }
+    private void LateUpdate()
+    {
+        AdvancePresentation(Time.deltaTime);
+        if (!IsDead && body != null && hitRemaining > 0f && Time.deltaTime > 0f)
+        {
+            body.localPosition += new Vector3(Mathf.Sin(damageTime * 95f) * 0.045f * HitFlash, 0f, 0f);
+        }
+    }
 
     public void AdvancePresentation(float delta)
     {
@@ -360,6 +420,12 @@ public sealed class TurretBossVisualRig : MonoBehaviour
                 enabled = false;
                 return;
             }
+        }
+        AdvanceDamageEffects(delta);
+        if (IsDead)
+        {
+            AdvanceDeath(delta);
+            return;
         }
         AdvanceWeapons(delta);
         if (returningToBase)
@@ -573,6 +639,142 @@ public sealed class TurretBossVisualRig : MonoBehaviour
             Color color = renderer.color;
             color.a = 1f;
             renderer.color = color;
+        }
+    }
+
+    public void SetHealthFraction(float fraction) { healthFraction = Mathf.Clamp01(fraction); }
+
+    public void PlayDamageFeedback(float remainingFraction)
+    {
+        if (IsDead || body == null) { return; }
+        SetHealthFraction(remainingFraction);
+        hitRemaining = 0.14f;
+        EnsureDamageEffects();
+        EmitSparks(7);
+    }
+
+    public void BeginDeath()
+    {
+        if (IsDead || body == null) { return; }
+        IsDead = true;
+        deathElapsed = 0f;
+        CancelWeaponAnimations();
+        deathStartBody = body.localPosition;
+        deathStartRotation = body.localRotation;
+        for (int i = 0; i < legPoses.Length; i++)
+        {
+            deathHips[i] = legPoses[i].Hip.localPosition;
+            deathAnkles[i] = transform.InverseTransformPoint(legPoses[i].Ankle.position);
+        }
+        EnsureDamageEffects();
+        EmitSparks(12);
+    }
+
+    private void AdvanceDeath(float delta)
+    {
+        deathElapsed += delta;
+        float collapse = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.22f, 1.35f, deathElapsed));
+        float settle = deathElapsed > 1.35f ? Mathf.Sin((deathElapsed - 1.35f) * 20f) * Mathf.Exp(-(deathElapsed - 1.35f) * 10f) * 0.025f : 0f;
+        body.localPosition = Vector3.Lerp(deathStartBody, new Vector3(0.12f, mobile ? 1.08f : 1.02f, 0f), collapse) + Vector3.up * settle;
+        body.localRotation = Quaternion.Lerp(deathStartRotation, Quaternion.Euler(0f, 0f, -7f), collapse);
+        turret.localRotation = Quaternion.Euler(0f, 0f, -collapse * 5f);
+        Cannon.localRotation = Quaternion.Euler(0f, 0f, -collapse * 18f);
+        Launcher.localRotation = Quaternion.Euler(0f, 0f, collapse * 15f);
+        shutterOpening = Mathf.MoveTowards(shutterOpening, 1f, delta * 4f);
+        ApplyShutters();
+        if (!mobile) { return; }
+        for (int i = 0; i < legPoses.Length; i++)
+        {
+            LegPose leg = legPoses[i];
+            Vector2 hip = Vector2.Lerp(deathHips[i], new Vector2(leg.Side * 1.05f, 0.96f), collapse);
+            Vector2 ankle = Vector2.Lerp(deathAnkles[i], new Vector2(leg.Side * 1.25f, leg.RestAnkle.y), collapse);
+            PoseLeg(leg, hip, ankle);
+        }
+    }
+
+    private void EnsureDamageEffects()
+    {
+        if (damageRenderers != null && damageProperties != null && sparks != null) { return; }
+        var renderers = new System.Collections.Generic.List<SpriteRenderer>();
+        foreach (SpriteRenderer renderer in GetComponentsInChildren<SpriteRenderer>(true))
+        {
+            if (!renderer.name.StartsWith("Damage spark ")) { renderers.Add(renderer); }
+        }
+        damageRenderers = renderers.ToArray();
+        damageProperties = new MaterialPropertyBlock();
+        foreach (SpriteRenderer renderer in damageRenderers)
+        {
+            if (damageMaterial != null && renderer.gameObject != plantedBase) { renderer.sharedMaterial = damageMaterial; }
+        }
+        sparks = new Spark[12];
+        for (int i = 0; i < sparks.Length; i++)
+        {
+            Transform chip = transform.Find("Damage spark " + i);
+            if (chip == null) { chip = Part(5, "Damage spark " + i, transform, Vector2.zero, 0.025f, 70); }
+            SpriteRenderer visual = chip.GetComponent<SpriteRenderer>();
+            visual.enabled = false;
+            sparks[i] = new Spark { Visual = visual };
+        }
+    }
+
+    private void EmitSparks(int count)
+    {
+        if (sparks == null || body == null) { return; }
+        for (int i = 0; i < count; i++)
+        {
+            Spark spark = sparks[i % sparks.Length];
+            float angle = (i * 137.5f + damageTime * 91f) * Mathf.Deg2Rad;
+            spark.Position = body.position + transform.TransformVector(new Vector3(Mathf.Cos(angle) * 0.35f, 0.15f, 0f));
+            spark.Velocity = new Vector3(Mathf.Cos(angle) * 1.5f, 0.9f + Mathf.Abs(Mathf.Sin(angle)) * 1.2f, 0f);
+            spark.Remaining = spark.Lifetime = 0.25f + (i % 4) * 0.07f;
+            spark.Visual.enabled = true;
+            spark.Visual.transform.position = spark.Position;
+        }
+    }
+
+    private void AdvanceDamageEffects(float delta)
+    {
+        EnsureDamageEffects();
+        damageTime += delta;
+        hitRemaining = Mathf.Max(0f, hitRemaining - delta);
+        sparkCountdown -= delta;
+        float damage = 1f - healthFraction;
+        if (!IsDead && healthFraction < 0.75f && sparkCountdown <= 0f)
+        {
+            int count = healthFraction <= 0.25f ? 5 : healthFraction <= 0.5f ? 3 : 1;
+            EmitSparks(count);
+            sparkCountdown = healthFraction > 0.5f
+                ? Mathf.Lerp(1.2f, 2.5f, (healthFraction - 0.5f) / 0.25f)
+                : Mathf.Lerp(0.18f, 1.2f, healthFraction / 0.5f);
+        }
+        // Persistent surface damage begins with the first hit, not just at critical HP.
+        float wear = Mathf.Pow(damage, 0.8f);
+        float instability = Mathf.Clamp01((damage - 0.2f) / 0.8f);
+        float pulse = Mathf.Sin(damageTime * 31f) * Mathf.Sin(damageTime * 7f);
+        float flicker = pulse > Mathf.Lerp(0.98f, 0.3f, instability)
+            ? Mathf.Lerp(0f, 0.95f, instability) : 0f;
+        float shutdown = IsDead ? Mathf.SmoothStep(0f, 0.7f, Mathf.InverseLerp(0.25f, 1.4f, deathElapsed)) : 0f;
+        foreach (SpriteRenderer renderer in damageRenderers)
+        {
+            if (renderer == null || renderer.gameObject == plantedBase || renderer == muzzleEnergy) { continue; }
+            float flare = IsDead && deathElapsed < 0.22f ? (renderer.name == "Bare reactor" ? 1f : 0.35f) : 0f;
+            renderer.GetPropertyBlock(damageProperties);
+            damageProperties.SetFloat("_FlashAmount", Mathf.Max(HitFlash, flare));
+            damageProperties.SetFloat("_Wear", wear);
+            damageProperties.SetFloat("_Shutdown", shutdown);
+            damageProperties.SetFloat("_PowerLoss", IsDead ? Mathf.Clamp01((deathElapsed - 0.2f) / 0.6f) : flicker);
+            renderer.SetPropertyBlock(damageProperties);
+        }
+        foreach (Spark spark in sparks)
+        {
+            if (spark.Remaining <= 0f) { continue; }
+            spark.Remaining = Mathf.Max(0f, spark.Remaining - delta);
+            spark.Velocity += Vector3.down * (5f * delta);
+            spark.Position += spark.Velocity * delta;
+            spark.Visual.transform.position = spark.Position;
+            spark.Visual.transform.Rotate(0f, 0f, 240f * delta);
+            spark.Visual.color = new Color(1f, 0.75f, 0.25f, spark.Remaining / spark.Lifetime);
+            spark.Visual.enabled = spark.Remaining > 0f;
         }
     }
 

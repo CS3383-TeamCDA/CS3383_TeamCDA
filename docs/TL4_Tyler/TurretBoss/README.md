@@ -244,3 +244,108 @@ the slow walk/weapon/transformation review. Death is still a held wreck pose.
 Added regression checks for combat-speed diagonal stepping and charge/spin/stomp
 poses. Source/test compilation passes; runtime tests and visual balancing remain
 pending. This supersedes the documented high-speed stance fallback.
+
+## Hit, damaged-state and death presentation
+
+Accepted HP loss now emits TL4 DamageTaken feedback. Closed armor, zero damage
+and rejected hits do not trigger it. The rig uses a short warm-white flash,
+small chassis jolt and pooled sparks, without interrupting the attack timeline.
+Armor darkens below 70% HP; below 40% it intermittently sparks and red energy
+flickers. This uses a TL4 unlit sprite shader/material referenced by the visual
+prefab, with per-renderer property blocks; no source sprites are modified.
+
+Death cancels weapon animation, flares then darkens the uncaged reactor, opens
+its shutters, droops cannon/launcher and buckles the mobile legs outward with
+feet drawing inward into a low wreck pose. The planted form slumps on its base.
+The sequence settles in roughly 1.6 seconds and leaves dark wreckage behind.
+The adapter stops following the dead physics body and removes its damage/launcher
+subscriptions. All timers use scaled time, so pause freezes the effects. Restart
+removes the visual/effect pool with the arena. No gameplay hit-stun or damage
+changes were added. The accepted low leg-sweep charge is unchanged.
+
+ArtPreview: H simulates a hit (repeated hits increase persistent wear); K defeats
+the right-hand assembly. Restart Play Mode to reset. Combat sandbox J remains
+an exposed-core-only hit.
+
+Source and regression-test compilation pass; material/shader asset references
+and numerical collapse reach were checked. Regression additions cover rejected
+versus accepted hits, lethal transition, paused death, weapon suppression and
+persistent wreckage. Unity runtime tests and shader/visual review remain pending:
+UI inspection succeeded, but editor controls disconnected before a restart.
+
+## Animated attack effects
+
+Combat sandbox now references SiegeCoreAttackVfx.asset and its transparent
+32-frame sprite atlas: 8 beam frames, 4 rotating grenade frames, 4 rocket/exhaust
+frames, 8 explosion/smoke frames and 8 ground shockwave frames. Beam plasma tiles
+across the shot length to avoid stretching its pixels; the red charging line stays
+a separate warning. Low bolts also use the plasma frames. Rockets flip for
+descent, grenades animate during the existing lob, and stomp waves play mirrored
+left/right sequences. Frame changes use the attack field's scaled elapsed time.
+
+Explosions now spawn a 0.65-second visual-only aftermath clip; damage still ends
+with the existing 0.35-second blast state. Normal state changes retain aftermath;
+explicit field cancellation, death and arena cleanup remove it. Launcher fields
+inherit the same VFX set. Existing warning colors/target locks and damage geometry
+remain unchanged. Missing VFX assets fall back to the original hazard graphics.
+
+Sprites are in Art/SiegeCoreAttackVfx.png with slice coordinates in the matching
+JSON. These are first-pass generated effect frames and may need art/timing polish.
+Source/tests compile, all 32 slice bounds and scene references validate. Added
+regression coverage for frame advancement, pause, shared launcher configuration,
+non-damaging aftermath and explicit cleanup. Runtime tests and visual gameplay
+review remain pending. Open TurretBossSandbox to review the animated attacks.
+
+## Charge selection after pursuit
+
+The quick charge was previously considered only when choosing a new combo opener.
+After a low leg-sweep pursuit ended close to the player, follow-up selection could
+choose only stomp/sweep and never re-evaluated charge. It now rechecks the existing
+3.5-unit proximity range after pursuit follow-through and selects charge if ready,
+within the three-attack combo cap. The 0.25-second tell, 0.3-second dash, four-second
+cooldown, and guaranteed eventual recovery remain unchanged. Source/test compile
+checks pass; runtime playtest remains pending. Regression coverage checks that
+this follow-up reaches the actual dash and honors cooldown/combo limits.
+
+## Actual body/foot VFX anchors
+
+Phase-one bolts no longer use the fixed X=5.5 spawn. A visible small firing port
+is assembled on the front of the planted base, and its FloorMuzzle supplies both
+shot origin and floor-warning X. Bolts are drawn immediately at that muzzle on
+spawn, then retain their sampled height and firing direction with swept damage.
+Fallback scenes without modular art derive the origin from boss position/facing.
+
+Charge placement now samples the outermost ankle/toe on the travel side from the
+actual modular rig. The burst's trailing edge meets that leading foot and its
+crest extends forward. LateUpdate runs after leg presentation to refresh this
+anchor, eliminating the old fixed-center offset and one-frame foot mismatch.
+The end burst uses the same sampled position. No AI/attack durations changed.
+
+Source and tests compile. Added assertions for immediate low-port spawn/movement
+and leading-foot anchors. Visual placement still requires gameplay review.
+
+
+## Player collision pass (November 11)
+
+The sandbox installs `TurretBossBodyCollision`: a grounded 1.8 × 2.1 solid
+kinematic body with zero friction. Phase two no longer ignores the player.
+Boss movement clamps at player contact so transform-driven charges cannot cross
+or crush through the player. Cosmetic lift/lean does not move the body off the
+floor; defeat disables its collision. Sandbox jump/headroom checks recognize
+the boss as solid support.
+
+All attack-field hit checks now query the player's actual non-trigger collider
+shapes, including child/compound colliders, with immediate transform/size sync.
+Existing bolt, stomp and charge sweeps and single-hit gates remain in use.
+Telegraphs and airborne payloads remain harmless; grenade/missile blasts deal
+damage on landing. Disabling the field clears hazards. The right sandbox wall
+moves past the initial boss, and beam/payload coverage includes that arena area.
+Fight timings and balance are unchanged.
+
+Added `TurretBossCollisionTests` covering warning safety, child hurtboxes,
+crouching, trigger exclusion, blasts, fast bolts, cancellation and solid-body
+blocking. Source and tests compile with Unity Roslyn; `git diff --check` passes.
+Runtime verification remains pending: the isolated editor failed AssetDatabase/
+UDS initialization, and desktop automation could read Unity but could not click
+its window. Run this test class in the Unity PlayMode Test Runner and replay the
+sandbox before treating physical behavior as verified.

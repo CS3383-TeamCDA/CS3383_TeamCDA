@@ -57,5 +57,6 @@ MonoBehaviour:
   - {fileID: 21300018, guid: 08298994cd7241e693b0303d0c059e0f, type: 3}
   - {fileID: 21300020, guid: 08298994cd7241e693b0303d0c059e0f, type: 3}
   - {fileID: 21300022, guid: 08298994cd7241e693b0303d0c059e0f, type: 3}
+  damageMaterial: {fileID: 2100000, guid: e1045c59e603406f9c92ee51e0ce67b4, type: 2}
   mobile: 0
   exposed: 0

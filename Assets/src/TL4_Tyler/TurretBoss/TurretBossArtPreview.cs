@@ -9,6 +9,7 @@ public sealed class TurretBossArtPreview : MonoBehaviour
     private TurretBossVisualRig mobile;
     private bool exposed;
     private bool mirrored;
+    private float previewHealth = 1f;
     private Sprite groundSprite;
     [SerializeField, Min(0.1f)] private float previewWalkSpeed = 0.65f;
 
@@ -50,6 +51,14 @@ public sealed class TurretBossArtPreview : MonoBehaviour
     {
         Keyboard keyboard = Keyboard.current;
         if (keyboard == null || planted == null || mobile == null) { return; }
+        if (keyboard.hKey.wasPressedThisFrame)
+        {
+            previewHealth = Mathf.Max(0.1f, previewHealth - 0.15f);
+            planted.PlayDamageFeedback(previewHealth);
+            mobile.PlayDamageFeedback(previewHealth);
+        }
+        if (keyboard.kKey.wasPressedThisFrame) { mobile.BeginDeath(); }
+        if (mobile.IsDead) { return; }
         float horizontal = (keyboard.dKey.isPressed || keyboard.rightArrowKey.isPressed ? 1f : 0f) -
             (keyboard.aKey.isPressed || keyboard.leftArrowKey.isPressed ? 1f : 0f);
         Vector3 position = mobile.transform.localPosition;
@@ -91,6 +100,6 @@ public sealed class TurretBossArtPreview : MonoBehaviour
     private void OnGUI()
     {
         GUI.Label(new Rect(20f, 20f, 1000f, 30f), "SIEGE CORE ART PREVIEW | Left: reference | Right: transform preview | A/D: walk | T: transform right boss | Space: shutters | F: mirror");
-        GUI.Label(new Rect(20f, 50f, 1000f, 30f), "B: cannon charge/fire | L: launcher shot (independent) | Space: slide shutters | T: deploy/return");
+        GUI.Label(new Rect(20f, 50f, 1000f, 30f), "B: cannon | L: launcher | Space: shutters | H: damage/wear | K: defeat right boss | T: deploy/return");
     }
 }

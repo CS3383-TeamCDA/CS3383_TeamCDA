@@ -1,0 +1,390 @@
+{
+  "width": 1774,
+  "height": 887,
+  "frames": [
+    {
+      "group": "beam",
+      "index": 0,
+      "name": "beam_00",
+      "fileID": 21310000,
+      "rect": [
+        0,
+        707,
+        222,
+        131
+      ]
+    },
+    {
+      "group": "beam",
+      "index": 1,
+      "name": "beam_01",
+      "fileID": 21310002,
+      "rect": [
+        222,
+        707,
+        222,
+        131
+      ]
+    },
+    {
+      "group": "beam",
+      "index": 2,
+      "name": "beam_02",
+      "fileID": 21310004,
+      "rect": [
+        444,
+        707,
+        221,
+        131
+      ]
+    },
+    {
+      "group": "beam",
+      "index": 3,
+      "name": "beam_03",
+      "fileID": 21310006,
+      "rect": [
+        665,
+        707,
+        222,
+        131
+      ]
+    },
+    {
+      "group": "beam",
+      "index": 4,
+      "name": "beam_04",
+      "fileID": 21310008,
+      "rect": [
+        887,
+        707,
+        222,
+        131
+      ]
+    },
+    {
+      "group": "beam",
+      "index": 5,
+      "name": "beam_05",
+      "fileID": 21310010,
+      "rect": [
+        1109,
+        707,
+        221,
+        131
+      ]
+    },
+    {
+      "group": "beam",
+      "index": 6,
+      "name": "beam_06",
+      "fileID": 21310012,
+      "rect": [
+        1330,
+        707,
+        222,
+        131
+      ]
+    },
+    {
+      "group": "beam",
+      "index": 7,
+      "name": "beam_07",
+      "fileID": 21310014,
+      "rect": [
+        1552,
+        707,
+        222,
+        131
+      ]
+    },
+    {
+      "group": "grenades",
+      "index": 0,
+      "name": "grenades_00",
+      "fileID": 21310016,
+      "rect": [
+        16,
+        447,
+        193,
+        216
+      ]
+    },
+    {
+      "group": "grenades",
+      "index": 1,
+      "name": "grenades_01",
+      "fileID": 21310018,
+      "rect": [
+        238,
+        447,
+        193,
+        216
+      ]
+    },
+    {
+      "group": "grenades",
+      "index": 2,
+      "name": "grenades_02",
+      "fileID": 21310020,
+      "rect": [
+        459,
+        447,
+        193,
+        216
+      ]
+    },
+    {
+      "group": "grenades",
+      "index": 3,
+      "name": "grenades_03",
+      "fileID": 21310022,
+      "rect": [
+        681,
+        447,
+        193,
+        216
+      ]
+    },
+    {
+      "group": "rockets",
+      "index": 0,
+      "name": "rockets_00",
+      "fileID": 21310024,
+      "rect": [
+        918,
+        445,
+        167,
+        218
+      ]
+    },
+    {
+      "group": "rockets",
+      "index": 1,
+      "name": "rockets_01",
+      "fileID": 21310026,
+      "rect": [
+        1140,
+        445,
+        166,
+        218
+      ]
+    },
+    {
+      "group": "rockets",
+      "index": 2,
+      "name": "rockets_02",
+      "fileID": 21310028,
+      "rect": [
+        1361,
+        445,
+        167,
+        218
+      ]
+    },
+    {
+      "group": "rockets",
+      "index": 3,
+      "name": "rockets_03",
+      "fileID": 21310030,
+      "rect": [
+        1583,
+        445,
+        167,
+        218
+      ]
+    },
+    {
+      "group": "explosions",
+      "index": 0,
+      "name": "explosions_00",
+      "fileID": 21310032,
+      "rect": [
+        0,
+        222,
+        222,
+        221
+      ]
+    },
+    {
+      "group": "explosions",
+      "index": 1,
+      "name": "explosions_01",
+      "fileID": 21310034,
+      "rect": [
+        222,
+        222,
+        222,
+        221
+      ]
+    },
+    {
+      "group": "explosions",
+      "index": 2,
+      "name": "explosions_02",
+      "fileID": 21310036,
+      "rect": [
+        444,
+        222,
+        221,
+        221
+      ]
+    },
+    {
+      "group": "explosions",
+      "index": 3,
+      "name": "explosions_03",
+      "fileID": 21310038,
+      "rect": [
+        665,
+        222,
+        222,
+        221
+      ]
+    },
+    {
+      "group": "explosions",
+      "index": 4,
+      "name": "explosions_04",
+      "fileID": 21310040,
+      "rect": [
+        887,
+        222,
+        222,
+        221
+      ]
+    },
+    {
+      "group": "explosions",
+      "index": 5,
+      "name": "explosions_05",
+      "fileID": 21310042,
+      "rect": [
+        1109,
+        222,
+        221,
+        221
+      ]
+    },
+    {
+      "group": "explosions",
+      "index": 6,
+      "name": "explosions_06",
+      "fileID": 21310044,
+      "rect": [
+        1330,
+        222,
+        222,
+        221
+      ]
+    },
+    {
+      "group": "explosions",
+      "index": 7,
+      "name": "explosions_07",
+      "fileID": 21310046,
+      "rect": [
+        1552,
+        222,
+        222,
+        221
+      ]
+    },
+    {
+      "group": "shockwaves",
+      "index": 0,
+      "name": "shockwaves_00",
+      "fileID": 21310048,
+      "rect": [
+        0,
+        28,
+        222,
+        167
+      ]
+    },
+    {
+      "group": "shockwaves",
+      "index": 1,
+      "name": "shockwaves_01",
+      "fileID": 21310050,
+      "rect": [
+        222,
+        28,
+        222,
+        167
+      ]
+    },
+    {
+      "group": "shockwaves",
+      "index": 2,
+      "name": "shockwaves_02",
+      "fileID": 21310052,
+      "rect": [
+        444,
+        28,
+        221,
+        167
+      ]
+    },
+    {
+      "group": "shockwaves",
+      "index": 3,
+      "name": "shockwaves_03",
+      "fileID": 21310054,
+      "rect": [
+        665,
+        28,
+        222,
+        167
+      ]
+    },
+    {
+      "group": "shockwaves",
+      "index": 4,
+      "name": "shockwaves_04",
+      "fileID": 21310056,
+      "rect": [
+        887,
+        28,
+        222,
+        167
+      ]
+    },
+    {
+      "group": "shockwaves",
+      "index": 5,
+      "name": "shockwaves_05",
+      "fileID": 21310058,
+      "rect": [
+        1109,
+        28,
+        221,
+        167
+      ]
+    },
+    {
+      "group": "shockwaves",
+      "index": 6,
+      "name": "shockwaves_06",
+      "fileID": 21310060,
+      "rect": [
+        1330,
+        28,
+        222,
+        167
+      ]
+    },
+    {
+      "group": "shockwaves",
+      "index": 7,
+      "name": "shockwaves_07",
+      "fileID": 21310062,
+      "rect": [
+        1552,
+        28,
+        222,
+        167
+      ]
+    }
+  ]
+}
