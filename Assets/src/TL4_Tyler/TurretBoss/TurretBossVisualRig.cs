@@ -14,6 +14,9 @@ public sealed class TurretBossVisualRig : MonoBehaviour
     private const float PlantedBodyHeight = 1.32f;
     private const float MobileBodyHeight = 2.4f;
     [SerializeField, Min(0.05f)] private float shutterSlideSeconds = 0.3f;
+    private bool cannonExternallyDriven;
+    public float BodyHeightOffset { get; set; }
+    public bool GroundedWalkingEnabled { get; set; } = true;
     private float shutterOpening;
     private float cannonClock = -1f;
     private float launcherClock = -1f;
@@ -106,14 +109,29 @@ public sealed class TurretBossVisualRig : MonoBehaviour
     public bool PlayCannonAttack()
     {
         if (Cannon == null || IsCannonAnimating) { return false; }
+        cannonExternallyDriven = false;
         cannonClock = 0f;
         return true;
     }
 
-    public bool PlayLauncherShot()
+    public void SyncCannonTimeline(float seconds)
+    {
+        cannonExternallyDriven = true;
+        cannonClock = seconds;
+    }
+
+    public void CancelWeaponAnimations()
+    {
+        cannonExternallyDriven = false;
+        cannonClock = -1f;
+        launcherClock = -1f;
+        if (Cannon != null && Launcher != null) { AdvanceWeapons(0f); }
+    }
+
+    public bool PlayLauncherShot(bool immediate = false)
     {
         if (Launcher == null || IsLauncherAnimating) { return false; }
-        launcherClock = 0f;
+        launcherClock = immediate ? 0.15f : 0f;
         return true;
     }
 
@@ -145,7 +163,7 @@ public sealed class TurretBossVisualRig : MonoBehaviour
         float glow = 0f;
         if (IsCannonAnimating)
         {
-            cannonClock += delta;
+            if (!cannonExternallyDriven) { cannonClock += delta; }
             if (cannonClock < 1.5f)
             {
                 float charge = cannonClock / 1.5f;
@@ -354,12 +372,14 @@ public sealed class TurretBossVisualRig : MonoBehaviour
             AdvanceTransformation(delta);
             return;
         }
-        bool walking = (mobile || returningToBase) && Mathf.Abs(localVelocity.x) > 0.03f;
+        if (!GroundedWalkingEnabled || Mathf.Abs(localVelocity.x) > 1.5f) { ResetFooting(); }
+        bool walking = GroundedWalkingEnabled && (mobile || returningToBase) &&
+            Mathf.Abs(localVelocity.x) > 0.03f && Mathf.Abs(localVelocity.x) <= 1.5f;
         float cycle = Mathf.Max(0.2f, walkCycleSeconds);
         float swingSeconds = cycle * 0.21f;
         float sway = Mathf.Sin(motionTime * 1.7f) * 0.035f;
         float bob = walking ? Mathf.Sin(motionTime / cycle * Mathf.PI * 4f) * 0.045f : Mathf.Sin(motionTime * 2.1f) * 0.018f;
-        body.localPosition = new Vector3(sway, Mathf.Lerp(PlantedBodyHeight, MobileBodyHeight, deployment) + bob, 0f);
+        body.localPosition = new Vector3(sway, Mathf.Lerp(PlantedBodyHeight, MobileBodyHeight, deployment) + bob + BodyHeightOffset, 0f);
         body.localRotation = Quaternion.Euler(0f, 0f, Mathf.Sin(motionTime * 1.7f) * (walking ? 0.7f : 0.35f));
         // Upper assembly lags the chassis slightly without moving either weapon off its mount.
         turret.localRotation = Quaternion.Euler(0f, 0f, -Mathf.Sin(motionTime * 1.7f - 0.25f) * 0.35f);
@@ -394,7 +414,7 @@ public sealed class TurretBossVisualRig : MonoBehaviour
                     leg.Swinging = false;
                 }
             }
-            Vector2 hip = leg.RestHip + new Vector2(sway, bob);
+            Vector2 hip = leg.RestHip + new Vector2(sway, bob + BodyHeightOffset);
             PoseLeg(leg, hip, transform.InverseTransformPoint(footWorld));
         }
     }
@@ -407,7 +427,7 @@ public sealed class TurretBossVisualRig : MonoBehaviour
         float lift = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.3f, 1f, deployment));
         // Brace before lifting and settle as the feet take the load.
         float brace = Mathf.Sin(deployment * Mathf.PI * 2f) * 0.06f;
-        body.localPosition = new Vector3(0f, Mathf.Lerp(PlantedBodyHeight, MobileBodyHeight, lift) - brace, 0f);
+        body.localPosition = new Vector3(0f, Mathf.Lerp(PlantedBodyHeight, MobileBodyHeight, lift) - brace + BodyHeightOffset, 0f);
         body.localRotation = Quaternion.Euler(0f, 0f, Mathf.Sin(deployment * Mathf.PI * 2f) * 1.5f);
         turret.localRotation = Quaternion.Euler(0f, 0f, -Mathf.Sin(deployment * Mathf.PI * 2f));
         for (int index = 0; index < legPoses.Length; index++)
@@ -417,7 +437,7 @@ public sealed class TurretBossVisualRig : MonoBehaviour
             progress = Mathf.SmoothStep(0f, 1f, progress);
             Vector2 foldedHip = new Vector2(leg.Side * 0.6f, 1.15f);
             Vector2 foldedAnkle = new Vector2(leg.Side * 1.05f, 0.65f);
-            Vector2 plantedHip = leg.RestHip - Vector2.up * ((MobileBodyHeight - PlantedBodyHeight) * (1f - lift));
+            Vector2 plantedHip = leg.RestHip + Vector2.up * BodyHeightOffset - Vector2.up * ((MobileBodyHeight - PlantedBodyHeight) * (1f - lift));
             PoseLeg(leg, Vector2.Lerp(foldedHip, plantedHip, progress),
                 Vector2.Lerp(foldedAnkle, leg.RestAnkle, progress));
         }

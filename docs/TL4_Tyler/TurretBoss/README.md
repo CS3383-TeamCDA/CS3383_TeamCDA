@@ -191,3 +191,32 @@ Decision and mobile-loop regression coverage was updated for distance/cooldown,
 repeat avoidance, follow-through, bounded chains, launcher/beam exclusion and
 longer guaranteed recovery. Source and test assemblies compile; Unity runtime
 execution and visual balancing remain pending.
+
+## Combat sandbox now uses the modular Siege Core rig
+
+`TurretBossSandbox.unity` now references `SiegeCoreVisual.prefab` and creates a
+TL4 `TurretBossCombatVisuals` adapter. Open the COMBAT sandbox to fight the new art;
+`TurretBossArtPreview` remains the independent art-review scene. The old sprite,
+Animator, procedural stick legs and launcher block are hidden only when the new
+visual binding is present. A sandbox without a visual prefab retains legacy art.
+
+The adapter follows controller X/facing on a separate grounded visual root so
+physics-root lift/lean does not double-transform the art. It triggers deployment
+on transformation, parks the solid base, slides shutters on core exposure, drives
+cannon charge/fire directly from combat elapsed time and responds independently
+to real launcher shot events. Beam geometry begins at the rig muzzle; payloads
+snapshot the launcher muzzle. Existing warning regions, beam height, damage,
+attack selection and timings remain controller-owned. Mobile cannon posture
+lowers to the crouchable beam height without returning to the abandoned base.
+
+The rig is half scale in combat. Root movement above the slow gait's supported
+speed uses grounded stance placement rather than overextending legs. Dedicated
+charge/spin/stomp animation is still next work. Death cancels weapon motion and
+holds a wreck pose; a proper death animation is still pending. Restart destroys
+both controller and visual roots under the arena and unsubscribes launcher hooks.
+
+Source and regression-test compilation and scene-reference checks pass. New
+integration coverage exercises hidden legacy art, launcher triggers, cannon
+recoil, core exposure and transformation. Unity runtime execution and combat
+visual review are still pending; do not equate compilation with passing runtime
+tests. No FinalGame/Composition or other teams' files were changed.

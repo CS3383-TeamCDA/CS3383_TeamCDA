@@ -26,6 +26,14 @@ public sealed class TurretBossAttackField : MonoBehaviour
     private SpriteRenderer missile;
     private bool missileLocked;
     private bool launcherModule;
+    private bool showLauncherModule = true;
+    private Transform beamMuzzle;
+    public void BindBeamMuzzle(Transform muzzle) { beamMuzzle = muzzle; }
+    public void ShowLauncherModule(bool value)
+    {
+        showLauncherModule = value;
+        if (!value && launcherTube != null) { launcherTube.enabled = false; }
+    }
     private SpriteRenderer launcherTube;
     private Vector2 bossOrigin = new Vector2(7f, 0f);
     private Vector2 payloadLaunchOrigin;
@@ -152,7 +160,7 @@ public sealed class TurretBossAttackField : MonoBehaviour
     {
         if (square == null || delta <= 0f || float.IsNaN(delta) || float.IsInfinity(delta)) { return; }
         elapsed += delta;
-        if (launcherModule && state != TurretBossAttackState.Defeated)
+        if (launcherModule && showLauncherModule && state != TurretBossAttackState.Defeated)
         {
             bool launching = state == TurretBossAttackState.MissileLaunch || state == TurretBossAttackState.GrenadeFlight;
             float recoil = launching ? 0.12f * Mathf.Abs(Mathf.Sin(elapsed * 18f)) : 0f;
@@ -234,7 +242,7 @@ public sealed class TurretBossAttackField : MonoBehaviour
         }
         bool charging = state == TurretBossAttackState.BeamCharge;
         bool firing = state == TurretBossAttackState.BeamFire;
-        float muzzleX = bossOrigin.x + aimDirection;
+        float muzzleX = beamMuzzle != null ? beamMuzzle.position.x : bossOrigin.x + aimDirection;
         float beamEnd = aimDirection < 0f ? -10f : 5f;
         Vector2 beamCenter = new Vector2((muzzleX + beamEnd) * 0.5f, (BeamBottom + BeamTop) * 0.5f);
         Vector2 beamSize = new Vector2(Mathf.Abs(beamEnd - muzzleX), BeamTop - BeamBottom);

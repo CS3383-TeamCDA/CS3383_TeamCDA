@@ -5,6 +5,16 @@ public sealed class TurretBossLegRig : MonoBehaviour
 {
     private readonly SpriteRenderer[] segments = new SpriteRenderer[8];
     private Sprite square;
+    private bool presentationVisible = true;
+    public bool PresentationVisible
+    {
+        get => presentationVisible;
+        set
+        {
+            presentationVisible = value;
+            if (!value) { foreach (SpriteRenderer segment in segments) { if (segment != null) { segment.enabled = false; } } }
+        }
+    }
 
     private void Awake()
     {
@@ -57,7 +67,7 @@ public sealed class TurretBossLegRig : MonoBehaviour
     {
         if (renderer == null) { return; }
         Vector2 offset = end - start;
-        renderer.enabled = visible;
+        renderer.enabled = visible && presentationVisible;
         renderer.transform.position = (start + end) * 0.5f;
         renderer.transform.rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(offset.y, offset.x) * Mathf.Rad2Deg);
         renderer.transform.localScale = new Vector3(offset.magnitude / Mathf.Abs(transform.lossyScale.x),

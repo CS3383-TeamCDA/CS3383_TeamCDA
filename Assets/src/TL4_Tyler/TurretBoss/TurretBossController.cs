@@ -63,6 +63,8 @@ public sealed class TurretBossController : EnemyBase
     public const float PlantSeconds = 1f;
     public TurretBossAttackState State { get; private set; }
     public float StateElapsed => elapsed;
+    public float FacingDirection => facingDirection;
+    public float BeamChargeSeconds => beamChargeSeconds;
     public bool CoreExposed => State == TurretBossAttackState.Recovery && !IsDefeated;
     public override EnemyType Type => EnemyType.Turret;
     public override EnemyMovementType MovementType => IsMobilePhase ? EnemyMovementType.Ground : EnemyMovementType.Static;

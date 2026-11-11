@@ -15,6 +15,14 @@ public sealed class TurretBossLauncher : MonoBehaviour
     private TurretBossAttackField field;
     private Transform target;
     private Vector2 origin;
+    private Transform visualMuzzle;
+    public void BindVisualMuzzle(Transform muzzle)
+    {
+        visualMuzzle = muzzle;
+        if (field != null) { field.ShowLauncherModule(muzzle == null); }
+    }
+    private Vector2 EffectiveOrigin => visualMuzzle != null
+        ? (Vector2)visualMuzzle.position - new Vector2(0.5f, 2.2f) : origin;
     private float elapsed;
     private int remaining;
     private int damage;
@@ -33,7 +41,7 @@ public sealed class TurretBossLauncher : MonoBehaviour
     public void SetOrigin(Vector2 position)
     {
         origin = position;
-        if (field != null) { field.SetBossOrigin(origin, -1f, 0f); }
+        if (field != null) { field.SetBossOrigin(EffectiveOrigin, -1f, 0f); }
     }
 
     public bool TryStart(TurretBossPayload kind, int attackDamage, bool varyBarrage = false)
@@ -100,7 +108,7 @@ public sealed class TurretBossLauncher : MonoBehaviour
     {
         Stage = next;
         elapsed = 0f;
-        field.SetBossOrigin(origin, -1f, 0f);
+        field.SetBossOrigin(EffectiveOrigin, -1f, 0f);
         field.SetState(next, target.position.x, damage);
         OnStageChanged?.Invoke(next);
     }

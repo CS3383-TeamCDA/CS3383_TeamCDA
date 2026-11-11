@@ -45,6 +45,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: TL4Assembly::TurretBossSandbox
   bossPrefab: {fileID: 3159229003962319650, guid: 4a9560c78f8340bdbc39d26067889206, type: 3}
+  visualPrefab: {fileID: 1917715702, guid: 1943296d3aa34f159b604096a2284067, type: 3}
   bossLevel: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

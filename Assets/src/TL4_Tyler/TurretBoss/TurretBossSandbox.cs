@@ -5,6 +5,7 @@ using UnityEngine.InputSystem;
 public sealed class TurretBossSandbox : MonoBehaviour
 {
     [SerializeField] private TurretBossController bossPrefab;
+    [SerializeField] private TurretBossVisualRig visualPrefab;
     [SerializeField, Min(1)] private int bossLevel = 1;
     private GameObject arena;
     private TurretBossController boss;
@@ -76,6 +77,12 @@ public sealed class TurretBossSandbox : MonoBehaviour
         {
             boss = Instantiate(bossPrefab, new Vector3(7.5f, 0.1f, 0f), Quaternion.identity, arena.transform);
             boss.Begin(target.transform, field, bossLevel);
+            if (visualPrefab != null)
+            {
+                TurretBossVisualRig visualRig = Instantiate(visualPrefab, new Vector3(7.5f, 0f, 0f),
+                    Quaternion.identity, arena.transform);
+                arena.AddComponent<TurretBossCombatVisuals>().Initialize(boss, visualRig, field, 0f);
+            }
             arena.AddComponent<TurretBossHUD>().Bind(boss);
         }
         Camera camera = Camera.main;
