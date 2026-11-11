@@ -5,6 +5,7 @@ using EscapeThe90s;
 using EscapeThe90s.Contracts;
 using EscapeThe90s.Infrastructure;
 using EscapeThe90s.Infrastructure.Unity;
+using EscapeThe90s.PowerUps;
 using LegacyUnityPublisher = EscapeThe90s.Dependencies.Unity.IUnityGameStateEventPublisher;
 using UnityEngine;
 
@@ -38,6 +39,32 @@ namespace EscapeThe90s.Composition
                 Register<IGameState>(gameStateManager);
             }
             else Debug.LogError("ServiceContainer: GameStateManager could not be resolved or created.", this);
+
+            // One scene-owned TL4 spawner is exposed to all contract consumers.
+            foreach (EnemySpawner spawner in FindObjectsByType<EnemySpawner>(FindObjectsInactive.Include))
+            {
+                if (spawner.gameObject.scene != gameObject.scene) continue;
+                if (_services.ContainsKey(typeof(IEnemySpawner)))
+                {
+                    Debug.LogError("ServiceContainer: multiple scene EnemySpawners; use one shared provider.", this);
+                    continue;
+                }
+                Register<IEnemySpawner>(spawner);
+                if (spawner.GetComponent<EnemyGameStateBinding>() == null)
+                    spawner.gameObject.AddComponent<EnemyGameStateBinding>();
+            }
+
+            // One scene-owned TL3 power-up manager is exposed to all contract consumers.
+            foreach (PowerUpManager manager in FindObjectsByType<PowerUpManager>(FindObjectsInactive.Include))
+            {
+                if (manager.gameObject.scene != gameObject.scene) continue;
+                if (_services.ContainsKey(typeof(IPowerUpSpawner)))
+                {
+                    Debug.LogError("ServiceContainer: multiple scene PowerUpManagers; use one shared provider.", this);
+                    continue;
+                }
+                Register<IPowerUpSpawner>(manager);
+            }
 
             Register<IEventBus>(eventBus);
             if (bridge != null)

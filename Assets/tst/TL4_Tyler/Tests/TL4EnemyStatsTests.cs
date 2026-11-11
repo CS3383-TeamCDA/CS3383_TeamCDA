@@ -1,3 +1,4 @@
+using EscapeThe90s.Contracts;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -34,7 +35,7 @@ public class TL4EnemyStatsTests
                 System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).Invoke(manager, null);
             var serialized = new UnityEditor.SerializedObject(enemy);
             serialized.FindProperty("powerUpDropChance").floatValue = chance;
-            serialized.FindProperty("powerUpManager").objectReferenceValue = manager;
+            enemy.Inject(manager);
             serialized.ApplyModifiedPropertiesWithoutUndo();
             enemy.transform.position = new Vector3(7, 3, 0);
 

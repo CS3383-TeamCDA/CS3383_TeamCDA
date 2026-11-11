@@ -17,12 +17,12 @@ namespace EscapeThe90s.WorldGen.Integration
         }
 
         public static bool HasTeamPlayerController(GameObject player)
-        { return player != null && player.GetComponent<TempPlayerController>() != null; }
+        { return player != null && player.GetComponent<PlayerControllerTL6>() != null; }
 
         public static void ConfigurePlayer(GameObject player, float moveSpeed)
         {
             if (player == null) return;
-            TempPlayerController controller = player.GetComponent<TempPlayerController>();
+            PlayerControllerTL6 controller = player.GetComponent<PlayerControllerTL6>();
             if (controller != null)
             {
                 const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;

@@ -1,14 +1,14 @@
+using EscapeThe90s.Contracts;
 using System;
 using UnityEngine;
 using UnityEngine.Serialization;
-using EscapeThe90s.PowerUps;
 
 public enum EnemyMovementType { Static, Flying, Ground }
 public enum EnemyAttackMode { MeleeOnly, RangedOnly, Both }
 public enum EnemyAggroRange { Close, Medium, Far }
 public enum EnemyAwareness { Low, High }
 
-public abstract class EnemyBase : MonoBehaviour
+public abstract class EnemyBase : MonoBehaviour, IDependent<IPowerUpSpawner>
 {
     private static readonly PowerUpType[] dropTypes = (PowerUpType[])Enum.GetValues(typeof(PowerUpType));
 
@@ -20,14 +20,19 @@ public abstract class EnemyBase : MonoBehaviour
     [FormerlySerializedAs("hp"), FormerlySerializedAs("healthPoints")]
     [SerializeField, Min(1)] private int baseHealth = 100;
     [SerializeField, Min(0)] private int baseCoins = 5;
+    [SerializeField, Min(0)] private int scoreValue = 0;
     [SerializeField, Min(0)] private int baseMeleeDamage = 10;
     [SerializeField, Min(0)] private int baseRangedDamage = 8;
 
     [Header("Power-up drops")]
     [Tooltip("Chance of one random power-up on defeat: 0 = never, 1 = always.")]
     [SerializeField, Range(0f, 1f)] private float powerUpDropChance = .2f;
-    [Tooltip("Optional. If empty, uses the active PowerUpManager in the scene.")]
-    [SerializeField] private PowerUpManager powerUpManager;
+    private IPowerUpSpawner powerUps;
+
+    public void Inject(IPowerUpSpawner dependency)
+    {
+        powerUps = dependency;
+    }
 
     [Header("Added per level")]
     [SerializeField, Min(0)] private int healthPerLevel = 20;
@@ -67,6 +72,7 @@ public abstract class EnemyBase : MonoBehaviour
     public int Level => Mathf.Max(1, level);
     public int MaxHealth => Scale(baseHealth, healthPerLevel, 1);
     public int CurrentHealth { get { EnsureInitialized(); return hp; } }
+    public int ScoreValue => Mathf.Max(0, scoreValue);
     public int CoinReward => Scale(baseCoins, coinsPerLevel, 0);
     public bool CanMelee => attackMode == EnemyAttackMode.MeleeOnly || attackMode == EnemyAttackMode.Both;
     public bool CanRanged => attackMode == EnemyAttackMode.RangedOnly || attackMode == EnemyAttackMode.Both;
@@ -221,10 +227,37 @@ public abstract class EnemyBase : MonoBehaviour
         if (hp == 0)
         {
             defeated = true;
+            ConfigureCorpseCollision();
             TryDropPowerUp();
             Defeated?.Invoke(this);
         }
         return defeated;
+    }
+
+    private void ConfigureCorpseCollision()
+    {
+        int corpseLayer = LayerMask.NameToLayer("Corpse");
+        Collider2D[] corpseColliders = GetComponentsInChildren<Collider2D>(true);
+        foreach (Transform child in GetComponentsInChildren<Transform>(true))
+        {
+            if (corpseLayer >= 0)
+            {
+                child.gameObject.layer = corpseLayer;
+            }
+        }
+
+        // Keep solid terrain contact, while excluding the player from corpse physics.
+        // The separate layer also prevents Default/Ground queries treating bodies as floors.
+        foreach (GameObject player in GameObject.FindGameObjectsWithTag("Player"))
+        {
+            foreach (Collider2D playerCollider in player.GetComponentsInChildren<Collider2D>(true))
+            {
+                foreach (Collider2D corpseCollider in corpseColliders)
+                {
+                    Physics2D.IgnoreCollision(corpseCollider, playerCollider);
+                }
+            }
+        }
     }
 
     private void TryDropPowerUp()
@@ -232,13 +265,11 @@ public abstract class EnemyBase : MonoBehaviour
         if (powerUpDropChance <= 0f) return;
         if (powerUpDropChance < 1f && UnityEngine.Random.value >= powerUpDropChance) return;
 
-        if (powerUpManager == null)
-            powerUpManager = FindFirstObjectByType<PowerUpManager>();
-
-        if (powerUpManager != null && powerUpManager.isActiveAndEnabled)
+        if (powerUps != null)
         {
             PowerUpType type = dropTypes[UnityEngine.Random.Range(0, dropTypes.Length)];
-            powerUpManager.SpawnPowerUp(transform.position, type);
+            Vector3 position = transform.position;
+            powerUps.SpawnPowerUp(new WorldPosition2D(position.x, position.y), type);
         }
     }
 }

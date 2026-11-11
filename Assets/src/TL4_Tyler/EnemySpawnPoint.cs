@@ -1,3 +1,4 @@
+using EscapeThe90s.Contracts;
 using UnityEngine;
 
 // Place on a room prefab at an intentional, valid enemy origin (feet for the ground prefab).

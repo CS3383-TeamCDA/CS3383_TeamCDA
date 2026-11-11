@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [DefaultExecutionOrder(100)]
-public class TempPlayerController : MonoBehaviour
+public class PlayerControllerTL6 : MonoBehaviour
 {
     [SerializeField] private Rigidbody2D _rb;
     [SerializeField] private Collider2D _collider;
@@ -17,6 +17,11 @@ public class TempPlayerController : MonoBehaviour
     [SerializeField] private LayerMask _groundLayer;
     [SerializeField] private float _groundCheckDistance = 0.05f;
 
+    [Header("Dash")]
+    [SerializeField] private float _dashSpeed = 16f;
+    [SerializeField] private float _dashDuration = 0.2f;
+    [SerializeField] private bool _disableGravityDuringDash = true;
+
     // Give our states access to the player's components/settings.
     public Rigidbody2D Rb => _rb;
     public IPlayerMovementInput Input;
@@ -24,6 +29,13 @@ public class TempPlayerController : MonoBehaviour
     public float XDeceleration => _xDeceleration;
     public float MaxSpeedX => _maxSpeedX;
     public float JumpSpeed => _jumpSpeed;
+    public float DashSpeed => _dashSpeed;
+    public float DashDuration => _dashDuration;
+    public bool DisableGravityDuringDash => _disableGravityDuringDash;
+
+
+    public int FacingDirection = 1;
+    public bool AirDashAvailable { get; private set; } = true;
 
     private PlayerStateManager _stateManager;
 
@@ -52,6 +64,7 @@ public class TempPlayerController : MonoBehaviour
         _stateManager.FixedUpdate();
     }
 
+    //JUMPING
     public bool IsGrounded()
     {
         Bounds b = _collider.bounds;
@@ -67,5 +80,24 @@ public class TempPlayerController : MonoBehaviour
         return Physics2D.OverlapBox(
             center, size, 0f, _groundLayer
         ) != null;
+    }
+
+    //DASHING
+    public void UpdateFacingDirection(float inputX)
+    {
+        if (inputX > 0f)
+            FacingDirection = 1;
+        else if (inputX < 0f)
+            FacingDirection = -1;
+    }
+
+    public void ConsumeAirDash()
+    {
+        AirDashAvailable = false;
+    }
+
+    public void ResetAirDash()
+    {
+        AirDashAvailable = true;
     }
 }

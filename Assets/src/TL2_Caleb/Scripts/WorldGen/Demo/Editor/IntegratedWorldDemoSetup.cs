@@ -71,7 +71,7 @@ public static class IntegratedWorldDemoSetup
 
         foreach (MonoBehaviour component in FindSceneBehaviours(scene))
         {
-            if (component == null || component.GetType().Name != "TempPlayerController") continue;
+            if (component == null || component.GetType().Name != "PlayerControllerTL6") continue;
             demo.player = component.transform;
             break;
         }

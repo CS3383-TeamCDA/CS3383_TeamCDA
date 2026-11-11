@@ -16,12 +16,21 @@ public class RunningState : MovementState
         PlayerStateManager manager =
             (PlayerStateManager)stateManager;
 
-        TempPlayerController player = manager.Player;
+        PlayerControllerTL6 player = manager.Player;
+
+        player.UpdateFacingDirection(player.Input.Movement.x);
 
         if (player.Input.JumpJustPressed && player.IsGrounded())
         {
             manager.ChangeState(new JumpingState());
         }
+
+        if (player.Input.DashJustPressed)
+        {
+            manager.ChangeState(new DashingState());
+            return;
+        }
+
     }
 
     public override void FixedTick(PlayerStateManager manager)
@@ -30,7 +39,7 @@ public class RunningState : MovementState
     }
 
     // Shared with JumpingState so air movement still works.
-    public static void MoveHorizontally(TempPlayerController player)
+    public static void MoveHorizontally(PlayerControllerTL6 player)
     {
         Rigidbody2D rb = player.Rb;
 

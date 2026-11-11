@@ -1,15 +1,8 @@
+using EscapeThe90s.Contracts;
 using UnityEngine;
 
 namespace EscapeThe90s.PowerUps
 {
-    /// <summary>The three required power-up types.</summary>
-    public enum PowerUpType
-    {
-        SpeedBoost = 0,
-        Shield = 1,
-        Magnet = 2
-    }
-
     /// <summary>Payload for PowerUpManager.OnPowerUpCollected.</summary>
     public readonly struct PowerUpCollectedEventArgs
     {

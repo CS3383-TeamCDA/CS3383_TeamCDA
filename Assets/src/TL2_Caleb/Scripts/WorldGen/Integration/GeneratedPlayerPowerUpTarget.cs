@@ -10,7 +10,7 @@ namespace EscapeThe90s.WorldGen.Integration
     {
         [SerializeField, Min(0f)] float basePickupRadius = 1.5f;
 
-        TempPlayerController _controller;
+        PlayerControllerTL6 _controller;
         PlayerHealth _health;
         FieldInfo _speedField;
         float _baseSpeed;
@@ -21,7 +21,7 @@ namespace EscapeThe90s.WorldGen.Integration
 
         void Awake()
         {
-            _controller = GetComponent<TempPlayerController>();
+            _controller = GetComponent<PlayerControllerTL6>();
             _health = GetComponent<PlayerHealth>();
             PickupRadius = basePickupRadius;
             if (_controller == null) return;

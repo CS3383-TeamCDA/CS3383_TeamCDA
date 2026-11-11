@@ -1,17 +1,11 @@
+using EscapeThe90s.Contracts;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-
-public enum EnemyType
-{
-    Ground,
-    Flying,
-    Turret,
-    Aim
-}
+using EscapeThe90s.Infrastructure.Unity;
 
 [DefaultExecutionOrder(10000)]
-public class EnemySpawner : MonoBehaviour
+public class EnemySpawner : MonoBehaviour, IEnemySpawner
 {
     [SerializeField, Min(0)] private float spawnRate;
     [SerializeField, Min(1)] private int maxAlive = 8;
@@ -28,6 +22,7 @@ public class EnemySpawner : MonoBehaviour
     private readonly List<EnemyBase> activeEnemies = new List<EnemyBase>();
     [SerializeField] private Camera gameplayCamera;
     [SerializeField, Min(0)] private float screenMargin = 1f;
+    private bool gameplaySpawningAllowed = true;
     private float elapsed;
     private int nextPoint;
     private int nextType;
@@ -73,7 +68,7 @@ public class EnemySpawner : MonoBehaviour
     public bool TrySpawnAt(EnemySpawnPoint point, out EnemyBase enemy)
     {
         enemy = null;
-        if (point == null || !point.IsAvailable || AliveCount >= maxAlive || !IsOffScreen(point.ClearanceBounds)) return false;
+        if (!gameplaySpawningAllowed || point == null || !point.IsAvailable || AliveCount >= maxAlive || !IsOffScreen(point.ClearanceBounds)) return false;
         foreach (EnemyBase active in activeEnemies)
         {
             if (active == null) continue;
@@ -91,10 +86,17 @@ public class EnemySpawner : MonoBehaviour
     // Run after the camera follows the player, using its final view for this frame.
     private void LateUpdate() { Tick(Time.deltaTime); }
 
+    // State adapter gates spawning without overwriting the configured difficulty/rate.
+    public void SetGameplaySpawningAllowed(bool allowed)
+    {
+        gameplaySpawningAllowed = allowed;
+        if (!allowed) elapsed = 0;
+    }
+
     public void Tick(float deltaTime)
     {
         if (float.IsNaN(deltaTime) || float.IsInfinity(deltaTime) || deltaTime <= 0) return;
-        if (spawnRate <= 0 || spawnPoints.Length == 0 || AliveCount >= maxAlive)
+        if (!gameplaySpawningAllowed || spawnRate <= 0 || spawnPoints.Length == 0 || AliveCount >= maxAlive)
         {
             elapsed = 0;
             return;
@@ -122,7 +124,14 @@ public class EnemySpawner : MonoBehaviour
         }
     }
 
+    // Compatibility callbacks for existing scenes; new consumers use IEnemySpawner.
     public event Action<EnemyType, Vector3> OnEnemyDefeated;
+    private event Action<EnemyDefeatedInfo> contractEnemyDefeated;
+    event Action<EnemyDefeatedInfo> IEnemySpawner.OnEnemyDefeated
+    {
+        add => contractEnemyDefeated += value;
+        remove => contractEnemyDefeated -= value;
+    }
     // TL5 subscribes to this instance event to credit its own currency manager.
     // The amount is already scaled by enemy level. Ordinary despawns do not award coins.
     public event Action<int> OnCoinsAwarded;
@@ -180,6 +189,11 @@ public class EnemySpawner : MonoBehaviour
             }
 
         }
+        DependencyScope scope = FindAnyObjectByType<DependencyScope>();
+        if (scope != null && scope.gameObject.scene == gameObject.scene)
+        {
+            scope.Inject(enemy.gameObject);
+        }
         enemy.SetLevel(SpawnLevel);
         enemy.Defeated += HandleEnemyDefeated;
         activeEnemies.Add(enemy);
@@ -196,12 +210,16 @@ public class EnemySpawner : MonoBehaviour
     private void HandleEnemyDefeated(EnemyBase enemy)
     {
         int coins = enemy.CoinReward;
+        Vector3 position = enemy.transform.position;
+        var info = new EnemyDefeatedInfo(enemy.Type, enemy.Level, enemy.ScoreValue, coins,
+            new WorldPosition2D(position.x, position.y));
         enemy.Defeated -= HandleEnemyDefeated;
         activeEnemies.Remove(enemy);
         if (this != null)
         {
+            contractEnemyDefeated?.Invoke(info);
             OnCoinsAwarded?.Invoke(coins);
-            OnEnemyDefeated?.Invoke(enemy.Type, enemy.transform.position);
+            OnEnemyDefeated?.Invoke(info.Type, position);
         }
     }
 }

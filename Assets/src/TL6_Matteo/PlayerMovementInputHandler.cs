@@ -7,11 +7,13 @@ public class PlayerMovementInputHandler : MonoBehaviour, IPlayerMovementInput
 
     private InputAction _moveAction;
     private InputAction _jumpAction;
+    private InputAction _dashAction;
 
     public Vector2 Movement { get; private set; }
     public bool JumpJustPressed { get; private set; }
     public bool JumpBeingHeld { get; private set; }
     public bool JumpReleased { get; private set; }
+    public bool DashJustPressed { get; private set; }
 
 
 
@@ -21,12 +23,14 @@ public class PlayerMovementInputHandler : MonoBehaviour, IPlayerMovementInput
 
         _moveAction = _playerInput.actions.FindAction("Move");
         _jumpAction = _playerInput.actions.FindAction("Jump");
+        _dashAction = _playerInput.actions.FindAction("Dash");
     }
 
     private void Update()
     {
         Movement = _moveAction.ReadValue<Vector2>();
         JumpJustPressed = _jumpAction.WasPressedThisFrame();
+        DashJustPressed = _dashAction.WasPressedThisFrame();
     }
 
     private void CacheInputActions()

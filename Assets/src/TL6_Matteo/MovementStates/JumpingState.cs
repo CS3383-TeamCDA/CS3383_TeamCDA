@@ -4,19 +4,29 @@ using StateLogic = Assets.src.StateLogic;
 
 public class JumpingState : MovementState
 {
+    private readonly bool _applyJumpImpulse;
+
+    public JumpingState(bool applyJumpImpulse = true)
+    {
+        _applyJumpImpulse = applyJumpImpulse;
+    }
+
     public override void EnterState(
         StateLogic.StateManager stateManager)
     {
         PlayerStateManager manager =
             (PlayerStateManager)stateManager;
 
-        TempPlayerController player = manager.Player;
+        PlayerControllerTL6 player = manager.Player;
 
-        // Apply the initial jump velocity.
-        player.Rb.linearVelocity = new Vector2(
-            player.Rb.linearVelocity.x,
-            player.JumpSpeed
-        );
+        if (_applyJumpImpulse)
+        {
+            // Apply the initial jump velocity.
+            player.Rb.linearVelocity = new Vector2(
+                player.Rb.linearVelocity.x,
+                player.JumpSpeed
+            );
+        }
     }
 
     public override void UpdateState(
@@ -25,13 +35,23 @@ public class JumpingState : MovementState
         PlayerStateManager manager =
             (PlayerStateManager)stateManager;
 
-        TempPlayerController player = manager.Player;
+        PlayerControllerTL6 player = manager.Player;
+
+        player.UpdateFacingDirection(player.Input.Movement.x);
 
         // Return to running when the player lands.
         if (player.Rb.linearVelocity.y <= 0f &&
             player.IsGrounded())
         {
+            player.ResetAirDash();
             manager.ChangeState(new RunningState());
+        }
+
+        if (player.Input.DashJustPressed && player.AirDashAvailable)
+        {
+            player.ConsumeAirDash();
+            manager.ChangeState(new DashingState());
+            return;
         }
     }
 

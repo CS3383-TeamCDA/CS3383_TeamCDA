@@ -1,3 +1,4 @@
+using EscapeThe90s.Contracts;
 using UnityEngine;
 
 [RequireComponent(typeof(EnemySpawner))]

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using EscapeThe90s.Contracts;
 using UnityEngine;
 
 namespace EscapeThe90s.PowerUps
@@ -8,14 +9,24 @@ namespace EscapeThe90s.PowerUps
     /// Strategy Client: picks an effect by type and calls it through a PowerUpEffect reference.
     /// Memento Caretaker: holds one StatSnapshot per active temporary type, never reads inside it.
     /// GRASP Indirection: items and the player never reference each other; this class sits between.
+    /// Other teams reach it through the IPowerUpSpawner contract, registered by ServiceContainer.
     /// </summary>
-    public class PowerUpManager : MonoBehaviour
+    public class PowerUpManager : MonoBehaviour, IPowerUpSpawner
     {
         #region Attributes
 
         public const int MaxActiveItems = 200;
 
         public event Action<PowerUpCollectedEventArgs> OnPowerUpCollected;
+
+        // Contract version of OnPowerUpCollected; same name, so implemented explicitly.
+        private event Action<PowerUpCollectedInfo> PowerUpCollectedForContract;
+
+        event Action<PowerUpCollectedInfo> IPowerUpSpawner.OnPowerUpCollected
+        {
+            add { PowerUpCollectedForContract += value; }
+            remove { PowerUpCollectedForContract -= value; }
+        }
 
         [SerializeField] private PowerUpDefinition[] definitionAssets;
         [SerializeField] private float magnetPullSpeed = 12f;        // units per second
@@ -82,6 +93,12 @@ namespace EscapeThe90s.PowerUps
             item.Initialize(type, this);
             activeItems.Add(item);
             Debug.Log($"[PowerUpManager] SpawnPowerUp {type} at {position}");
+        }
+
+        /// <summary>Contract entry point for other teams. Spawns at z = 0.</summary>
+        public void SpawnPowerUp(WorldPosition2D position, PowerUpType type)
+        {
+            SpawnPowerUp(new Vector3(position.X, position.Y, 0f), type);
         }
 
         /// <summary>Called by PowerUpItem when the player touches it.</summary>
@@ -288,24 +305,32 @@ namespace EscapeThe90s.PowerUps
 
         private void RaiseCollected(PowerUpCollectedEventArgs args)
         {
-            if (OnPowerUpCollected == null)
+            InvokeEach(OnPowerUpCollected, args);
+            InvokeEach(PowerUpCollectedForContract, new PowerUpCollectedInfo(
+                args.Type, new WorldPosition2D(args.Position.x, args.Position.y),
+                args.StackCount, args.RemainingSeconds, args.IsPermanent));
+            Debug.Log($"[PowerUpManager] RaiseCollected {args.Type}");
+        }
+
+        /// <summary>Calls every handler, so one throwing subscriber can't stop the rest.</summary>
+        private static void InvokeEach<T>(Action<T> handlers, T args)
+        {
+            if (handlers == null)
             {
                 return;
             }
 
-            foreach (Delegate handler in OnPowerUpCollected.GetInvocationList())
+            foreach (Delegate handler in handlers.GetInvocationList())
             {
                 try
                 {
-                    ((Action<PowerUpCollectedEventArgs>)handler)(args);
+                    ((Action<T>)handler)(args);
                 }
                 catch (Exception e)
                 {
                     Debug.LogException(e);
                 }
             }
-            Debug.Log($"[PowerUpManager] OnPowerUpCollected raised for {args.Type}");
-            Debug.Log($"[PowerUpManager] RaiseCollected {args.Type}");
         }
 
         private static bool IsFinite(float f)
