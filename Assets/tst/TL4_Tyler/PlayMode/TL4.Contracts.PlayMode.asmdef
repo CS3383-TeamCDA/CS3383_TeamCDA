@@ -3,7 +3,8 @@
     "references": [
         "TL4Assembly",
         "EscapeThe90s.Contracts",
-        "EscapeThe90s.Infrastructure.Unity"
+        "EscapeThe90s.Infrastructure.Unity",
+        "TL6Assembly"
     ],
     "optionalUnityReferences": [
         "TestAssemblies"

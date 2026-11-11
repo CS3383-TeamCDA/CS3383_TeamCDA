@@ -219,7 +219,7 @@ public abstract class EnemyBase : MonoBehaviour, IDependent<IPowerUpSpawner>
     }
 
     // CoinReward is available to Defeated listeners; this class does not credit a wallet.
-    public bool TakeDamage(int amount)
+    public virtual bool TakeDamage(int amount)
     {
         EnsureInitialized();
         if (defeated) return true;
