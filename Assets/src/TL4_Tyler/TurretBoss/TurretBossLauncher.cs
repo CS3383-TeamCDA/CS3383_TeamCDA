@@ -6,6 +6,12 @@ public enum TurretBossPayload { Grenades, Missiles }
 /// <summary>Independent launcher track: body state changes never cancel its in-flight payload.</summary>
 public sealed class TurretBossLauncher : MonoBehaviour
 {
+    [SerializeField, Min(0f)] private float minimumShotGap = 0.15f;
+    [SerializeField, Min(0f)] private float maximumShotGap = 0.85f;
+    private System.Random random;
+    private bool variableBarrage;
+    public int PlannedShotCount { get; private set; }
+    public float NextShotDelay { get; private set; }
     private TurretBossAttackField field;
     private Transform target;
     private Vector2 origin;
@@ -17,19 +23,27 @@ public sealed class TurretBossLauncher : MonoBehaviour
     public TurretBossAttackState Stage { get; private set; } = TurretBossAttackState.Defeated;
     public event Action<TurretBossAttackState> OnStageChanged;
 
-    public void Initialize(TurretBossAttackField attackField, Transform player)
+    public void Initialize(TurretBossAttackField attackField, Transform player, int? seed = null)
     {
+        random = seed.HasValue ? new System.Random(seed.Value) : new System.Random();
         field = attackField;
         target = player;
     }
 
-    public void SetOrigin(Vector2 position) { origin = position; }
+    public void SetOrigin(Vector2 position)
+    {
+        origin = position;
+        if (field != null) { field.SetBossOrigin(origin, -1f, 0f); }
+    }
 
-    public bool TryStart(TurretBossPayload kind, int attackDamage)
+    public bool TryStart(TurretBossPayload kind, int attackDamage, bool varyBarrage = false)
     {
         if (IsActive || field == null || target == null) { return false; }
         IsActive = true;
-        remaining = 3;
+        variableBarrage = varyBarrage;
+        PlannedShotCount = variableBarrage ? random.Next(1, 6) : 3;
+        remaining = PlannedShotCount;
+        NextShotDelay = 0f;
         payload = kind;
         damage = attackDamage;
         Enter(kind == TurretBossPayload.Missiles ? TurretBossAttackState.MissileLaunch : TurretBossAttackState.GrenadeWarning);
@@ -42,6 +56,12 @@ public sealed class TurretBossLauncher : MonoBehaviour
         elapsed += delta;
         switch (Stage)
         {
+            case TurretBossAttackState.PayloadWait:
+                if (elapsed >= NextShotDelay)
+                {
+                    Enter(payload == TurretBossPayload.Missiles ? TurretBossAttackState.MissileLaunch : TurretBossAttackState.GrenadeWarning);
+                }
+                break;
             case TurretBossAttackState.MissileLaunch:
                 if (elapsed >= TurretBossAttackField.MissileLaunchSeconds) { Enter(TurretBossAttackState.MissileWarning); }
                 break;
@@ -63,6 +83,13 @@ public sealed class TurretBossLauncher : MonoBehaviour
                 {
                     remaining--;
                     if (remaining == 0) { Cancel(); }
+                    else if (variableBarrage)
+                    {
+                        float minimum = Mathf.Max(0f, minimumShotGap);
+                        float maximum = Mathf.Max(minimum, maximumShotGap);
+                        NextShotDelay = Mathf.Lerp(minimum, maximum, (float)random.NextDouble());
+                        Enter(TurretBossAttackState.PayloadWait);
+                    }
                     else { Enter(payload == TurretBossPayload.Missiles ? TurretBossAttackState.MissileLaunch : TurretBossAttackState.GrenadeWarning); }
                 }
                 break;

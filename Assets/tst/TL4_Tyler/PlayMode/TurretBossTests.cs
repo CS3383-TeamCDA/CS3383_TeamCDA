@@ -5,6 +5,96 @@ using UnityEngine.TestTools;
 
 public class TurretBossTests
 {
+    [Test]
+    public void VariableBarragesUseOneToFiveShotsAndWaitWithoutFinishingEarly()
+    {
+        GameObject root = new GameObject("Variable barrage test");
+        Sprite square = Sprite.Create(Texture2D.whiteTexture, new Rect(0f, 0f, 1f, 1f), Vector2.zero, 1f);
+        try
+        {
+            GameObject target = new GameObject("Target");
+            target.transform.SetParent(root.transform);
+            target.AddComponent<BoxCollider2D>();
+            PlayerHealth health = target.AddComponent<PlayerHealth>();
+            TurretBossAttackField field = root.AddComponent<TurretBossAttackField>();
+            field.Initialize(health, square);
+            TurretBossLauncher launcher = root.AddComponent<TurretBossLauncher>();
+            launcher.Initialize(field, target.transform, 12345);
+            var counts = new System.Collections.Generic.HashSet<int>();
+            var gaps = new System.Collections.Generic.HashSet<float>();
+            foreach (TurretBossPayload payload in new[] { TurretBossPayload.Grenades, TurretBossPayload.Missiles })
+            {
+                for (int barrage = 0; barrage < 30; barrage++)
+                {
+                    int fired = 0;
+                    System.Action<TurretBossAttackState> onStage = stage =>
+                    {
+                        if (stage == TurretBossAttackState.GrenadeFlight || stage == TurretBossAttackState.MissileLaunch) { fired++; }
+                    };
+                    launcher.OnStageChanged += onStage;
+                    Assert.IsTrue(launcher.TryStart(payload, 10, true));
+                    int planned = launcher.PlannedShotCount;
+                    Assert.That(planned, Is.InRange(1, 5));
+                    counts.Add(planned);
+                    for (int step = 0; step < 40 && launcher.IsActive; step++)
+                    {
+                        if (launcher.Stage == TurretBossAttackState.PayloadWait)
+                        {
+                            Assert.IsTrue(launcher.IsActive, "Body must wait through the random gap.");
+                            Assert.That(launcher.NextShotDelay, Is.InRange(0.15f, 0.85f));
+                            gaps.Add(launcher.NextShotDelay);
+                            launcher.Advance(launcher.NextShotDelay * 0.5f);
+                            Assert.AreEqual(TurretBossAttackState.PayloadWait, launcher.Stage);
+                        }
+                        launcher.Advance(10f);
+                    }
+                    Assert.IsFalse(launcher.IsActive);
+                    Assert.AreEqual(planned, fired);
+                    launcher.OnStageChanged -= onStage;
+                }
+            }
+            Assert.AreEqual(5, counts.Count, "Seeded sample should exercise every barrage length.");
+            Assert.Greater(gaps.Count, 1, "Gaps should vary between shots.");
+            launcher.TryStart(TurretBossPayload.Grenades, 10, true);
+            launcher.Cancel();
+            Assert.IsFalse(launcher.IsActive);
+        }
+        finally
+        {
+            Object.DestroyImmediate(root);
+            Object.DestroyImmediate(square);
+        }
+    }
+
+    [Test]
+    public void GrenadeLaunchesFromCurrentBossAndKeepsItsFlightOrigin()
+    {
+        GameObject root = new GameObject("Grenade origin test");
+        Sprite square = Sprite.Create(Texture2D.whiteTexture, new Rect(0f, 0f, 1f, 1f), Vector2.zero, 1f);
+        try
+        {
+            GameObject target = new GameObject("Target");
+            target.transform.SetParent(root.transform);
+            target.AddComponent<BoxCollider2D>();
+            PlayerHealth health = target.AddComponent<PlayerHealth>();
+            TurretBossAttackField field = root.AddComponent<TurretBossAttackField>();
+            field.Initialize(health, square);
+            field.SetBossOrigin(new Vector2(-4f, 1f), -1f, 0f);
+            field.SetState(TurretBossAttackState.GrenadeWarning, 0f, 10);
+            field.SetState(TurretBossAttackState.GrenadeFlight, 0f, 10);
+            field.SetBossOrigin(new Vector2(3f, 1f), -1f, 0f);
+            field.Advance(0.001f);
+            Transform grenade = root.transform.Find("Lobbed grenade");
+            Assert.AreEqual(-3.5f, grenade.position.x, 0.02f);
+            Assert.AreEqual(3.2f, grenade.position.y, 0.03f);
+        }
+        finally
+        {
+            Object.DestroyImmediate(root);
+            Object.DestroyImmediate(square);
+        }
+    }
+
     [UnityTest]
     public IEnumerator CycleSeparatesHazardsAndOpensCoreOnlyAfterBeam()
     {
@@ -37,7 +127,13 @@ public class TurretBossTests
                 boss.Advance(0.35f);
             }
             Assert.AreEqual(TurretBossAttackState.BeamCharge, boss.State);
+            float beamDirection = (float)typeof(TurretBossController).GetField("facingDirection",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(boss);
+            target.transform.position = root.transform.position + new Vector3(beamDirection * -2f, 0f, 0f);
             boss.Advance(1.5f);
+            Assert.AreEqual(beamDirection, (float)typeof(TurretBossController).GetField("facingDirection",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(boss),
+                "Crossing the boss during charge must not redirect the shot.");
             Assert.AreEqual(TurretBossAttackState.BeamFire, boss.State);
             Assert.IsFalse(boss.CoreExposed);
             boss.Advance(0.7f);
@@ -110,6 +206,7 @@ public class TurretBossTests
             Assert.AreEqual(40, boss.CurrentHealth);
             field.Advance(10f);
             Assert.AreEqual(100, health.CurrentHealth, "Transformation clears hazards.");
+            target.transform.position = root.transform.position + Vector3.left * 2f;
             boss.Advance(TurretBossController.TransformationSeconds);
             Assert.Greater(root.transform.position.y, 0.8f);
             for (int cycle = 0; cycle < 2; cycle++)
@@ -121,12 +218,14 @@ public class TurretBossTests
                 Assert.AreEqual(startX, root.transform.position.x);
                 boss.Advance(TurretBossController.LungeSeconds);
                 Assert.AreEqual(TurretBossAttackState.SpinWarning, boss.State);
-                Assert.LessOrEqual(Mathf.Abs(root.transform.position.x - startX), 3.01f);
+                Assert.That(root.transform.position.x, Is.InRange(-8.4f, 3.3f));
                 boss.Advance(TurretBossController.SpinWarningSeconds);
                 Assert.AreEqual(TurretBossAttackState.Spinning, boss.State);
                 float spinStartX = root.transform.position.x;
                 boss.Advance(TurretBossController.SpinSeconds);
-                Assert.LessOrEqual(Mathf.Abs(root.transform.position.x - spinStartX), 2.01f);
+                Assert.That(root.transform.position.x, Is.InRange(-8.4f, 3.3f));
+                Assert.Greater(Mathf.Abs(root.transform.position.x - spinStartX), 2f,
+                    "Spin continues beyond the old two-unit hop.");
                 Assert.AreEqual(TurretBossAttackState.StompWarning, boss.State);
                 Assert.IsTrue(boss.Launcher.IsActive);
                 boss.Advance(TurretBossController.StompWarningSeconds);
@@ -142,6 +241,7 @@ public class TurretBossTests
                 boss.Advance(1.5f);
                 boss.Advance(0.7f);
                 Assert.IsTrue(boss.CoreExposed);
+                target.transform.position = root.transform.position + Vector3.right * 2f;
                 boss.Advance(2.5f);
             }
             Object.DestroyImmediate(root);

@@ -28,6 +28,7 @@ public sealed class TurretBossAttackField : MonoBehaviour
     private bool launcherModule;
     private SpriteRenderer launcherTube;
     private Vector2 bossOrigin = new Vector2(7f, 0f);
+    private Vector2 payloadLaunchOrigin;
     private float aimDirection = -1f;
     private float lungeDestination;
     private SpriteRenderer leftWave;
@@ -123,6 +124,10 @@ public sealed class TurretBossAttackField : MonoBehaviour
         {
             landingX = Mathf.Clamp(targetX, -9f, 4f);
         }
+        if (next == TurretBossAttackState.GrenadeFlight || next == TurretBossAttackState.MissileLaunch)
+        {
+            payloadLaunchOrigin = bossOrigin + new Vector2(0.5f, 2.2f);
+        }
         missileLocked = next == TurretBossAttackState.MissileDescent || next == TurretBossAttackState.MissileBlast;
     }
 
@@ -151,7 +156,7 @@ public sealed class TurretBossAttackField : MonoBehaviour
         {
             bool launching = state == TurretBossAttackState.MissileLaunch || state == TurretBossAttackState.GrenadeFlight;
             float recoil = launching ? 0.12f * Mathf.Abs(Mathf.Sin(elapsed * 18f)) : 0f;
-            Display(launcherTube, new Vector2(bossOrigin.x + 0.5f, 2.2f - recoil), new Vector2(0.65f, 0.55f), true);
+            Display(launcherTube, bossOrigin + new Vector2(0.5f, 2.2f - recoil), new Vector2(0.65f, 0.55f), true);
             launcherTube.color = launching ? Color.yellow : new Color(0.2f, 0.65f, 0.7f);
         }
         for (int index = shots.Count - 1; index >= 0; index--)
@@ -178,7 +183,7 @@ public sealed class TurretBossAttackField : MonoBehaviour
         }
         if (state == TurretBossAttackState.MissileLaunch)
         {
-            Display(missile, new Vector2(bossOrigin.x, Mathf.Lerp(2.5f, 10f, Mathf.Clamp01(elapsed / MissileLaunchSeconds))),
+            Display(missile, new Vector2(payloadLaunchOrigin.x, Mathf.Lerp(payloadLaunchOrigin.y, 10f, Mathf.Clamp01(elapsed / MissileLaunchSeconds))),
                 new Vector2(0.25f, 0.75f), true);
         }
         else if (descending)
@@ -194,7 +199,7 @@ public sealed class TurretBossAttackField : MonoBehaviour
         if (state == TurretBossAttackState.GrenadeFlight)
         {
             float progress = Mathf.Clamp01(elapsed / 1.2f);
-            Vector2 position = Vector2.Lerp(new Vector2(7f, 2.5f), new Vector2(landingX, 0.25f), progress);
+            Vector2 position = Vector2.Lerp(payloadLaunchOrigin, new Vector2(landingX, 0.25f), progress);
             position.y += 4f * Mathf.Sin(progress * Mathf.PI);
             Display(grenade, position, new Vector2(0.3f, 0.3f), true);
         }

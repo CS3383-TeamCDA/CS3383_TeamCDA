@@ -7,7 +7,7 @@ public enum TurretBossAttackState
     BeamCharge, BeamFire, Recovery, Defeated,
     MissileLaunch, MissileWarning, MissileDescent, MissileBlast,
     Transforming, LungeWarning, Lunging, StompWarning, Stomping, Planting,
-    SpinWarning, Spinning, LauncherWait
+    SpinWarning, Spinning, LauncherWait, PayloadWait
 }
 
 /// <summary>Planted Siege Core prototype. All hazards are resolved by the separate attack field.</summary>
@@ -24,16 +24,27 @@ public sealed class TurretBossController : EnemyBase
     private TurretBossLauncher launcher;
     public TurretBossLauncher Launcher => launcher;
     public const float SpinWarningSeconds = 1.2f;
-    public const float SpinSeconds = 1f;
+    public const float SpinSeconds = 4f;
+    [SerializeField, Min(0.1f)] private float chargeTriggerDistance = 3.5f;
+    [SerializeField, Min(0.1f)] private float chargeCooldownSeconds = 4f;
+    [SerializeField, Min(0.1f)] private float spinSpeed = 4.5f;
+    private float chargeCooldown;
+    private float facingDirection = -1f;
+    private const float LeftMovementLimit = -8.4f;
+    private const float RightMovementLimit = 3.3f;
+    private bool PlayerTooClose => Mathf.Abs(target.position.x - transform.position.x) <= chargeTriggerDistance;
+    private TurretBossAttackState NextMobileAttack => PlayerTooClose && chargeCooldown <= 0f
+        ? TurretBossAttackState.LungeWarning : TurretBossAttackState.SpinWarning;
     private Vector3 lungeStart;
     private float lungeDestination;
     private float plantedY;
     private Rigidbody2D bossBody;
     private TurretBossLegRig legs;
     public bool IsMobilePhase { get; private set; }
+    public const float MobilePhaseThreshold = 0.4f;
     public const float TransformationSeconds = 2f;
-    public const float LungeWarningSeconds = 1f;
-    public const float LungeSeconds = 0.6f;
+    public const float LungeWarningSeconds = 0.25f;
+    public const float LungeSeconds = 0.3f;
     public const float StompWarningSeconds = 0.8f;
     public const float StompSeconds = 1.5f;
     public const float PlantSeconds = 1f;
@@ -76,8 +87,14 @@ public sealed class TurretBossController : EnemyBase
         {
             return;
         }
-        launcher.SetOrigin(new Vector2(transform.position.x, 0f));
+        launcher.SetOrigin(transform.position);
         launcher.Advance(deltaTime);
+        chargeCooldown = Mathf.Max(0f, chargeCooldown - deltaTime);
+        if (IsMobilePhase && chargeCooldown <= 0f && PlayerTooClose &&
+            State == TurretBossAttackState.SpinWarning)
+        {
+            ChangeState(TurretBossAttackState.LungeWarning);
+        }
         elapsed += deltaTime;
         switch (State)
         {
@@ -102,7 +119,7 @@ public sealed class TurretBossController : EnemyBase
             case TurretBossAttackState.Transforming:
                 transform.position = new Vector3(transform.position.x, plantedY + 0.9f * Mathf.Clamp01(elapsed / TransformationSeconds), transform.position.z);
                 legs.SetPose(Mathf.Clamp01(elapsed / TransformationSeconds), 0f);
-                if (elapsed >= TransformationSeconds) { ChangeState(TurretBossAttackState.LungeWarning); }
+                if (elapsed >= TransformationSeconds) { ChangeState(NextMobileAttack); }
                 break;
             case TurretBossAttackState.LungeWarning:
                 if (elapsed >= LungeWarningSeconds) { ChangeState(TurretBossAttackState.Lunging); }
@@ -122,10 +139,11 @@ public sealed class TurretBossController : EnemyBase
             case TurretBossAttackState.Spinning:
                 float spinPreviousX = transform.position.x;
                 float spinProgress = Mathf.Clamp01(elapsed / SpinSeconds);
-                transform.position = new Vector3(Mathf.Lerp(lungeStart.x, lungeDestination, spinProgress), plantedY + 0.9f, transform.position.z);
+                float spinX = Mathf.MoveTowards(spinPreviousX, lungeDestination, spinSpeed * deltaTime);
+                transform.position = new Vector3(spinX, plantedY + 0.9f, transform.position.z);
                 legs.SetSpinPose(spinProgress);
                 field.ResolveSpin(spinPreviousX, transform.position.x, MeleeDamage);
-                if (elapsed >= SpinSeconds) { ChangeState(TurretBossAttackState.StompWarning); }
+                if (elapsed >= SpinSeconds || Mathf.Abs(spinX - lungeDestination) < 0.01f) { ChangeState(TurretBossAttackState.StompWarning); }
                 break;
             case TurretBossAttackState.StompWarning:
                 if (elapsed >= StompWarningSeconds) { ChangeState(TurretBossAttackState.Stomping); }
@@ -157,7 +175,7 @@ public sealed class TurretBossController : EnemyBase
                 if (elapsed >= recoverySeconds)
                 {
                     missileCycle = !missileCycle;
-                    ChangeState(IsMobilePhase ? TurretBossAttackState.LungeWarning : TurretBossAttackState.FloorWarning);
+                    ChangeState(IsMobilePhase ? NextMobileAttack : TurretBossAttackState.FloorWarning);
                 }
                 break;
         }
@@ -177,16 +195,24 @@ public sealed class TurretBossController : EnemyBase
         }
         if (next == TurretBossAttackState.StompWarning)
         {
-            launcher.SetOrigin(new Vector2(transform.position.x, 0f));
-            launcher.TryStart(missileCycle ? TurretBossPayload.Grenades : TurretBossPayload.Missiles, RangedDamage);
+            launcher.SetOrigin(transform.position);
+            launcher.TryStart(missileCycle ? TurretBossPayload.Grenades : TurretBossPayload.Missiles, RangedDamage, true);
         }
         if (next == TurretBossAttackState.LungeWarning || next == TurretBossAttackState.SpinWarning)
         {
+            if (next == TurretBossAttackState.LungeWarning) { chargeCooldown = chargeCooldownSeconds; }
             lungeStart = transform.position;
             float direction = target.position.x < transform.position.x ? -1f : 1f;
-            lungeDestination = Mathf.Clamp(lungeStart.x + direction * (next == TurretBossAttackState.SpinWarning ? 2f : 3f), -6f, 7.5f);
+            lungeDestination = next == TurretBossAttackState.SpinWarning
+                ? (direction < 0f ? LeftMovementLimit : RightMovementLimit)
+                : Mathf.MoveTowards(lungeStart.x, Mathf.Clamp(lungeStart.x + direction * 3f, LeftMovementLimit, RightMovementLimit), 3f);
         }
-        float aim = target != null && target.position.x > transform.position.x ? 1f : -1f;
+        // Keep the charge telegraph, firing beam and body pointed the same way.
+        if (next != TurretBossAttackState.BeamFire)
+        {
+            facingDirection = target != null && target.position.x > transform.position.x ? 1f : -1f;
+        }
+        float aim = facingDirection;
         SpriteRenderer renderer = GetComponent<SpriteRenderer>();
         if (renderer != null) { renderer.flipX = aim < 0f; }
         if (IsMobilePhase && next != TurretBossAttackState.Transforming) { legs.SetPose(1f, 0f); }
@@ -208,7 +234,7 @@ public sealed class TurretBossController : EnemyBase
             if (legs != null) { legs.SetPose(0f, 0f); }
             if (bossBody != null) { bossBody.bodyType = RigidbodyType2D.Dynamic; }
         }
-        else if (!IsMobilePhase && CurrentHealth <= MaxHealth * 0.4f)
+        else if (!IsMobilePhase && CurrentHealth <= MaxHealth * MobilePhaseThreshold)
         {
             IsMobilePhase = true;
             plantedY = transform.position.y;
@@ -230,6 +256,13 @@ public sealed class TurretBossController : EnemyBase
             ChangeState(TurretBossAttackState.Transforming);
         }
         return died;
+    }
+
+    private void LateUpdate()
+    {
+        if (State != TurretBossAttackState.BeamCharge && State != TurretBossAttackState.BeamFire) { return; }
+        SpriteRenderer renderer = GetComponent<SpriteRenderer>();
+        if (renderer != null) { renderer.flipX = facingDirection < 0f; }
     }
 
     private void OnDisable()

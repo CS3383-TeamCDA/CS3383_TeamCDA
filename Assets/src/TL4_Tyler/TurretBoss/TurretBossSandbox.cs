@@ -76,6 +76,7 @@ public sealed class TurretBossSandbox : MonoBehaviour
         {
             boss = Instantiate(bossPrefab, new Vector3(7.5f, 0.1f, 0f), Quaternion.identity, arena.transform);
             boss.Begin(target.transform, field, bossLevel);
+            arena.AddComponent<TurretBossHUD>().Bind(boss);
         }
         Camera camera = Camera.main;
         if (camera == null)

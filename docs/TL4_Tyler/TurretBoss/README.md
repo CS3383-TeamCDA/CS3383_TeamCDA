@@ -106,3 +106,54 @@ mobile loops with completed barrages, planting before beam and no return to floo
 attacks. Independent-track tests verify payload survival across body changes,
 explicit cancellation, and jumpable single-hit spin damage. Runtime Test Runner
 and visual playtesting remain to be run in Unity.
+
+## Boss health overlay
+
+The sandbox now binds an encounter-owned `TurretBossHUD` after `boss.Begin`.
+A wide bottom overlay shows SIEGE CORE, HP, phase and armor/core status. Purple
+health turns teal during exposed recovery; orange damage trails wait 0.45 seconds
+then drain at 35% of the bar per second. Scaled time freezes the trail on pause.
+The white 40% marker uses the controller's shared transformation threshold and
+hides once phase two starts. Victory retains the empty bar; arena restart removes
+and rebuilds the overlay. Existing upper-left text remains sandbox diagnostics.
+
+For another TL4 encounter host, add the HUD to an encounter-owned object and call
+`Bind(controller)` after `Begin`. No EventSystem or input interception is needed.
+This is a runtime uGUI overlay; no changes to TL1 HUD or shared scenes are needed.
+Compile checked against cached Unity assembly references; visual layout and runtime
+behavior still require Play Mode verification in the turret sandbox.
+
+## Movement and launcher tuning update
+
+Beam facing is selected on charge entry and held through firing, including the
+sprite's late-frame facing. Crossing behind the boss does not redirect the shot.
+Mobile attack selection now charges only within 3.5 horizontal units (editable on
+the controller), with a four-second charge cooldown. The warning is 0.45 seconds
+and the three-unit dash takes 0.3 seconds. Otherwise the boss selects spin;
+a nearby player can also trigger charge during spin wind-up. Active spin, beam,
+transformation and core recovery are never interrupted by proximity charges.
+Spin commits to the player's direction at wind-up and travels at 4.5 units/second
+until reaching the arena edge (-8.4 / 3.3 body-center X) or four seconds. It does
+not reverse when the player crosses behind it. These limits leave leg clearance
+inside the sandbox walls. Movement bounds still belong to this flat sandbox.
+
+The independent launcher module follows the boss including its raised height.
+Grenades and missiles snapshot its launch position on firing, so payloads begin
+at the current boss rather than the old hardcoded X and do not get dragged by
+subsequent movement. Landing warnings retain their existing lock rules.
+Updated regression coverage checks beam direction across a target crossing,
+longer bounded spin travel, and fixed grenade launch origins after boss movement.
+Source/test compilation passed; runtime tests and visual playtest remain pending.
+
+## Short charge and variable phase-two barrages
+
+Charge warning reduced to 0.25 seconds. Phase-two launcher bursts now choose 1–5
+shots per barrage and sample a fresh 0.15–0.85-second gap after each explosion
+before beginning the next payload. Landing warning/lock and flight durations stay
+consistent. Phase one retains its three-shot introductory rhythm. Launcher stays
+active during gaps, so the body still waits before planting/beam; cancel, pause,
+and restart retain their existing behavior. Gap range is serialized on the
+launcher. Its Initialize accepts an optional local RNG seed for repeatable tests;
+world-seed integration remains future work. No global Unity random state is used.
+Added seeded regression coverage for shot counts, varying gaps, completion and
+cancellation. Source and test assemblies compile; runtime execution is pending.
