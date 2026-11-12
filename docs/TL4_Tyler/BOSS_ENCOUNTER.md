@@ -71,7 +71,7 @@ This controller is scene-owned and must not survive scene reloads.
    before scene injection. It consumes IGameState and must receive that dependency.
 3. Assign the player Transform or let it resolve the active Player-tagged object
    at encounter start. Keep the PrototypeBoss prefab reference (or swap in final TL4 art).
-4. Consumers request IDependent<IBossEncounter> and call TryStart with the gate data.
+4. Consumers request IDependent `IBossEncounter` and call TryStart with the gate data.
 5. TL1/TL5 consume boss outcome/rewards; TL2 handles gate/arena/chunk lifetime and
    calls Cancel before unloading the arena. No other team's scripts/scene were edited.
 
