@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 2044100002}
   - component: {fileID: 2044100003}
   - component: {fileID: 2044100004}
+  - component: {fileID: 2044100005}
   m_Layer: 0
   m_Name: TVClaw
   m_TagString: Untagged
@@ -88,8 +89,8 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 10
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 4723107735738678597, guid: 0c638ab17761a47e8affabc12bbcb972, type: 3}
-  m_Color: {r: 0.65, g: 0.9, b: 0.65, a: 1}
+  m_Sprite: {fileID: 21320000, guid: 19186275ddac466fb0b679a806579b45, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -107,7 +108,7 @@ Animator:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4311587290486528061}
-  m_Enabled: 1
+  m_Enabled: 0
   m_Avatar: {fileID: 0}
   m_Controller: {fileID: 9100000, guid: 83b00bd81487c4a048a15997bea216f8, type: 2}
   m_CullingMode: 0
@@ -291,3 +292,16 @@ MonoBehaviour:
   burstPauseRange: {x: 0.25, y: 0.45}
   recoveryRange: {x: 0.3, y: 0.7}
   pursuitWindowRange: {x: 0.5, y: 0.9}
+--- !u!114 &2044100005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4311587290486528061}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e5d3ce1ff82e41779f810260fb95f538, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: TL4Assembly::TVClawArtDriver
+  art: {fileID: 11400000, guid: 9f2a2dfa2b274f4b8a69a8db74e9610c, type: 2}

@@ -3,10 +3,11 @@ using UnityEngine;
 
 public enum TVClawCombatState { Pursuing, SwipeWindup, BiteWindup, PounceWindup, Pouncing, Recovery }
 
-// Four-legged hunter combat. Dedicated quadruped/claw/bite artwork is still required.
+// Four-legged hunter combat; TVClawArtDriver follows these timings.
 public class TVClawEnemy : GroundEnemy
 {
-    [SerializeField, Min(0)] private float biteRange = 1.1f;
+    [SerializeField, Min(0)] private float biteRange = .65f;
+    [SerializeField] private Vector2 biteMouthOffset = new Vector2(.8f, .65f);
     [SerializeField, Min(0)] private float swipeRange = 2.2f;
     [SerializeField] private Vector2 pounceRange = new Vector2(2.8f, 7f);
     [SerializeField, Min(0)] private float baitTime = .7f;
@@ -18,7 +19,14 @@ public class TVClawEnemy : GroundEnemy
     [SerializeField, Min(0)] private float pounceDuration = .55f;
     [SerializeField, Min(0)] private float pounceCooldown = 3.5f;
     public TVClawCombatState CombatState { get; private set; }
+    public float CombatElapsed => elapsed;
+    public float SwipeWindup => swipeWindup;
+    public float BiteWindup => biteWindup;
+    public float PounceWindup => pounceWindup;
+    public float PounceDuration => pounceDuration;
+    public TVClawCombatState LastAttack { get; private set; }
     public float LockedDirection { get; private set; }
+    protected override bool AvoidAllies => false;
     public override EnemyType Type => EnemyType.TVClaw;
     public override bool CanStartAttack => false; // Own sequence; no duplicate generic melee hits.
     private Rigidbody2D physicsBody;
@@ -66,10 +74,12 @@ public class TVClawEnemy : GroundEnemy
         switch (CombatState)
         {
             case TVClawCombatState.Pursuing:
-                if (distance <= swipeRange)
+                float direction = AggroTarget.position.x >= transform.position.x ? 1 : -1;
+                bool biteReach = CanBite(direction, out _);
+                if (biteReach || distance <= swipeRange)
                 {
                     LockAttack();
-                    Enter(distance <= biteRange ? TVClawCombatState.BiteWindup : TVClawCombatState.SwipeWindup);
+                    Enter(biteReach ? TVClawCombatState.BiteWindup : TVClawCombatState.SwipeWindup);
                 }
                 else if (distance >= pounceRange.x && distance <= pounceRange.y && cooldown <= 0 && Grounded())
                 {
@@ -84,7 +94,7 @@ public class TVClawEnemy : GroundEnemy
                 if (elapsed >= (bite ? biteWindup : swipeWindup))
                 {
                     if (animations != null) animations.TriggerMelee();
-                    Strike(bite ? biteRange : swipeRange, bite ? Mathf.Max(1, attackDamage / 2) : attackDamage, bite ? 1.5f : 5f);
+                    Strike(bite ? biteRange : swipeRange, bite ? Mathf.Max(1, attackDamage / 2) : attackDamage, bite ? 1.5f : 5f, bite);
                     Recover();
                 }
                 break;
@@ -106,6 +116,17 @@ public class TVClawEnemy : GroundEnemy
         }
     }
 
+    public override bool TakeDamage(int amount)
+    {
+        bool defeated = base.TakeDamage(amount);
+        if (!defeated && amount > 0)
+        {
+            var art = GetComponent<TVClawArtDriver>();
+            if (art != null) art.ShowHit();
+        }
+        return defeated;
+    }
+
     private void LockAttack()
     {
         LockedDirection = AggroTarget.position.x >= transform.position.x ? 1 : -1;
@@ -116,10 +137,12 @@ public class TVClawEnemy : GroundEnemy
     }
     private void Enter(TVClawCombatState state)
     {
+        if (state == TVClawCombatState.SwipeWindup || state == TVClawCombatState.BiteWindup || state == TVClawCombatState.PounceWindup)
+            LastAttack = state;
         CombatState = state;
         elapsed = 0;
         if (visual != null)
-            visual.color = state == TVClawCombatState.PounceWindup ? new Color(1, .65f, .3f) : normalColor;
+            visual.color = GetComponent<TVClawArtDriver>() == null && state == TVClawCombatState.PounceWindup ? new Color(1, .65f, .3f) : normalColor;
     }
     private void ResetVisual() { if (visual != null) visual.color = normalColor; }
     private void Recover() { Enter(TVClawCombatState.Recovery); StopHorizontal(); }
@@ -145,14 +168,47 @@ public class TVClawEnemy : GroundEnemy
             contact.collider.GetComponentInParent<PlayerHealth>() == null &&
             (contact.rigidbody == null || contact.rigidbody.bodyType == RigidbodyType2D.Static);
     }
-    private void Strike(float range, int damage, float knockback)
+    public Vector2 BiteMouthPosition(float direction)
+    {
+        Vector3 scale = transform.lossyScale;
+        return (Vector2)transform.position + new Vector2(direction * biteMouthOffset.x * Mathf.Abs(scale.x),
+            biteMouthOffset.y * Mathf.Abs(scale.y));
+    }
+    private bool CanBite(float direction, out Vector2 point)
+    {
+        point = HasAggro ? (Vector2)AggroTarget.position : (Vector2)transform.position;
+        if (!HasAggro) return false;
+        Vector2 mouth = BiteMouthPosition(direction);
+        float nearest = float.PositiveInfinity;
+        var health = AggroTarget.GetComponentInParent<PlayerHealth>();
+        if (health == null || !health.isActiveAndEnabled || health.CurrentHealth <= 0) return false;
+        bool hasCollider = false;
+        foreach (var collider in health.GetComponentsInChildren<Collider2D>())
+        {
+            if (!collider.enabled || !collider.gameObject.activeInHierarchy) continue;
+            hasCollider = true;
+            Vector2 candidate = collider.ClosestPoint(mouth);
+            float squared = (candidate - mouth).sqrMagnitude;
+            if (squared < nearest) { nearest = squared; point = candidate; }
+        }
+        if (!hasCollider) nearest = (point - mouth).sqrMagnitude;
+        return nearest <= biteRange * biteRange &&
+            (AggroTarget.position.x - transform.position.x) * direction >= -.05f;
+    }
+    private void Strike(float range, int damage, float knockback, bool bite = false)
     {
         if (hit || !HasAggro) return;
         Vector2 target = AggroTarget.position;
-        if (Vector2.Distance(transform.position, target) > range ||
+        Vector2 origin = (Vector2)transform.position + Vector2.up * .5f;
+        if (bite)
+        {
+            if (!CanBite(LockedDirection, out target)) return;
+            origin = BiteMouthPosition(LockedDirection);
+        }
+        if ((!bite && Vector2.Distance(transform.position, target) > range) ||
             (target.x - transform.position.x) * LockedDirection < -.05f) return;
-        foreach (var obstacle in Physics2D.LinecastAll((Vector2)transform.position + Vector2.up * .5f,
-            target + Vector2.up * .5f, (1 << 0) | (1 << 3)))
+        foreach (var obstacle in Physics2D.LinecastAll(origin,
+            bite ? target : target + Vector2.up * .5f, (1 << 0) | (1 << 3)))
             if (Terrain(obstacle)) return;
         var health = AggroTarget.GetComponentInParent<PlayerHealth>();
         if (health == null || !health.isActiveAndEnabled || health.CurrentHealth <= 0) return;
@@ -162,8 +218,20 @@ public class TVClawEnemy : GroundEnemy
         if (body != null && body.simulated && body.bodyType == RigidbodyType2D.Dynamic)
             body.linearVelocity = new Vector2(LockedDirection * knockback, Mathf.Max(body.linearVelocity.y, 2));
     }
+    private void IgnoreEnemyBodies()
+    {
+        // EnemyBase remains on corpses, so this covers living allies and dead bodies.
+        var own = GetComponentsInChildren<Collider2D>();
+        foreach (var enemy in FindObjectsByType<EnemyBase>())
+        {
+            if (enemy == this) continue;
+            foreach (var other in enemy.GetComponentsInChildren<Collider2D>())
+                foreach (var collider in own) Physics2D.IgnoreCollision(collider, other);
+        }
+    }
     public override void Move()
     {
+        IgnoreEnemyBodies();
         if (CombatState == TVClawCombatState.Pursuing) { base.Move(); return; }
         if (CombatState != TVClawCombatState.Pouncing || IsDefeated) { StopHorizontal(); return; }
         // Stop at terrain walls instead of grinding into them until the timer expires.

@@ -78,7 +78,7 @@ public class NewEnemyTests
     }
 
     [TestCase(.8f, 15, TVClawCombatState.BiteWindup, .25f)]
-    [TestCase(1.7f, 30, TVClawCombatState.SwipeWindup, .65f)]
+    [TestCase(2.2f, 30, TVClawCombatState.SwipeWindup, .65f)]
     public void ClawAttacksHaveWindupSingleDamageAndRecovery(float distance, int damage,
         TVClawCombatState windup, float duration)
     {
@@ -99,7 +99,7 @@ public class NewEnemyTests
     [Test] public void ClawMissesWhenPlayerEscapesAndDamageDoesNotCancelWindup()
     {
         var claw = Enemy<TVClawEnemy>("TVClaw");
-        var player = Player(Vector2.right * 1.7f);
+        var player = Player(Vector2.right * 2.2f);
         claw.TryAcquireTarget(player.transform);
         claw.TickCombat(.01f);
         claw.TakeDamage(1);
@@ -135,6 +135,50 @@ public class NewEnemyTests
         claw.TickCombat(.81f);
         claw.TickCombat(.71f);
         Assert.AreEqual(TVClawCombatState.Pursuing, claw.CombatState, "Cooldown prevents immediate repeat pounces.");
+    }
+
+    [TestCase(1f, false)]
+    [TestCase(-1f, false)]
+    [TestCase(1f, true)]
+    public void BiteReachesPlayerInFrontOfMouthWithoutBodyOverlap(float direction, bool escape)
+    {
+        var claw = Enemy<TVClawEnemy>("TVClaw");
+        var player = Player(new Vector2(direction * 2, 0));
+        var collider = player.GetComponent<BoxCollider2D>();
+        collider.offset = new Vector2(0, .65f);
+        collider.size = new Vector2(.7f, 1.3f);
+        Physics2D.SyncTransforms();
+        Assert.Greater(Mathf.Abs(player.transform.position.x - claw.transform.position.x), 1.1f,
+            "Old origin-distance bite would reject this standing position.");
+        claw.TryAcquireTarget(player.transform);
+        claw.TickCombat(.01f);
+        Assert.AreEqual(TVClawCombatState.BiteWindup, claw.CombatState);
+        if (escape) { player.transform.position += Vector3.right * direction * 3; Physics2D.SyncTransforms(); }
+        claw.TickCombat(claw.BiteWindup);
+        Assert.AreEqual(player.MaxHealth - (escape ? 0 : 15), player.CurrentHealth);
+    }
+
+    [Test] public void MouthBiteCannotReachPlayerAboveItOrThroughTerrain()
+    {
+        var claw = Enemy<TVClawEnemy>("TVClaw");
+        var player = Player(new Vector2(2, 4));
+        claw.TryAcquireTarget(player.transform);
+        claw.TickCombat(.01f);
+        Assert.AreEqual(TVClawCombatState.Pursuing, claw.CombatState);
+        player.transform.position = new Vector2(2, 0);
+        var collider = player.GetComponent<BoxCollider2D>();
+        collider.offset = new Vector2(0, .65f);
+        collider.size = new Vector2(.7f, 1.3f);
+        var wall = new GameObject("Bite blocker");
+        wall.transform.SetParent(root.transform);
+        wall.layer = 3;
+        wall.transform.position = new Vector2(1.45f, 1);
+        wall.AddComponent<BoxCollider2D>().size = new Vector2(.1f, 2);
+        Physics2D.SyncTransforms();
+        claw.TickCombat(.01f);
+        Assert.AreEqual(TVClawCombatState.BiteWindup, claw.CombatState);
+        claw.TickCombat(claw.BiteWindup);
+        Assert.AreEqual(player.MaxHealth, player.CurrentHealth);
     }
 
     [Test] public void DamageTriggersPermanentRageButZeroAndNegativeDoNot()
@@ -200,6 +244,26 @@ public class NewEnemyTests
         yield return null;
         Assert.AreEqual(1, Object.FindObjectsByType<BerserkerGrenade>().Length);
         Assert.IsFalse(enemy.HasExploded);
+    }
+
+    [UnityTest] public IEnumerator GrenadierStopsThrowingBeyondMaximumButRetainsAggroAndResumesInRange()
+    {
+        var enemy = Enemy<GrenadeBerserkerEnemy>("GrenadeBerserker");
+        var player = Player(Vector2.right * 8);
+        Assert.IsTrue(enemy.TryAcquireTarget(player.transform));
+        player.transform.position = Vector2.right * (enemy.MaxThrowRange + .1f);
+        yield return null;
+        Assert.IsTrue(enemy.HasAggro);
+        Assert.IsFalse(enemy.IsBerserk);
+        Assert.AreEqual(0, Object.FindObjectsByType<BerserkerGrenade>().Length);
+        player.transform.position = Vector2.right * enemy.MaxThrowRange;
+        yield return null;
+        Assert.AreEqual(1, Object.FindObjectsByType<BerserkerGrenade>().Length, "Maximum boundary is included.");
+        player.transform.position = Vector2.right * (enemy.MaxThrowRange + 5);
+        typeof(GrenadeBerserkerEnemy).GetField("nextThrow",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).SetValue(enemy, 0f);
+        yield return null;
+        Assert.AreEqual(1, Object.FindObjectsByType<BerserkerGrenade>().Length, "Aggro cannot bypass the throw limit.");
     }
 
     [UnityTest] public IEnumerator GrenadeSurvivesOwnerDeathAndDamagesOnceAfterFuse()

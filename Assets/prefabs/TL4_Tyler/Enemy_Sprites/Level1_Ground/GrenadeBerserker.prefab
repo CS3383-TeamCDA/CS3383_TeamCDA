@@ -134,6 +134,7 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier: TL4Assembly::GrenadeBerserkerEnemy
   attackVfx: {fileID: 11400000, guid: 6acd2433825a4365acae580e96d3db98, type: 2}
+  maxThrowRange: 12
   attackMode: 2
   level: 1
   baseHealth: 65

@@ -172,3 +172,45 @@ Pounce cooldown is 3.5s from launch. Ordinary damage does not cancel windups.
 An amber tint is the temporary pounce tell; quadruped running, crouch, claw and
 bite animations remain art work. Tests cover attack timing/damage, escaped
 strikes, windup persistence, locked launch direction, miss recovery and cooldown.
+
+## TV Claw animation integration
+
+The approved animation atlas is imported at `Enemy_Sprites/TVClaw/TVClawAtlas.png`
+with 56 named sprite slices (8 frames per idle/run/swipe/bite/pounce/hit/death row).
+The source is 1340x1174 rather than the requested exact grid; row boundaries are
+measured and sprite pivots use common foot baselines. Pixel filtering, no texture
+compression and 80 pixels/unit retain the pixel style. The original generated PNG
+is retained separately. Generated frame consistency may still need manual polish.
+
+`TVClawArt.asset` supplies the seven sequences to `TVClawArtDriver` on the existing
+TVClaw prefab. Both demos therefore use the new art without new scene overrides.
+The placeholder Animator is disabled; facing remains controlled by GroundEnemy.
+Run/idle follow velocity; combat frames follow TVClawEnemy's actual windup and
+recovery elapsed time. Pounce has separate crouch, launch and landing frame ranges.
+Nonlethal hit reactions play only during pursuit and do not interrupt committed
+attacks. Death holds its final frame. The old green tint and amber placeholder
+windup flash are removed for this animated prefab.
+
+TVClawArtTests checks sequence references, disabled placeholder animation, bite
+windup/recovery selection and persistent corpse frames. C# compiler verification
+passes; Unity Test Runner and in-game visual verification remain pending.
+
+TV Claw atlas slices are horizontally trimmed to the main connected character
+silhouette, excluding detached claw fragments spilling from adjacent frames.
+Pivots compensate the cropped left edge to preserve each frame's world alignment.
+TV Claw ignores collisions with EnemyBase bodies (living or defeated), including
+new arrivals, and disables crowd-following speed clamping. Player/terrain contacts
+remain enabled. TVClawArtTests covers traversal through living enemies and corpses.
+
+Bite reach now uses a scale-aware local mouth offset (.8, .65) and .65-world-unit
+reach to the nearest enabled player collider rather than root-to-root distance.
+The same check selects the bite and validates damage after windup, mirrored for
+left-facing attacks. Vertical separation, escaping during windup, and terrain LOS
+still prevent hits. Tests cover a normal standing player at 2 units in either
+direction without body overlap, escape, vertical separation and wall blocking.
+
+Grenadier throws are capped at 12 world units (maxThrowRange on the prefab).
+Retained aggro does not bypass the limit. It holds position outside throw range
+and resumes normal-cadence throwing when the target returns; damage/proximity
+rage and already-launched grenades are unchanged. Regression covers retained
+aggro, no out-of-range throws, boundary inclusion and resuming in range.

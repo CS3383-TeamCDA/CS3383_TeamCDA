@@ -7,6 +7,8 @@ public class GrenadeBerserkerEnemy : GroundEnemy
     [SerializeField, Min(0)] private float contactDistance = 1.1f;
     [SerializeField, Min(.1f)] private float rushSpeed = 6;
     [SerializeField, Min(.1f)] private float throwInterval = 2;
+    [SerializeField, Min(0)] private float maxThrowRange = 12;
+    public float MaxThrowRange => Mathf.Max(0, maxThrowRange);
     [SerializeField, Min(.1f)] private float grenadeFlightTime = 1.2f;
     [SerializeField, Min(0)] private float grenadeRadius = 2;
     [SerializeField, Min(0)] private float deathBlastRadius = 2.8f;
@@ -83,7 +85,7 @@ public class GrenadeBerserkerEnemy : GroundEnemy
             return;
         }
         SetFacingRight(AggroTarget.position.x > transform.position.x);
-        if (Time.time < nextThrow) return;
+        if (distance > MaxThrowRange || Time.time < nextThrow) return;
         nextThrow = Time.time + throwInterval;
         var driver = GetComponent<EnemyAnimationDriver>();
         if (driver != null) driver.TriggerRanged();
