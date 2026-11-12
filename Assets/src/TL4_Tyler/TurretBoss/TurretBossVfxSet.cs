@@ -9,6 +9,7 @@ public sealed class TurretBossVfxSet : ScriptableObject
     public Sprite[] grenades;
     public Sprite[] rockets;
     public Sprite[] explosions;
+    [Range(0, .5f)] public float groundExplosionBottomInset;
     public Sprite[] shockwaves;
 
     public static Sprite Frame(Sprite[] frames, float progress, bool loop)

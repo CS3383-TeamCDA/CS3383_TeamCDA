@@ -93,3 +93,82 @@ spawn height onto terrain instead of leaving it suspended over gaps.
 See [Boss encounter setup and controls](BOSS_ENCOUNTER.md). The standalone scene is
 `Assets/Scenes/TL4_Tyler/BossSandbox.unity`; final-scene registration remains a
 separate integration-owner task.
+
+## TV-claw and grenade berserker prototypes
+
+`EnemyType` appends TVClaw=4 and GrenadeBerserker=5; existing serialized values
+remain unchanged. Both animated prefabs and typed spawn markers live alongside
+Level1_Ground. EnemySpawningMvp is now based on the current GeneratedWorldGameDemo
+composition, replacing its obsolete generator-less TL2 setup. Both scenes use
+WorldNetworkDemo and GeneratedStreetContent with terrain, player, camera, menu,
+HUD, click combat and the same five-enemy rotation. Their active enemyPrefabsByKind
+array supplies Ground, Flying, Turret, null Aim, TVClaw, and GrenadeBerserker.
+The street assignment cycles configured non-null slots. Both world-demo setup
+menus preserve that configuration when regenerating scenes. The disabled legacy
+GeneratedTerrainEnemyPopulation is not the spawning path in either scene.
+
+TVClaw uses the shared timed melee/pursuit system: 300 base HP, 30 melee damage,
+4.5 speed, enlarged green TV-head placeholder. Its deathclaw-like silhouette and
+claw animation still need dedicated art; the prototype reuses the early enemy.
+
+GrenadeBerserker has 65 base HP and holds position while throwing every 2 seconds.
+Grenades fly toward the player's launch-time position over 1.2 seconds and explode
+with radius 2, using level-scaled ranged damage. Any positive damage or a player
+within 4 units permanently triggers its speed-6 rush. Contact within 1.1 units
+kills the berserker. Every combat death, including a one-shot kill, emits exactly
+one radius-2.8 blast at twice the larger of melee/ranged damage. Terrain blocks
+blast damage; multiple player colliders cannot multiply a blast. Streaming unload
+and scene cleanup are despawns and do not explode. Grenades survive owner death.
+The orange TV-head body remains placeholder art. Grenades and explosions reuse
+SiegeCoreAttackVfx and TurretBossVfxBurst from the boss. The ballistic fuse remains
+independent of the boss arena attack-state machine. Death blasts also damage nearby
+enemies once per blast and can chain other berserkers; thrown grenades retain
+player-only damage. Raging berserkers ignore enemy collisions and shared crowd
+slowdown, including enemies spawned after rage begins; terrain/player collision
+is retained.
+
+Validation: Contracts and TL4Assembly compile with Unity 6000.6 cached compiler
+references. Playtest these two scenes for jump/contact behavior, blast readability,
+and cadence before accepting tuning; no fresh Unity Test Runner run is claimed.
+
+New-enemy regression tests: `Assets/tst/TL4_Tyler/Tests/NewEnemyTests.cs` in
+`TL4Tyler_Tests`. In Window > General > Test Runner, select PlayMode and filter
+`NewEnemyTests`. Covers prefab/marker wiring, melee-only identity and scaling,
+zero/negative damage, permanent damage/proximity rage, grenade suppression during
+rage, contact death, one-shot/reentrant death and reward deduplication, multi-hurtbox
+blast deduplication, terrain/radius safety, grenade fuse/owner-death survival,
+living despawn safety, and both factory types. Tests compile; batch execution was
+blocked because the project was already open in Unity. Execution results pending.
+
+Scene regression coverage: `EnemySceneIntegrationTests` checks the sandbox's active
+HUDController (required to hide the menu on Start), active generated-demo enemy
+prefabs, sparse enemy-kind cycling, and the actual Start button callback through
+Menu -> Playing -> hidden menu. These tests and the modified WorldGen Integration,
+Demo, and Demo.Editor assemblies pass compiler verification. Unity Test Runner
+execution remains pending. The sandbox now instantiates the shared HUD prefab.
+
+The sandbox scene regression also requires an active WorldNetworkDemo and assigned
+settings, art, player prefab and StreetView, to catch a menu-only scene with no
+world generator. Scene identity/meta GUID is retained when refreshing its contents.
+
+Additional NewEnemyTests cover rush collision bypass/new arrivals/crowd slowdown,
+friendly death-blast damage with multiple colliders, shared animated explosion
+frames, and chained berserker deaths with one defeat event per enemy.
+
+Explosion presentation: terrain within 0.85 units below the blast selects the
+bottom-anchored Siege Core ground animation. Airborne blasts use a separate
+radial pixel fire/smoke animation at the actual detonation point. Player-contact
+suicide blasts always use the radial animation, even near terrain. No distant
+floor snapping; damage stays centered at the detonation. Tests cover nearby vs
+distant terrain and forced contact bursts. Compiler checks pass; runtime pending.
+
+TV Claw combat now owns its sequence instead of generic attack animations:
+close bite (1.1 range, .25s windup, half melee damage), heavy swipe (2.2 range,
+.65s windup, full melee damage and stronger knockback). Both have .8s recovery.
+A grounded player target lingering at 2.8–7 units for .7s triggers a .55s pounce
+windup, direction locked immediately, then speed 10 / vertical impulse 4 for up
+to .55s. Hit or wall contact stops the pounce; misses leave the same recovery.
+Pounce cooldown is 3.5s from launch. Ordinary damage does not cancel windups.
+An amber tint is the temporary pounce tell; quadruped running, crouch, claw and
+bite animations remain art work. Tests cover attack timing/damage, escaped
+strikes, windup persistence, locked launch direction, miss recovery and cooldown.

@@ -86,7 +86,10 @@ public static class WorldNetworkDemoSetup
         {
             AssetDatabase.LoadAssetAtPath<GameObject>("Assets/prefabs/TL4_Tyler/Enemy_Sprites/Level1_Ground/Level1_Ground_Animated.prefab"),
             AssetDatabase.LoadAssetAtPath<GameObject>("Assets/prefabs/TL4_Tyler/Enemy_Sprites/Level1_Flying/Level1_Flying.prefab"),
-            AssetDatabase.LoadAssetAtPath<GameObject>("Assets/prefabs/TL4_Tyler/Enemy_Sprites/Level1_Turret/Level1_Turret.prefab")
+            AssetDatabase.LoadAssetAtPath<GameObject>("Assets/prefabs/TL4_Tyler/Enemy_Sprites/Level1_Turret/Level1_Turret.prefab"),
+            null, // Aim=3 has no assigned prefab in this demo.
+            AssetDatabase.LoadAssetAtPath<GameObject>("Assets/prefabs/TL4_Tyler/Enemy_Sprites/Level1_Ground/TVClaw.prefab"),
+            AssetDatabase.LoadAssetAtPath<GameObject>("Assets/prefabs/TL4_Tyler/Enemy_Sprites/Level1_Ground/GrenadeBerserker.prefab")
         };
     }
 }

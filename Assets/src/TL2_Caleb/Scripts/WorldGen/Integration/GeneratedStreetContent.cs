@@ -198,8 +198,14 @@ namespace EscapeThe90s.WorldGen.Integration
             }
         }
 
-        static void EnsureAllEnemyKinds(StreetLayout layout)
+        void EnsureAllEnemyKinds(StreetLayout layout)
         {
+            // Array positions match EnemyType values; skip unconfigured slots (e.g. Aim).
+            var kinds = new List<int>();
+            if (_enemyPrefabs != null)
+                for (int i = 0; i < _enemyPrefabs.Length; i++)
+                    if (_enemyPrefabs[i] != null) kinds.Add(i);
+            if (kinds.Count == 0) return;
             int nextKind = 0;
             foreach (ChunkData chunk in layout.Chunks)
             {
@@ -207,7 +213,7 @@ namespace EscapeThe90s.WorldGen.Integration
                 for (int i = 0; i < chunk.Enemies.Length; i++)
                 {
                     EnemySlot slot = chunk.Enemies[i];
-                    slot.KindIndex = nextKind++ % 3; // Ground, Flying, Turret.
+                    slot.KindIndex = kinds[nextKind++ % kinds.Count];
                     chunk.Enemies[i] = slot;
                 }
             }
