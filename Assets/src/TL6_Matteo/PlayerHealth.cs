@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class PlayerHealth : MonoBehaviour
 {
+    [SerializeField, Min(1)] private int _defaultMaxHealth = 100;
     [SerializeField, Min(1)] private int _maxHealth = 100;
 
     public int MaxHealth => _maxHealth;
@@ -65,17 +66,22 @@ public class PlayerHealth : MonoBehaviour
 
         OnHealthChanged?.Invoke(CurrentHealth, _maxHealth);
     }
+    public void ResetHealth()
+    {
+        CurrentHealth = _maxHealth;
+        OnHealthChanged?.Invoke(CurrentHealth, _maxHealth);
+    }
 
+    //MAX HEALTH
     public void IncreaseMaxHealth(int amount)
     {
         if (amount<=0) return;
         SetMaxHealth(_maxHealth + amount);
     }
 
-    public void ResetHealth()
+    public void ResetMaxHealth()
     {
-        CurrentHealth = _maxHealth;
-        OnHealthChanged?.Invoke(CurrentHealth, _maxHealth);
+        SetMaxHealth(_defaultMaxHealth);
     }
 
 

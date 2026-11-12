@@ -1069,6 +1069,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: TL4Assembly::GeneratedTerrainEnemyPopulation
   collisionTilemap: {fileID: 1412512145}
   player: {fileID: 457964105}
+  clawSpawnPointPrefab: {fileID: 7057206579223619174, guid: 4fba2fe5610b4614b998501c5fd72158, type: 3}
+  berserkerSpawnPointPrefab: {fileID: 7057206579223619174, guid: cc966eb7c2c14251ab694fbf47e1bf04, type: 3}
   groundSpawnPointPrefab: {fileID: 7057206579223619174, guid: a08e0f9c4c5c9471686abd46655fdaea, type: 3}
   turretSpawnPointPrefab: {fileID: 7057206579223619174, guid: da0be32113a24c27ad6354b58e69cbf6, type: 3}
   flyingSpawnPointPrefab: {fileID: 7057206579223619174, guid: 2f9341d8dd364d1bb5ac33f0af45c1b9, type: 3}
@@ -1198,6 +1200,9 @@ MonoBehaviour:
   - {fileID: 4311587290486528061, guid: 2f6a23a66998f4ebbbac180c85c633cb, type: 3}
   - {fileID: 5927830652048804934, guid: 3f4f7257c1046461594f3f310cdc5921, type: 3}
   - {fileID: 6743709566900238644, guid: d45a3f8f106404f2593561d5678976b6, type: 3}
+  - {fileID: 0}
+  - {fileID: 4311587290486528061, guid: f73f8e11040441bf88137fd41989bf0e, type: 3}
+  - {fileID: 4311587290486528061, guid: 6dfeb327087347f6be4aa7d898ca9b00, type: 3}
   streetView: {fileID: 170804353}
   player: {fileID: 457964105}
   demoPlayerSpeed: 16

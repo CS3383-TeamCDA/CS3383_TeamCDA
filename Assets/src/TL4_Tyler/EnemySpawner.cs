@@ -18,7 +18,7 @@ public class EnemySpawner : MonoBehaviour, IEnemySpawner
         spawnLevel = level;
     }
     [SerializeField] private Transform[] spawnPoints = Array.Empty<Transform>();
-    [SerializeField] private EnemyBase[] prefabs = new EnemyBase[4];
+    [SerializeField] private EnemyBase[] prefabs = new EnemyBase[6];
     private readonly List<EnemyBase> activeEnemies = new List<EnemyBase>();
     [SerializeField] private Camera gameplayCamera;
     [SerializeField, Min(0)] private float screenMargin = 1f;
@@ -119,7 +119,7 @@ public class EnemySpawner : MonoBehaviour, IEnemySpawner
             }
             // Preserve untyped legacy/demo points; generated levels use typed markers.
             if (!IsOffScreen(point.position)) continue;
-            CreateEnemy((EnemyType)(nextType++ % 4), point.position);
+            CreateEnemy((EnemyType)(nextType++ % 6), point.position);
             break;
         }
     }
@@ -155,7 +155,7 @@ public class EnemySpawner : MonoBehaviour, IEnemySpawner
 
     private EnemyBase CreateEnemyInternal(EnemyType type, Vector3 position, EnemyBase overridePrefab)
     {
-        if (type != EnemyType.Ground && type != EnemyType.Flying && type != EnemyType.Turret && type != EnemyType.Aim)
+        if (type != EnemyType.Ground && type != EnemyType.Flying && type != EnemyType.Turret && type != EnemyType.Aim && type != EnemyType.TVClaw && type != EnemyType.GrenadeBerserker)
         {
             throw new ArgumentOutOfRangeException(nameof(type), type, "Unsupported enemy type.");
         }
@@ -174,6 +174,12 @@ public class EnemySpawner : MonoBehaviour, IEnemySpawner
             enemyObject.transform.position = position;
             switch (type)
             {
+                case EnemyType.TVClaw:
+                    enemy = enemyObject.AddComponent<TVClawEnemy>();
+                    break;
+                case EnemyType.GrenadeBerserker:
+                    enemy = enemyObject.AddComponent<GrenadeBerserkerEnemy>();
+                    break;
                 case EnemyType.Ground:
                     enemy = enemyObject.AddComponent<GroundEnemy>();
                     break;

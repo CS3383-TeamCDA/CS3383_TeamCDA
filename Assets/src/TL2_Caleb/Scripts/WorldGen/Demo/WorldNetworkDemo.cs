@@ -14,7 +14,7 @@ public class WorldNetworkDemo : MonoBehaviour
     public GameObject playerPrefab;
     [Tooltip("Input Actions asset supplied by the game integration for the player prefab.")]
     public InputActionAsset playerInputActions;
-    [Tooltip("TL4 enemy prefabs in EnemyType order: Ground, Flying, Turret.")]
+    [Tooltip("TL4 enemy prefabs in EnemyType order: Ground, Flying, Turret, Aim, TVClaw, GrenadeBerserker; null slots are skipped.")]
     public GameObject[] enemyPrefabsByKind;
     public StreetView streetView;
     public Transform player;

@@ -12,6 +12,8 @@ public class GeneratedTerrainEnemyPopulation : MonoBehaviour
     [SerializeField] private Transform player;
     [SerializeField] private EnemySpawnPoint groundSpawnPointPrefab;
     [SerializeField] private EnemySpawnPoint turretSpawnPointPrefab;
+    [SerializeField] private EnemySpawnPoint clawSpawnPointPrefab;
+    [SerializeField] private EnemySpawnPoint berserkerSpawnPointPrefab;
     [SerializeField] private EnemySpawnPoint flyingSpawnPointPrefab;
     [SerializeField, Min(2)] private int flyingEvery = 4;
     [SerializeField, Min(1)] private float flyingSpawnHeight = 3;
@@ -81,6 +83,8 @@ public class GeneratedTerrainEnemyPopulation : MonoBehaviour
                 ? turretSpawnPointPrefab : groundSpawnPointPrefab;
             if (flyingSpawnPointPrefab != null && (x / step) % Mathf.Max(2, flyingEvery) == 0)
                 markerPrefab = flyingSpawnPointPrefab;
+            if (clawSpawnPointPrefab != null && (x / step) % 5 == 0) markerPrefab = clawSpawnPointPrefab;
+            if (berserkerSpawnPointPrefab != null && (x / step) % 7 == 0) markerPrefab = berserkerSpawnPointPrefab;
             // Require headroom inside the generated row; don't spawn on the boundary wall.
             for (int y = bounds.yMax - 3; y >= bounds.yMin; y--)
             {

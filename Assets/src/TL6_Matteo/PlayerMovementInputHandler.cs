@@ -28,30 +28,24 @@ public class PlayerMovementInputHandler : MonoBehaviour, IPlayerMovementInput
 
     private void Update()
     {
-        Movement = _moveAction.ReadValue<Vector2>();
-        JumpJustPressed = _jumpAction.WasPressedThisFrame();
-        DashJustPressed = _dashAction.WasPressedThisFrame();
-    }
-
-    private void CacheInputActions()
-    {
-        if (_moveAction != null && _jumpAction != null) return;
-
-        if (_playerInput != null && _playerInput.actions != null)
-        {
-            _moveAction = _playerInput.actions.FindAction("Move");
-            _jumpAction = _playerInput.actions.FindAction("Jump");
-        }
+        UpdateInputs();
     }
 
     private void UpdateInputs()
     {
-        if (_moveAction != null) Movement = _moveAction.ReadValue<Vector2>();
+        if (_moveAction != null)
+            Movement = _moveAction.ReadValue<Vector2>();
+
         if (_jumpAction != null)
         {
             JumpJustPressed = _jumpAction.WasPressedThisFrame();
             JumpBeingHeld = _jumpAction.IsPressed();
             JumpReleased = _jumpAction.WasReleasedThisFrame();
+        }
+
+        if (_dashAction != null)
+        {
+            DashJustPressed = _dashAction.WasPressedThisFrame();
         }
     }
 }

@@ -20,6 +20,8 @@ public class GroundEnemy : EnemyBase
     private EnemyAttackAnimations attacks;
     private readonly RaycastHit2D[] hits = new RaycastHit2D[8];
 
+    protected virtual bool AvoidAllies => true;
+
     public void SetTarget(Transform player) { target = player; }
 
     // Read the actual displayed facing, including a mirrored parent transform.
@@ -88,7 +90,7 @@ public class GroundEnemy : EnemyBase
         float desiredSpeed = moving ? direction * Mathf.Max(0, speed) : 0;
         // The narrow body allows sprite overlap; match a nearby ally instead of pushing it.
         bool crowded = false;
-        if (moving && bodyCollider != null)
+        if (moving && bodyCollider != null && AvoidAllies)
         {
             var filter = ContactFilter2D.noFilter;
             filter.useTriggers = false;

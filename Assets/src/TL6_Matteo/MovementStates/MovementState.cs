@@ -4,9 +4,9 @@ using StateLogic = Assets.src.StateLogic;
 
 public class MovementState : StateLogic.BaseState
 {
-    public override void EnterState(
-        StateLogic.StateManager stateManager)
+    public override void EnterState(StateLogic.StateManager stateManager)
     {
+        
     }
 
     public virtual string Execute()

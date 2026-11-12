@@ -9,7 +9,9 @@
         "Joe.Game",
         "TL6Assembly",
         "Unity.TextMeshPro",
-        "Chris.Game"
+        "Chris.Game",
+        "EscapeThe90s.WorldGen.Core",
+        "EscapeThe90s.WorldGen.Integration"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

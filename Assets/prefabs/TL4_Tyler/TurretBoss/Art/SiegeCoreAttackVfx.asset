@@ -32,6 +32,7 @@ MonoBehaviour:
   - {fileID: 21310026, guid: 023472987c624802901dea862ccf46d3, type: 3}
   - {fileID: 21310028, guid: 023472987c624802901dea862ccf46d3, type: 3}
   - {fileID: 21310030, guid: 023472987c624802901dea862ccf46d3, type: 3}
+  groundExplosionBottomInset: 0.054298643
   explosions:
   - {fileID: 21310032, guid: 023472987c624802901dea862ccf46d3, type: 3}
   - {fileID: 21310034, guid: 023472987c624802901dea862ccf46d3, type: 3}
