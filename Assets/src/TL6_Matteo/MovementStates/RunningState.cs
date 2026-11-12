@@ -61,4 +61,13 @@ public class RunningState : MovementState
         rb.linearVelocity = new Vector2(
             newX, rb.linearVelocity.y);
     }
+
+    public override void EnterState(StateLogic.StateManager stateManager)
+    {
+        PlayerStateManager manager =
+            (PlayerStateManager)stateManager;
+
+        manager.Player.Rb.gravityScale =
+            manager.Player.BaseGravityScale;
+    }
 }
