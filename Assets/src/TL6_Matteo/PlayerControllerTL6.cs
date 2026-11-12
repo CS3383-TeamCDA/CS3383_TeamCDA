@@ -16,6 +16,8 @@ public class PlayerControllerTL6 : MonoBehaviour
     [SerializeField] private float _jumpSpeed = 10f;
     [SerializeField] private LayerMask _groundLayer;
     [SerializeField] private float _groundCheckDistance = 0.05f;
+    [SerializeField, Min(1f)] private float _fallGravityMultiplier = 1.8f;
+    [SerializeField, Min(1f)] private float _lowJumpGravityMultiplier = 2.2f;
 
     [Header("Dash")]
     [SerializeField] private float _dashSpeed = 16f;
@@ -31,11 +33,14 @@ public class PlayerControllerTL6 : MonoBehaviour
     public float JumpSpeed => _jumpSpeed;
     public float DashSpeed => _dashSpeed;
     public float DashDuration => _dashDuration;
+    public float FallGravityMultiplier => _fallGravityMultiplier;
+    public float LowJumpGravityMultiplier => _lowJumpGravityMultiplier;
     public bool DisableGravityDuringDash => _disableGravityDuringDash;
 
-
     public int FacingDirection = 1;
+
     public bool AirDashAvailable { get; private set; } = true;
+    public float BaseGravityScale { get; private set; }
 
     private PlayerStateManager _stateManager;
 
@@ -47,6 +52,7 @@ public class PlayerControllerTL6 : MonoBehaviour
 
         _stateManager = new PlayerStateManager(this);
         Input = GetComponent<IPlayerMovementInput>();
+        BaseGravityScale = Rb.gravityScale;
     }
 
     void Start()
