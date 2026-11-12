@@ -114,7 +114,7 @@ public sealed class PlayerSandboxMotor : MonoBehaviour
     void FixedUpdate()
     {
         if (states == null) return;
-        if (health.IsDead) { body.gravityScale = 0; body.linearVelocity = Vector2.zero; return; }
+        if (health.IsDead) return; // Death feedback owns the short physical flop.
         states.FixedUpdate();
     }
 

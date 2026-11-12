@@ -179,6 +179,11 @@ public sealed class PlayerMotionEffects : MonoBehaviour
         }
     }
 
+    public void DeathImpactBurst()
+    {
+        Dust(new Vector2(capsule.bounds.center.x, capsule.bounds.min.y), 8, .8f);
+    }
+
     void Dust(Vector2 foot, int count, float strength)
     {
         for (int i = 0; i < count; i++)

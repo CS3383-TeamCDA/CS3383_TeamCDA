@@ -9,6 +9,7 @@ public sealed class PlayerArtSandbox : MonoBehaviour
     [SerializeField] TwoHandedRig visualPrefab;
     [SerializeField] TwoHandedWeapon[] weapons;
     [SerializeField] RuntimeAnimatorController locomotionAnimator;
+    [SerializeField] Sprite[] deathFrames;
     PlayerControllerTL6 controller;
     PlayerHealth health;
     PlayerCrouchSlide stance;
@@ -47,6 +48,7 @@ public sealed class PlayerArtSandbox : MonoBehaviour
         health = player.GetComponent<PlayerHealth>();
         rig = Instantiate(visualPrefab, player.transform);
         if (locomotionAnimator != null) rig.bodyAnimator.runtimeAnimatorController = locomotionAnimator;
+        rig.deathFrames = deathFrames;
         // Art pivots sit at the feet; TL6's capsule is centered on its root.
         rig.transform.localPosition = new Vector3(0, -.5f, 0);
         rig.transform.localScale = Vector3.one * (1f / 2.4f);
@@ -102,7 +104,7 @@ public sealed class PlayerArtSandbox : MonoBehaviour
         if (keyboard.rKey.wasPressedThisFrame) ResetPlayer();
         if (keyboard.hKey.wasPressedThisFrame) combat.TakeDamage(25);
         if (keyboard.tKey.wasPressedThisFrame) health.Heal(25);
-        if (health.IsDead) { controller.enabled = false; body.linearVelocity = Vector2.zero; return; }
+        if (health.IsDead) return;
         if (keyboard.qKey.wasPressedThisFrame && weapons.Length > 0)
         {
             weaponIndex = (weaponIndex + 1) % weapons.Length;
@@ -116,6 +118,8 @@ public sealed class PlayerArtSandbox : MonoBehaviour
     void LateUpdate()
     {
         if (rig == null) return;
+        rig.SetDeathPose(health.IsDead);
+        if (health.IsDead) return;
         if (motor.IsDashing) rig.SetFacingRight(motor.DashDirection > 0);
         else if (Mathf.Abs(combat.AimDirection.x) > .1f)
             rig.SetFacingRight(combat.AimDirection.x > 0);

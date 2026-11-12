@@ -24,6 +24,49 @@ namespace TwoHandedHero
         public Vector3 AimOrigin { get; private set; }
         Vector2 aimDirection;
         float landingRemaining;
+        bool deathPose;
+        float liveAnimatorSpeed = 1;
+        bool weaponWasEnabled, supportWasEnabled, frontWasEnabled;
+        bool liveAnimatorEnabled;
+        SpriteRenderer bodyRenderer;
+        public Sprite[] deathFrames;
+        [Min(.1f)] public float deathFramesPerSecond = 10f;
+
+        public void SetDeathPose(bool dead)
+        {
+            if (deathPose == dead) return;
+            deathPose = dead;
+            Moving = false;
+            landingRemaining = recoilTime = 0;
+            if (dead)
+            {
+                liveAnimatorSpeed = bodyAnimator.speed;
+                liveAnimatorEnabled = bodyAnimator.enabled;
+                aimDirection = Vector2.zero;
+                weaponWasEnabled = weaponRenderer.enabled;
+                supportWasEnabled = supportHand.GetComponent<SpriteRenderer>().enabled;
+                frontWasEnabled = frontHand.GetComponent<SpriteRenderer>().enabled;
+                weaponRenderer.enabled = false;
+                supportHand.GetComponent<SpriteRenderer>().enabled = false;
+                frontHand.GetComponent<SpriteRenderer>().enabled = false;
+                // Death owns its sprite track. Animator controller changes during
+                // editor iteration must not strand the character in an old pose.
+                bodyAnimator.enabled = false;
+                Action = "Death";
+                actionTime = 0;
+                if (deathFrames == null || deathFrames.Length == 0)
+                    Debug.LogError("TwoHandedRig: Assign death frames before starting the death sequence.", this);
+            }
+            else
+            {
+                bodyAnimator.speed = liveAnimatorSpeed;
+                bodyAnimator.enabled = liveAnimatorEnabled;
+                weaponRenderer.enabled = weaponWasEnabled;
+                supportHand.GetComponent<SpriteRenderer>().enabled = supportWasEnabled;
+                frontHand.GetComponent<SpriteRenderer>().enabled = frontWasEnabled;
+                Play("Carry");
+            }
+        }
 
         public void SetAimDirection(Vector2 direction) { aimDirection = direction.normalized; }
         public void BeginLanding(float duration)
@@ -39,6 +82,7 @@ namespace TwoHandedHero
         void Awake()
         {
             rootScale = visualRoot.localScale;
+            bodyRenderer = bodyAnimator.transform.Find("Body").GetComponent<SpriteRenderer>();
             Equip(startingWeapon);
             Play("Carry");
         }
@@ -112,7 +156,7 @@ namespace TwoHandedHero
 
         public bool Fire()
         {
-            if (Weapon == null) return false;
+            if (Weapon == null || deathPose) return false;
             recoilTime = Weapon.recoilSeconds;
             if (!Moving && Action != "Jump" && Action != "Fall" && Action != "Crouch" && Action != "CrouchWalk" && Action != "Slide" && Action != "Dash" && Action != "Landing")
             {
@@ -143,6 +187,12 @@ namespace TwoHandedHero
 
         void LateUpdate()
         {
+            if (deathPose)
+            {
+                if (deathFrames != null && deathFrames.Length > 0)
+                    bodyRenderer.sprite = deathFrames[Mathf.Min((int)(actionTime * deathFramesPerSecond), deathFrames.Length - 1)];
+                return;
+            }
             Vector2 position = Moving ? runGrip : carryGrip;
             bool stopping = Action == "Stop";
             // Lower the rifle during braking while keeping the trigger arm connected at the shoulder.
