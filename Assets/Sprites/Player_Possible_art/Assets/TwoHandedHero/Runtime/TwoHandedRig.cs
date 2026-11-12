@@ -23,8 +23,16 @@ namespace TwoHandedHero
         public string Action { get; private set; } = "Carry";
         public Vector3 AimOrigin { get; private set; }
         Vector2 aimDirection;
+        float landingRemaining;
 
         public void SetAimDirection(Vector2 direction) { aimDirection = direction.normalized; }
+        public void BeginLanding(float duration)
+        {
+            landingRemaining = Mathf.Max(0, duration);
+            if (landingRemaining <= 0) return;
+            Moving = false;
+            Play("Landing");
+        }
         float actionTime, runTime, recoilTime;
         Vector3 rootScale;
 
@@ -68,12 +76,14 @@ namespace TwoHandedHero
         {
             if (dashing)
             {
+                landingRemaining = 0;
                 Moving = false;
                 if (Action != "Dash") Play("Dash");
                 return;
             }
             if (crouching)
             {
+                landingRemaining = 0;
                 Moving = false;
                 string stance = sliding ? "Slide" : Mathf.Abs(horizontalSpeed) > .1f ? "CrouchWalk" : "Crouch";
                 if (Action != stance) Play(stance);
@@ -81,6 +91,7 @@ namespace TwoHandedHero
             }
             if (!grounded || verticalSpeed > .1f)
             {
+                landingRemaining = 0;
                 Moving = false;
                 // Keep the tucked jump pose briefly through the apex; walking off
                 // a ledge goes straight to Fall rather than playing a takeoff.
@@ -89,7 +100,13 @@ namespace TwoHandedHero
                 if (Action != action) Play(action);
                 return;
             }
-            if (Action == "Jump" || Action == "Fall" || Action == "Crouch" || Action == "CrouchWalk" || Action == "Slide" || Action == "Dash") Play("Carry");
+            if (landingRemaining > 0)
+            {
+                Moving = false;
+                if (Action != "Landing") Play("Landing");
+                return;
+            }
+            if (Action == "Jump" || Action == "Fall" || Action == "Crouch" || Action == "CrouchWalk" || Action == "Slide" || Action == "Dash" || Action == "Landing") Play("Carry");
             SetMoving(Mathf.Abs(horizontalSpeed) > .1f);
         }
 
@@ -97,7 +114,7 @@ namespace TwoHandedHero
         {
             if (Weapon == null) return false;
             recoilTime = Weapon.recoilSeconds;
-            if (!Moving && Action != "Jump" && Action != "Fall" && Action != "Crouch" && Action != "CrouchWalk" && Action != "Slide" && Action != "Dash")
+            if (!Moving && Action != "Jump" && Action != "Fall" && Action != "Crouch" && Action != "CrouchWalk" && Action != "Slide" && Action != "Dash" && Action != "Landing")
             {
                 if (stableBodyWhenFiring)
                 {
@@ -117,6 +134,7 @@ namespace TwoHandedHero
         void Update()
         {
             actionTime += Time.deltaTime;
+            landingRemaining = Mathf.Max(0, landingRemaining - Time.deltaTime);
             if (Moving) runTime += Time.deltaTime;
             if ((Action == "Stop" && actionTime >= stopSeconds) ||
                 (Action == "Shoot" && actionTime >= shootSeconds)) Play("Carry");
@@ -153,6 +171,11 @@ namespace TwoHandedHero
                 var state = bodyAnimator.GetCurrentAnimatorStateInfo(0);
                 float elapsed = state.normalizedTime * state.length;
                 shoulderOffset.x = elapsed < .025f ? -.14f : elapsed < .05f ? -.08f : elapsed < .075f ? -.03f : 0;
+            }
+            else if (Action == "Landing")
+            {
+                var state = bodyAnimator.GetCurrentAnimatorStateInfo(0);
+                shoulderOffset.x = state.normalizedTime * state.length < .09375f ? -.18f : .05f;
             }
             Vector2 origin = (Vector2)shoulder.localPosition + shoulderOffset;
             // Rotate about the shoulder, not the trigger hand. Include mirroring

@@ -30,7 +30,7 @@ Keyboard aim takes precedence while aim keys are held. Moving the mouse resumes 
 
 TL4-owned Jump, Fall, Crouch and Slide clips use the generated atlases in `Assets/prefabs/TL4_Tyler/PlayerAnimations`. Whole-cell rectangular meshes preserve cape and boot edges. The shared visual rig adds optional shoulder-centered aiming, stable-body recoil and locomotion APIs. Slide uses its own shoulder offsets. Dash uses its own generated horizontal dive atlas and shoulder attachment keys. Dedicated hurt/death frames have not been drawn; hurt uses flash/blink and death uses a visual collapse.
 
-`PlayerMotionEffects` adds a surface-following shadow, foot dust, takeoff/landing bursts, an extra-jump burst and dash afterimages that include body, arms and weapon. The dash also emits a stationary launch ring and short speed streaks, with a horizontal stretch in the visual pivot. `PlayerSandboxFeedback` adds landing compression, damage flashing, 0.7 seconds of damage protection and death collapse. Reset clears those effects.
+`PlayerMotionEffects` adds a surface-following shadow, foot dust, takeoff/landing bursts, an extra-jump burst and dash afterimages that include body, arms and weapon. The dash also emits a stationary launch ring and short speed streaks, with a horizontal stretch in the visual pivot. Landing now plays a brief bent-knee brace followed by a recovery pose before idle/run; the 0.12–0.18 second visual response does not lock movement, jumping, aiming or shooting. `PlayerSandboxFeedback` adds landing compression, damage flashing, 0.7 seconds of damage protection and death collapse. Reset clears those effects.
 
 ## Combat test
 
