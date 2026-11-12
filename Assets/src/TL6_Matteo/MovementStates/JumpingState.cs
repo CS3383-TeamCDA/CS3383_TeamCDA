@@ -59,5 +59,32 @@ public class JumpingState : MovementState
     {
         // Allow horizontal movement while airborne.
         RunningState.MoveHorizontally(manager.Player);
+
+        Rigidbody2D rb = manager.Player.Rb;
+        PlayerControllerTL6 player = manager.Player;
+
+        float gravityMultiplier = 1f;
+
+        if (rb.linearVelocity.y < 0f)
+        {
+            // Falling: descend faster.
+            gravityMultiplier = player.FallGravityMultiplier;
+        }
+        else if (!player.Input.JumpBeingHeld)
+        {
+            // Rising, but jump was released: shorten the jump.
+            gravityMultiplier = player.LowJumpGravityMultiplier;
+        }
+
+        rb.gravityScale = player.BaseGravityScale * gravityMultiplier;
+    }
+
+    public override void ExitState(StateLogic.StateManager stateManager)
+    {
+        PlayerStateManager manager =
+            (PlayerStateManager)stateManager;
+
+        manager.Player.Rb.gravityScale =
+            manager.Player.BaseGravityScale;
     }
 }

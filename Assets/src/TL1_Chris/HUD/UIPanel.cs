@@ -9,11 +9,13 @@ namespace EscapeThe90s.HUD
         public virtual void Show()
         {
             gameObject.SetActive(true);
+            isVisible = true;
         }
 
         public virtual void Hide()
         {
             gameObject.SetActive(false);
+            isVisible = false;
         }
 
         public virtual void Update()

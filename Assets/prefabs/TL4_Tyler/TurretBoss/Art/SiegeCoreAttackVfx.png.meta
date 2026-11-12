@@ -1,0 +1,854 @@
+fileFormatVersion: 2
+guid: 023472987c624802901dea862ccf46d3
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationMethod: 0
+  spriteTessellationDetail: -1
+  spriteGeometrySubdivision: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 4096
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: beam_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 707
+        width: 222
+        height: 131
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 57bab4162ec74209b81f7708f3763419
+      internalID: 21310000
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: beam_01
+      rect:
+        serializedVersion: 2
+        x: 222
+        y: 707
+        width: 222
+        height: 131
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0cbe083f42274c28aa2f01c79627ec2e
+      internalID: 21310002
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: beam_02
+      rect:
+        serializedVersion: 2
+        x: 444
+        y: 707
+        width: 221
+        height: 131
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bf40c7b0dc9f41218a8e5353105d70bd
+      internalID: 21310004
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: beam_03
+      rect:
+        serializedVersion: 2
+        x: 665
+        y: 707
+        width: 222
+        height: 131
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2e668704b3cc4f73acbbf6b4c73140fa
+      internalID: 21310006
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: beam_04
+      rect:
+        serializedVersion: 2
+        x: 887
+        y: 707
+        width: 222
+        height: 131
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d8119e2e869449079c975ceaaa7133db
+      internalID: 21310008
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: beam_05
+      rect:
+        serializedVersion: 2
+        x: 1109
+        y: 707
+        width: 221
+        height: 131
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0befce3733f9433bbb64d4758515e5f2
+      internalID: 21310010
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: beam_06
+      rect:
+        serializedVersion: 2
+        x: 1330
+        y: 707
+        width: 222
+        height: 131
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 13c98f6f209449939cd30d3249cab4ce
+      internalID: 21310012
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: beam_07
+      rect:
+        serializedVersion: 2
+        x: 1552
+        y: 707
+        width: 222
+        height: 131
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a6b06b432ddb46e59a2ec54209c824c4
+      internalID: 21310014
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grenades_00
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 447
+        width: 193
+        height: 216
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 81bd36a4f9de4db4bfa4ffc85b3d8de3
+      internalID: 21310016
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grenades_01
+      rect:
+        serializedVersion: 2
+        x: 238
+        y: 447
+        width: 193
+        height: 216
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fd179bedbaf34560b0da7ca6c05d2952
+      internalID: 21310018
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grenades_02
+      rect:
+        serializedVersion: 2
+        x: 459
+        y: 447
+        width: 193
+        height: 216
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: db8ddcc1626f4e498914e0b9ecc4e46b
+      internalID: 21310020
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: grenades_03
+      rect:
+        serializedVersion: 2
+        x: 681
+        y: 447
+        width: 193
+        height: 216
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2cb3c109f44e4ca9b804650a6a7ba41d
+      internalID: 21310022
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rockets_00
+      rect:
+        serializedVersion: 2
+        x: 918
+        y: 445
+        width: 167
+        height: 218
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a134621206654cad92230141bcb3d8f8
+      internalID: 21310024
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rockets_01
+      rect:
+        serializedVersion: 2
+        x: 1140
+        y: 445
+        width: 166
+        height: 218
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d05b4f8b88064681bd43378e9c9d4640
+      internalID: 21310026
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rockets_02
+      rect:
+        serializedVersion: 2
+        x: 1361
+        y: 445
+        width: 167
+        height: 218
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a33945e648024b35955f3770754efe48
+      internalID: 21310028
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rockets_03
+      rect:
+        serializedVersion: 2
+        x: 1583
+        y: 445
+        width: 167
+        height: 218
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5e00703eace6406d910a1b089a34bb69
+      internalID: 21310030
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: explosions_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 222
+        width: 222
+        height: 221
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ab10897666934ff59eee60ca751f3154
+      internalID: 21310032
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: explosions_01
+      rect:
+        serializedVersion: 2
+        x: 222
+        y: 222
+        width: 222
+        height: 221
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 722fc4e4fae5423db064aa2052a402c2
+      internalID: 21310034
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: explosions_02
+      rect:
+        serializedVersion: 2
+        x: 444
+        y: 222
+        width: 221
+        height: 221
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 186e63cdaa784f839546b8ef0e2b1f2e
+      internalID: 21310036
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: explosions_03
+      rect:
+        serializedVersion: 2
+        x: 665
+        y: 222
+        width: 222
+        height: 221
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4628cb1071e74abf9100d006bf35a3a1
+      internalID: 21310038
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: explosions_04
+      rect:
+        serializedVersion: 2
+        x: 887
+        y: 222
+        width: 222
+        height: 221
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 340f3098a7cf40af8006d087c97c63bb
+      internalID: 21310040
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: explosions_05
+      rect:
+        serializedVersion: 2
+        x: 1109
+        y: 222
+        width: 221
+        height: 221
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 76a7acd835a94db4b6a857c4b9910fc6
+      internalID: 21310042
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: explosions_06
+      rect:
+        serializedVersion: 2
+        x: 1330
+        y: 222
+        width: 222
+        height: 221
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0ea59914d9a6405486904e27e904e278
+      internalID: 21310044
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: explosions_07
+      rect:
+        serializedVersion: 2
+        x: 1552
+        y: 222
+        width: 222
+        height: 221
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5973a6d9d2df40c981d47ec27c06ad8d
+      internalID: 21310046
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: shockwaves_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 28
+        width: 222
+        height: 167
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3440ae8d10c4427ea29dcd5329fdb27d
+      internalID: 21310048
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: shockwaves_01
+      rect:
+        serializedVersion: 2
+        x: 222
+        y: 28
+        width: 222
+        height: 167
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a65e66a67a7245b2809a8f167494b718
+      internalID: 21310050
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: shockwaves_02
+      rect:
+        serializedVersion: 2
+        x: 444
+        y: 28
+        width: 221
+        height: 167
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 80af39fe04e140ac9d3cc3bc44ade458
+      internalID: 21310052
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: shockwaves_03
+      rect:
+        serializedVersion: 2
+        x: 665
+        y: 28
+        width: 222
+        height: 167
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 45edead919a1403391a715624e4a4573
+      internalID: 21310054
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: shockwaves_04
+      rect:
+        serializedVersion: 2
+        x: 887
+        y: 28
+        width: 222
+        height: 167
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fd3fa8bf4e404f14b696e21123fa9c6f
+      internalID: 21310056
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: shockwaves_05
+      rect:
+        serializedVersion: 2
+        x: 1109
+        y: 28
+        width: 221
+        height: 167
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 307e7b0e843540d9acf86a035afe0a7a
+      internalID: 21310058
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: shockwaves_06
+      rect:
+        serializedVersion: 2
+        x: 1330
+        y: 28
+        width: 222
+        height: 167
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d1e16b2e36744d72a79516543f41c334
+      internalID: 21310060
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: shockwaves_07
+      rect:
+        serializedVersion: 2
+        x: 1552
+        y: 28
+        width: 222
+        height: 167
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 11089c1c3dd248669759c0e0bbf28ef4
+      internalID: 21310062
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      beam_00: 21310000
+      beam_01: 21310002
+      beam_02: 21310004
+      beam_03: 21310006
+      beam_04: 21310008
+      beam_05: 21310010
+      beam_06: 21310012
+      beam_07: 21310014
+      grenades_00: 21310016
+      grenades_01: 21310018
+      grenades_02: 21310020
+      grenades_03: 21310022
+      rockets_00: 21310024
+      rockets_01: 21310026
+      rockets_02: 21310028
+      rockets_03: 21310030
+      explosions_00: 21310032
+      explosions_01: 21310034
+      explosions_02: 21310036
+      explosions_03: 21310038
+      explosions_04: 21310040
+      explosions_05: 21310042
+      explosions_06: 21310044
+      explosions_07: 21310046
+      shockwaves_00: 21310048
+      shockwaves_01: 21310050
+      shockwaves_02: 21310052
+      shockwaves_03: 21310054
+      shockwaves_04: 21310056
+      shockwaves_05: 21310058
+      shockwaves_06: 21310060
+      shockwaves_07: 21310062
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

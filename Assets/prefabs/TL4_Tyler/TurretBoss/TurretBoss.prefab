@@ -163,7 +163,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c9f145e0fcf49f2a1b17cd9fb92e92f, type: 3}
   m_Name:
   m_EditorClassIdentifier: TL4Assembly::TurretBossController
-  attackMode: 1
+  attackMode: 2
   level: 1
   baseHealth: 600
   baseCoins: 50

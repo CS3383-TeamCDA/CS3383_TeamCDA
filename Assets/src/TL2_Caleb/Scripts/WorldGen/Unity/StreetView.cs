@@ -319,5 +319,44 @@ namespace EscapeThe90s.WorldGen
         }
 
         void OnDisable() { if (!Application.isPlaying) Clear(); }
+        void OnDestroy() { Shutdown(); }
+
+        void Shutdown()
+        {
+            if (_layout != null)
+            {
+                _scratch.Clear();
+                foreach (int index in _chunks.Keys) _scratch.Add(index);
+                foreach (int index in _scratch)
+                {
+                    _progress.NotifyChunkRecycled(new ChunkId(_layout.Id.Value, index));
+                    DestroyChunkObjects(index);
+                }
+            }
+
+            var ownedChunks = new List<int>(_chunkOwnedObjects.Keys);
+            foreach (int chunkIndex in ownedChunks) DestroyChunkObjects(chunkIndex);
+            _chunks.Clear();
+            _chunkOwnedObjects.Clear();
+            _layout = null;
+
+            // Active chunks remain children of the generated root and are destroyed with it.
+            // Pooled chunks are direct children of this component's GameObject, so destroy them
+            // in place instead of returning them to a parent that is already being destroyed.
+            for (int i = transform.childCount - 1; i >= 0; i--)
+            {
+                Transform child = transform.GetChild(i);
+                if (child == _root || child.GetComponent<Chunk>() == null) continue;
+                DestroyObject(child.gameObject);
+            }
+
+            if (_root == null)
+            {
+                Transform existing = transform.Find("Generated Street");
+                if (existing != null) _root = existing.gameObject;
+            }
+            if (_root != null) DestroyObject(_root);
+            _root = null;
+        }
     }
 }

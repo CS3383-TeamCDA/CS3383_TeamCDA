@@ -1,108 +1,129 @@
-# Turret Boss / Siege Core — isolated prototype
+# Siege Core turret boss
+
+Current sandbox implementation and tuning baseline. Earlier incremental design
+notes have been consolidated here; this document describes current behavior.
+For presentation details see [ART_ASSEMBLY.md](ART_ASSEMBLY.md), and for closeout
+status and continuation boundaries see [CHAT_HANDOFF.md](CHAT_HANDOFF.md).
+
+## Run and controls
 
 Open `Assets/Scenes/TL4_Tyler/TurretBoss/TurretBossSandbox.unity` and press Play.
-This prototype is separate from the earlier ground-boss sandbox and FinalGame.
+The scene constructs its camera and arena at runtime; “No cameras rendering”
+outside Play Mode is expected. This is separate from the older `BossSandbox`.
 
-| Controls | Action |
+| Control | Action |
 | --- | --- |
 | A / D | Move |
-| Space | Jump while standing |
-| S / Down | Crouch (actually shrinks collider and preserves feet position) |
-| J | Debug hit for 50 damage; works only during exposed-core recovery |
+| Space | Jump |
+| S / Down | Crouch; shrinks the collider while preserving the feet position |
+| J | Debug hit for 50 damage, accepted only while the core is exposed |
 | Escape | Pause/resume |
-| R | Rebuild arena and reset fight/player |
+| R | Rebuild the arena and reset the encounter |
 
-The cyan rectangle is a local sandbox player using existing PlayerHealth. No TL6
-movement or crouch scripts are edited. All warnings, projectiles, hit regions and
-explosions are simple colored prototype geometry; the boss uses enlarged existing
-turret art. It is not yet the rendered Siege Core artwork.
+The cyan player is a local dummy using existing PlayerHealth, not the production
+player controller. Boss level is configurable on the sandbox root. The prefab
+starts at 600 HP (+100 per additional level) and supports both melee and ranged
+attacks. Closed armor rejects damage through the EnemyBase entry point.
 
-## First attack cycle
+## Fight behavior
 
-1. Floor port warning (1 second), then three low horizontal bolts: jump.
-2. Alternate payload each cycle: first three grenades, next three vertical missiles,
-   then repeat. Grenades mark the player's position, wait 0.8 seconds, lob for 1.2
-   seconds and explode for 0.35 seconds. Move off the two-unit landing region.
-   They do not track after the warning begins.
-   Each missile launches vertically for 0.65 seconds, then displays a one-second
-   landing warning. The yellow marker follows the player for the first 0.6 seconds,
-   then turns red and locks for the last 0.4 seconds. It descends at that fixed X
-   over 0.45 seconds and explodes in a 1.5-unit-wide region for 0.35 seconds.
-   Missile descent is visual; damage comes from the ground explosion. All three
-   missiles finish before beam charging starts.
-3. Fixed-height cannon: 1.5-second line telegraph, then 0.7-second damaging beam.
-   Its region spans y=0.95..1.55; crouched player's top is about 0.7 on flat ground.
-4. 2.5-second recovery: armor opens (pink tint) and debug hits can damage the core.
-5. Repeat; death clears active hazards and plays the existing turret death animation.
+Phase one fires three jumpable low bolts, then a three-payload serial grenade or
+missile barrage, then a crouchable continuous beam and an exposed-core opening.
+Payload type alternates across cycles. Beam facing locks during charging/firing.
 
-Bolts sweep their frame travel to detect hits. Each bolt, grenade explosion or
-beam can damage the player once. Warnings do no damage. Clearing a track cancels its own damage; full encounter
-cleanup cancels both body and launcher tracks. The cannon waits for payloads to
-finish, while mobile stomp attacks may overlap launcher attacks. Pause
-uses scaled time; restart destroys the old arena and hazards before creating new
-ones. Victory/retry and HP are displayed in the sandbox HUD.
+A nonlethal hit bringing HP to 40% or lower starts a two-second transformation.
+Legs unfold and step out of the persistent docking platform. Phase two is enabled
+for development, not a random unlock. Lethal damage kills directly.
 
-Boss prefab starts at 600 HP with +100 per additional level. Ranged damage starts
-at 16 with +2 per level. Select the sandbox root before Play to change bossLevel.
-The shared EnemyBase.TakeDamage entry point is now virtual so the turret can
-reject closed-armor hits even when callers hold an EnemyBase reference. Ordinary
-enemies retain the same implementation.
+Phase two chooses between Short Charge, Long Charge and stomp using seeded,
+distance-based weights. Distance favors pursuit; proximity permits Short Charge
+when its cooldown is ready. The last opener receives reduced selection weight.
+A nearby target may prompt a retreat/reposition. Chains cap at two body attacks;
+extensions are probabilistic and stomp ends the chain. Crossing behind the boss
+causes a turn before the next opener, not a reversal of a committed charge.
 
-## Files and boundaries
+Every Long Charge windup requests grenade/rocket support, preserving an existing
+active barrage. Charge entry retries if the barrage has already finished. Stomp
+also requests launcher support. Phase-two barrages contain 1–5 payloads, starting
+0.3–0.4 seconds apart on independent warning/flight/blast tracks. The body waits
+for payload completion before planting, an optional beam, and core exposure.
+Long Charge ends on player hit, travel limit or timeout.
 
-- Scripts: `Assets/src/TL4_Tyler/TurretBoss/`
-- Boss prefab: `Assets/prefabs/TL4_Tyler/TurretBoss/TurretBoss.prefab`
-- Scene: `Assets/Scenes/TL4_Tyler/TurretBoss/TurretBossSandbox.unity`
-- Tests: `Assets/tst/TL4_Tyler/PlayMode/TurretBossTests.cs`
+Grenades snapshot their landing target at warning entry. Missiles track briefly,
+lock, then descend at the locked X. Soft oval ground shadows replace payload
+landing boxes, tightening/darkening during descent. A muted rim keeps them
+visible on the dark floor. Airborne payloads and warnings do not damage; their
+landing explosions do. Each bolt, charge, stomp, beam or blast has its own
+single-hit gate. Explosion/skid aftermath is visual only.
 
-This fight is not registered as IBossEncounter yet; the existing controller is
-still typed to the earlier BossEnemy prototype. Final integration will need a TL4
-encounter adapter to expose this fight without editing Caleb's implementation.
-No scene/build/Composition changes outside TL4 were made.
+## Current timing baseline
 
-## Mobile phase two (forced on for testing)
+Defaults below are in seconds unless stated otherwise. Serialized overrides can
+change defaults; the controller and launcher remain the implementation authority.
 
-The first nonlethal exposed-core hit that brings health to 40% or below starts a
-single two-second transformation. Hazards clear, damage is blocked during the
-transition, the turret rises and four articulated placeholder legs unfold.
-A lethal hit still kills directly instead of forcing an extra life/health gate.
+| Parameter | Current value |
+| --- | --- |
+| Floor warning / volley exit | 0.7 / 2.0 |
+| Beam warning / firing | 1.1 / 0.7 |
+| Short Charge warning / travel | 0.25 / 0.3 |
+| Short Charge proximity / cooldown | 3.5 units / 4.0 |
+| Long Charge warning / maximum travel time | 0.7 / 2.8 |
+| Long Charge speed | 4.5 × 2.197 = 9.8865 units/second |
+| Stomp warning / active state | 0.8 / 1.5 |
+| Assessment / turn / follow-through | 0.11 / 0.2 / 0.225 |
+| Reposition / disengage / planting | 0.35 / 0.325 / 1.0 |
+| Base core exposure | 0.8 |
+| Mobile core exposure | (1.6 + 0.4 × chain attacks + 0.4 if ending in stomp) / 2 |
+| Combo extension chance / maximum body attacks | 50% / 2 |
+| Phase-two launch gap / barrage size | 0.3–0.4 / 1–5 |
+| Grenade warning / flight / blast | 0.8 / 1.2 / 0.35 |
+| Missile ascent / warning / target lock / descent / blast | 0.65 / 1.0 / 0.6 / 0.45 / 0.35 |
 
-Mobile loop: one-second marked lunge warning → fixed three-unit lunge over 0.6
-seconds → 1.2-second leg-spin wind-up → low spin advancing two units over one
-second → stomp warning and shock waves, with an independent three-shot launcher
-barrage → wait for payload completion → planting → beam → exposed core. Jump over
-the spinning legs; the taller lunge requires distance or a higher jump.
+## Collision and lifecycle
 
-The launcher alternates missile and grenade barrages each mobile loop. Its own
-clock, telegraphs, projectile visuals and hit tracking survive body-state changes.
-A small rear module flashes/recoils independently of the leg animation. Production
-launcher animations can subscribe to TurretBossLauncher.OnStageChanged without
-replacing the body animation. The existing turret still supplies placeholder art.
+The sandbox installs a grounded 1.8 × 2.1 solid kinematic boss body. Cosmetic
+lift/lean does not lift collision off the floor. Movement clamps against the
+player; the player cannot walk through the boss. Defeat disables body collision.
+Sandbox jump/headroom checks recognize the boss as support.
 
-Spin and cannon never run simultaneously. The cannon cannot start charging while
-the launcher is active. Transformation, death, disable and sandbox restart cancel
-both tracks. Floor bolts do not return after transformation. Each barrage resets
-to three payloads. Cannon direction is selected when its state begins.
+Attack queries use actual non-trigger player collider shapes, including child
+colliders, and synchronize crouch/transform changes immediately. Bolts, stomp
+waves and charge use swept hit checks. The grounded charge effect/contact box
+shares a 2.25 × 0.6875 footprint, mirrored offset (1.15, -0.64), and 0.04 ground
+inset. Contact damage is enabled only during active charges.
 
-The boss body does not physically push/trap the player during mobile movement;
-lunges use swept damage checks instead. Each lunge, spin and stomp attack hits at most
-once. Movement stays within the sandbox bounds. Mobile motion uses a kinematic
-body on the flat test arena, not terrain-aware navigation. Death retracts the
-placeholder legs and restores a dynamic body so the wreckage can settle.
+Body state changes preserve independent payload tracks. Transformation, defeat,
+disable and arena restart cancel hazards; pause freezes scaled time. Sandbox
+body-center movement limits remain -8.4 to 3.3 on a flat arena. These are not
+production navigation or terrain support.
 
-Next: balance phase two in the sandbox, replace placeholder geometry with Siege
-Core art/leg animation, then add the seeded chance. Phase two is currently always
-available rather than random; no FinalGame/Caleb registration was changed.
+## Shared boss HUD
 
-## Verification
+`BossFightHUD.Bind(EnemyBase boss, string displayName, Sprite portrait,
+Func<string> statusText = null)` supplies the standard bottom-right HUD:
+framed portrait, boss name, diagonal magenta health segments, delayed damage
+trail and status. `SetPortraitOverlay(Sprite)` supports an additional head part.
+The Siege Core adapter uses dome plus cannon barrel. Encounter owners must
+create/destroy their own HUD. This does not replace the shared player HUD.
 
-Source and TL4 tests pass compile checks using Unity's cached compiler references.
-Scene/prefab local IDs and references pass structural checks. New regression tests
-cover attack ordering, core invulnerability/exposure, death cleanup, standing versus
-crouched beam hits, alternating grenade/missile cycles, missile target lock and
-dodge behavior, single-hit damage and hazard cancellation. Phase-two tests cover
-threshold/transition immunity, bounded lunges, jumpable stomp damage, two full
-mobile loops with completed barrages, planting before beam and no return to floor
-attacks. Independent-track tests verify payload survival across body changes,
-explicit cancellation, and jumpable single-hit spin damage. Runtime Test Runner
-and visual playtesting remain to be run in Unity.
+## Ownership and integration
+
+| Area | Location / responsibility |
+| --- | --- |
+| Gameplay, hazards, launcher, collision, HUD | `Assets/src/TL4_Tyler/TurretBoss/` |
+| Boss and visual prefabs, atlases, materials | `Assets/prefabs/TL4_Tyler/TurretBoss/` |
+| Sandbox and art preview | `Assets/Scenes/TL4_Tyler/TurretBoss/` |
+| Regression sources | `Assets/tst/TL4_Tyler/PlayMode/TurretBoss*Tests.cs` |
+
+The turret is not registered in Composition/FinalGame. Existing IBossEncounter
+wiring targets the older BossEnemy prototype. Production integration requires a
+TL4 adapter, real-player validation, production arena placement and world-seed
+wiring. Local Begin/launcher seeds already support repeatable decisions.
+
+## Validation status
+
+The user playtested and accepted the current sandbox direction. Unity Roslyn
+source/test compilation and diff checks have passed. Automated Unity runtime
+results are **not confirmed green**; compilation is not a test run. Isolated
+editor initialization and desktop automation previously blocked runtime checks.
+See the handoff for the remaining closeout checklist.

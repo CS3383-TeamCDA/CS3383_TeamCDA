@@ -54,14 +54,16 @@ MonoBehaviour:
   _rb: {fileID: 2713222599689475892}
   _collider: {fileID: 1621651890346431947}
   _inputHandler: {fileID: 7691105525367031125}
-  _xAcceleration: 60
-  _xDeceleration: 80
+  _xAcceleration: 65
+  _xDeceleration: 85
   _maxSpeedX: 8
-  _jumpSpeed: 10
+  _jumpSpeed: 13.5
   _groundLayer:
     serializedVersion: 2
     m_Bits: 0
   _groundCheckDistance: 0.05
+  _fallGravityMultiplier: 5.4
+  _lowJumpGravityMultiplier: 2.2
   _dashSpeed: 16
   _dashDuration: 0.2
   _disableGravityDuringDash: 1
@@ -81,7 +83,7 @@ Rigidbody2D:
   m_Mass: 1
   m_LinearDamping: 0
   m_AngularDamping: 0.05
-  m_GravityScale: 1
+  m_GravityScale: 3
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -309,4 +311,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 141d610457835d1449fe6495e30ce4c1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: TL6Assembly::PlayerHealth
+  _defaultMaxHealth: 100
   _maxHealth: 100

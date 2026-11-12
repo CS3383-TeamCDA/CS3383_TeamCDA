@@ -246,17 +246,13 @@ public abstract class EnemyBase : MonoBehaviour, IDependent<IPowerUpSpawner>
             }
         }
 
-        // Keep solid terrain contact, while excluding the player from corpse physics.
-        // The separate layer also prevents Default/Ground queries treating bodies as floors.
-        foreach (GameObject player in GameObject.FindGameObjectsWithTag("Player"))
+        // Corpses are visual-only: no solid, trigger, terrain or query participation.
+        foreach (Collider2D collider in corpseColliders) collider.enabled = false;
+        foreach (Rigidbody2D body in GetComponentsInChildren<Rigidbody2D>(true))
         {
-            foreach (Collider2D playerCollider in player.GetComponentsInChildren<Collider2D>(true))
-            {
-                foreach (Collider2D corpseCollider in corpseColliders)
-                {
-                    Physics2D.IgnoreCollision(corpseCollider, playerCollider);
-                }
-            }
+            body.linearVelocity = Vector2.zero;
+            body.angularVelocity = 0;
+            body.simulated = false;
         }
     }
 

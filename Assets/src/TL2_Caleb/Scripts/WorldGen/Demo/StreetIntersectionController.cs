@@ -80,5 +80,22 @@ namespace EscapeThe90s.WorldGen.Demo
             if (Exits.Length == 0) { SelectedExit = 0; return; }
             SelectedExit = Mathf.Clamp(index, 0, Exits.Length - 1);
         }
+
+        public void ReplaceExits(IntersectionExit[] exits, StableId preferredStreetId)
+        {
+            StableId previousSelection = Exits.Length > SelectedExit && SelectedExit >= 0
+                ? Exits[SelectedExit].StreetId : default(StableId);
+            Exits = exits ?? new IntersectionExit[0];
+            SelectedExit = 0;
+            for (int i = 0; i < Exits.Length; i++)
+            {
+                if (Exits[i].StreetId.Equals(previousSelection)) { SelectedExit = i; return; }
+            }
+            for (int i = 0; i < Exits.Length; i++)
+            {
+                if (Exits[i].StreetId.Equals(preferredStreetId)) { SelectedExit = i; return; }
+            }
+            IsAtIntersection = Exits.Length > 0;
+        }
     }
 }

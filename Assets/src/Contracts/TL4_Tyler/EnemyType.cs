@@ -1,4 +1,4 @@
 namespace EscapeThe90s.Contracts
 {
-    public enum EnemyType { Ground, Flying, Turret, Aim }
+    public enum EnemyType { Ground, Flying, Turret, Aim, TVClaw, GrenadeBerserker }
 }
