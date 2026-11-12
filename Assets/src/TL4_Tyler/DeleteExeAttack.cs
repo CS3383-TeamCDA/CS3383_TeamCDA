@@ -28,7 +28,7 @@ public class DeleteExeAttack : MonoBehaviour
         Ray ray = view.ScreenPointToRay(screenPosition);
         EnemyBase selected = null;
         float nearest = float.PositiveInfinity;
-        foreach (EnemyBase enemy in FindObjectsByType<EnemyBase>(FindObjectsSortMode.None))
+        foreach (EnemyBase enemy in FindObjectsByType<EnemyBase>())
         {
             if (enemy.IsDefeated) continue;
             foreach (SpriteRenderer sprite in enemy.GetComponentsInChildren<SpriteRenderer>())
