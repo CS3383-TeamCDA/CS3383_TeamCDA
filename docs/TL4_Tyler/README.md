@@ -77,12 +77,11 @@ existing concrete PlayerHealth calls and TL6Assembly reference.
 
 ## Enemy bodies and terrain
 
-Flying corpses stop flight control and gain gravity. Defeated enemies move to the
-Corpse layer so player ground queries do not treat them as platforms; their solid
-colliders ignore the currently active Player-tagged objects while still colliding
-with terrain. Player sprites already use the Player sorting layer above enemies.
-If future integration creates a new player while retaining existing corpses, its
-colliders must also ignore those corpses. Current restart destroys scene bodies.
+Defeated enemies are visual-only corpses: EnemyBase disables every child
+Collider2D (solid and trigger, including inactive children) and stops Rigidbody2D
+simulation before defeat callbacks. Corpse sprites/animations remain visible;
+players and enemies cannot stand on, block against, or stack on dead bodies.
+Flying corpses also stop in place rather than falling through the terrain.
 
 The Level1_Turret prefab now has a dynamic Rigidbody2D with horizontal motion and
 rotation frozen, plus a solid base collider. Gravity settles its approximate
@@ -214,3 +213,8 @@ Retained aggro does not bypass the limit. It holds position outside throw range
 and resumes normal-cadence throwing when the target returns; damage/proximity
 rage and already-launched grenades are unchanged. Regression covers retained
 aggro, no out-of-range throws, boundary inclusion and resuming in range.
+
+Boss grenade/missile explosion aftermath now uses the ground anchor and measured
+transparent-bottom inset, matching grounded grenadier blasts. Tests cover corpse
+collision removal before callbacks, no corpse drift, and visible ground anchoring
+for both boss payloads. Compiler checks pass; Unity test execution pending.

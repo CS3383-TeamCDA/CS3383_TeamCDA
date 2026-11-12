@@ -52,7 +52,8 @@ public class FlyingEnemyPursuitTests
         yield return new WaitForFixedUpdate();
         Rigidbody2D defeatedBody = enemy.GetComponent<Rigidbody2D>();
         Assert.AreEqual(0f, defeatedBody.linearVelocity.x);
-        Assert.Greater(defeatedBody.gravityScale, 0f);
+        Assert.IsFalse(defeatedBody.simulated);
+        foreach (var collider in enemy.GetComponentsInChildren<Collider2D>(true)) Assert.IsFalse(collider.enabled);
         Assert.LessOrEqual(defeatedBody.linearVelocity.y, 0f);
     }
 

@@ -247,9 +247,13 @@ public sealed class TurretBossAttackField : MonoBehaviour
             aftermath.RemoveAll(effect => effect == null);
             GameObject impact = new GameObject("Animated payload explosion (visual only)");
             impact.transform.SetParent(transform, false);
-            impact.transform.position = new Vector2(landingX, rocket ? 0.7f : 0.5f);
+            Vector2 groundAnchor;
+            if (!EnemyBlast.TryGroundVisualAnchor(new Vector2(landingX, .5f), out groundAnchor))
+                groundAnchor = new Vector2(landingX, 0);
+            impact.transform.position = groundAnchor;
             TurretBossVfxBurst effect = impact.AddComponent<TurretBossVfxBurst>();
-            effect.Initialize(vfx.explosions, rocket ? new Vector2(1.5f, 1.4f) : new Vector2(2f, 1f), 0.65f);
+            effect.Initialize(vfx.explosions, rocket ? new Vector2(1.5f, 1.4f) : new Vector2(2f, 1f), 0.65f,
+                anchorBottom: true, transparentBottom: vfx.groundExplosionBottomInset);
             aftermath.Add(effect);
         }
     }

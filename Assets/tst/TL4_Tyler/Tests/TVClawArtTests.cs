@@ -44,13 +44,13 @@ public class TVClawArtTests
             Assert.Greater(claw.GetComponent<Rigidbody2D>().linearVelocity.x, 0, "No crowd-following clamp.");
             other.TakeDamage(other.CurrentHealth);
             claw.Move();
-            Assert.IsTrue(Physics2D.GetIgnoreCollision(claw.GetComponent<Collider2D>(), otherCollider));
+            Assert.IsFalse(otherCollider.enabled);
             corpse = new GameObject("New corpse");
             var dead = corpse.AddComponent<GroundEnemy>();
             var deadCollider = corpse.AddComponent<BoxCollider2D>();
             dead.TakeDamage(dead.CurrentHealth);
             claw.Move();
-            Assert.IsTrue(Physics2D.GetIgnoreCollision(claw.GetComponent<Collider2D>(), deadCollider));
+            Assert.IsFalse(deadCollider.enabled);
             Assert.IsFalse(Physics2D.GetIgnoreCollision(claw.GetComponent<Collider2D>(), playerCollider));
         }
         finally
