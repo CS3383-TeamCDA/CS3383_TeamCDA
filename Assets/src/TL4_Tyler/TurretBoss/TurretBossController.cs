@@ -35,9 +35,9 @@ public sealed class TurretBossController : EnemyBase
     private const float LeftMovementLimit = -8.4f;
     private const float RightMovementLimit = 3.3f;
     private bool PlayerTooClose => Mathf.Abs(target.position.x - transform.position.x) <= chargeTriggerDistance;
-    [SerializeField, Min(0.05f)] private float assessmentSeconds = 0.22f;
-    [SerializeField, Min(0.05f)] private float turnSeconds = 0.4f;
-    [SerializeField, Min(0.05f)] private float followThroughSeconds = 0.45f;
+    [SerializeField, Min(0.05f)] private float assessmentSeconds = 0.11f;
+    [SerializeField, Min(0.05f)] private float turnSeconds = 0.2f;
+    [SerializeField, Min(0.05f)] private float followThroughSeconds = 0.225f;
     [SerializeField, Range(0f, 1f)] private float comboExtensionChance = 0.5f;
     [SerializeField, Min(0f)] private float heavyRecoveryBonus = 0.4f;
     private System.Random decisions;
@@ -47,9 +47,9 @@ public sealed class TurretBossController : EnemyBase
     private TurretBossAttackState completedAttack;
     private TurretBossAttackState previousOpening = TurretBossAttackState.Defeated;
     public int ComboAttacks => comboAttacks;
-    public float RecoveryDuration => recoveryDuration;
-    public const float RepositionSeconds = 0.7f;
-    public const float DisengageSeconds = 0.65f;
+    public float RecoveryDuration => recoveryDuration * 0.5f;
+    public const float RepositionSeconds = 0.35f;
+    public const float DisengageSeconds = 0.325f;
     private Vector3 shortChargeStart;
     private float chargeDestination;
     private float plantedY;
@@ -189,7 +189,7 @@ public sealed class TurretBossController : EnemyBase
             case TurretBossAttackState.LongCharge:
                 float longChargePreviousX = transform.position.x;
                 float longChargeProgress = Mathf.Clamp01(elapsed / LongChargeSeconds);
-                float longChargeX = Mathf.MoveTowards(longChargePreviousX, chargeDestination, longChargeSpeed * 1.3f * deltaTime);
+                float longChargeX = Mathf.MoveTowards(longChargePreviousX, chargeDestination, longChargeSpeed * 2.197f * deltaTime);
                 MoveBody(new Vector3(longChargeX, plantedY + 0.9f, transform.position.z));
                 legs.SetLongChargePose(longChargeProgress);
                 field.ResolveLongCharge(longChargePreviousX, transform.position.x, MeleeDamage);
@@ -224,7 +224,7 @@ public sealed class TurretBossController : EnemyBase
                     MoveBody(new Vector3(transform.position.x, plantedY + 0.9f * Mathf.Clamp01(elapsed / 0.5f), transform.position.z));
                     legs.SetPose(1f, 0f);
                 }
-                if (elapsed >= recoveryDuration)
+                if (elapsed >= RecoveryDuration)
                 {
                     missileCycle = !missileCycle;
                     ChangeState(IsMobilePhase ? TurretBossAttackState.MobileAssess : TurretBossAttackState.FloorWarning);
@@ -261,7 +261,8 @@ public sealed class TurretBossController : EnemyBase
             launcher.Cancel();
         }
         if (next == TurretBossAttackState.StompWarning ||
-            (next == TurretBossAttackState.LongCharge && decisions.NextDouble() < 0.5))
+            next == TurretBossAttackState.LongChargeWarning ||
+            (next == TurretBossAttackState.LongCharge && !launcher.IsActive))
         {
             launcher.SetOrigin(transform.position);
             launcher.TryStart(missileCycle ? TurretBossPayload.Grenades : TurretBossPayload.Missiles, RangedDamage, true);

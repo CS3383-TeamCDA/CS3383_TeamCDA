@@ -522,3 +522,24 @@ finishes; cancellation clears all tracks. Phase-one serial volleys are unchanged
 Long charge movement is multiplied by 1.3 and exits into follow-through on its
 first player hit. The field exposes its existing single-hit latch to the body
 controller. Source/test compilation passes; gameplay verification is pending.
+
+
+## Faster pacing and turret portrait
+
+HUD portrait now assembles dome and cannon barrel from the existing art atlas.
+Assessment, turning, follow-through, reposition and disengage times are halved.
+Core recovery/exposure is halved for every phase, including combo bonuses;
+RecoveryDuration reports that effective duration. Long charge speed multiplier
+is now 2.197 (another 30% over 1.69). Attack telegraphs and projectile cadence
+are unchanged. Unity Roslyn compilation passes; visual/gameplay review pending.
+
+
+## Long-charge support and landing shadows
+
+Every long-charge windup now requests a grenade/rocket barrage, retaining any
+already active barrage. Charge entry retries if the launcher has since finished.
+Landing warnings use soft oval shadows with a muted purple rim for visibility
+against the dark arena. Shadows tighten/darken during descent; their final
+width matches the explosion footprint. Tracking/locking, damage regions and
+phase-two launch cadence are unchanged. Non-payload telegraphs retain their
+existing shapes. Source compilation and diff checks pass; visual review pending.

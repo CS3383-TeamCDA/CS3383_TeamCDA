@@ -388,3 +388,15 @@ finishes; cancellation clears all tracks. Phase-one serial volleys are unchanged
 Long charge movement is multiplied by 1.3 and exits into follow-through on its
 first player hit. The field exposes its existing single-hit latch to the body
 controller. Source/test compilation passes; gameplay verification is pending.
+
+
+## Shared boss HUD standard
+
+`BossFightHUD` supplies the shared bottom-right neon-magenta HUD with a framed
+portrait, boss name, diagonal health segments, delayed damage trail and status.
+Bind with `Bind(EnemyBase boss, string displayName, Sprite portrait,
+Func<string> statusText = null)`. The encounter owns and destroys the HUD.
+`TurretBossHUD` is the Siege Core adapter; the sandbox supplies its dome sprite
+as the headshot. Future boss encounters can use the shared component and supply
+their own portrait/status. No shared player UI or FinalGame scene was modified.
+Unity source compilation and diff checks pass; visual review in Play Mode is pending.

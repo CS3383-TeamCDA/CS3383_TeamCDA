@@ -80,13 +80,19 @@ public sealed class TurretBossSandbox : MonoBehaviour
             boss = Instantiate(bossPrefab, new Vector3(7.5f, 0.1f, 0f), Quaternion.identity, arena.transform);
             boss.Begin(target.transform, field, bossLevel);
             boss.gameObject.AddComponent<TurretBossBodyCollision>().Initialize(boss, health, 0f);
+            Sprite bossPortrait = null;
+            Sprite bossPortraitBarrel = null;
             if (visualPrefab != null)
             {
                 TurretBossVisualRig visualRig = Instantiate(visualPrefab, new Vector3(7.5f, 0f, 0f),
                     Quaternion.identity, arena.transform);
+                bossPortrait = visualRig.BossPortrait;
+                bossPortraitBarrel = visualRig.BossPortraitBarrel;
                 arena.AddComponent<TurretBossCombatVisuals>().Initialize(boss, visualRig, field, 0f);
             }
-            arena.AddComponent<TurretBossHUD>().Bind(boss);
+            TurretBossHUD hud = arena.AddComponent<TurretBossHUD>();
+            hud.Bind(boss, bossPortrait);
+            hud.SetPortraitOverlay(bossPortraitBarrel);
         }
         Camera camera = Camera.main;
         if (camera == null)

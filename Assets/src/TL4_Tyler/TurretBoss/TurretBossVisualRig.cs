@@ -78,6 +78,8 @@ public sealed class TurretBossVisualRig : MonoBehaviour
     public Transform Launcher { get; private set; }
     public Transform Muzzle { get; private set; }
     public Transform LauncherMuzzle { get; private set; }
+    public Sprite BossPortraitBarrel => parts != null && parts.Length > 2 ? parts[2] : null;
+    public Sprite BossPortrait => parts != null && parts.Length > 0 ? parts[0] : null;
     public Transform FloorMuzzle { get; private set; }
     public Vector2 BodyCenter => body != null ? (Vector2)body.position : (Vector2)transform.position;
 

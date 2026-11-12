@@ -30,6 +30,7 @@ public sealed class TurretBossAttackField : MonoBehaviour
     private SpriteRenderer grenade;
     private SpriteRenderer blast;
     private SpriteRenderer marker;
+    private static Sprite landingShadow;
     private SpriteRenderer missile;
     private bool missileLocked;
     private bool launcherModule;
@@ -264,6 +265,31 @@ public sealed class TurretBossAttackField : MonoBehaviour
         Display(visual, origin, new Vector2(0.6f, 0.22f), true);
     }
 
+    private static Sprite LandingShadow()
+    {
+        if (landingShadow != null) { return landingShadow; }
+        const int size = 64;
+        Texture2D texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+        texture.name = "Payload ground shadow";
+        texture.wrapMode = TextureWrapMode.Clamp;
+        texture.filterMode = FilterMode.Bilinear;
+        Color[] pixels = new Color[size * size];
+        for (int y = 0; y < size; y++)
+        for (int x = 0; x < size; x++)
+        {
+            float radius = new Vector2((x + 0.5f) / size * 2f - 1f, (y + 0.5f) / size * 2f - 1f).magnitude;
+            float edge = 1f - Mathf.SmoothStep(0.85f, 1f, radius);
+            float rim = Mathf.SmoothStep(0.65f, 0.85f, radius);
+            Color color = Color.Lerp(new Color(0.015f, 0.01f, 0.035f), new Color(0.42f, 0.3f, 0.55f), rim);
+            color.a = edge * 0.85f;
+            pixels[y * size + x] = color;
+        }
+        texture.SetPixels(pixels);
+        texture.Apply(false, true);
+        landingShadow = Sprite.Create(texture, new Rect(0f, 0f, size, size), Vector2.one * 0.5f, size);
+        return landingShadow;
+    }
+
     private bool Overlaps(Vector2 center, Vector2 size)
     {
         if (player == null || player.IsDead || !player.gameObject.activeInHierarchy) { return false; }
@@ -345,9 +371,16 @@ public sealed class TurretBossAttackField : MonoBehaviour
         }
         bool floorWarning = state == TurretBossAttackState.FloorWarning;
         bool grenadeWarning = state == TurretBossAttackState.GrenadeWarning || state == TurretBossAttackState.GrenadeFlight;
-        Display(marker, new Vector2(floorWarning ? FloorOrigin.x : landingX, 0.08f),
-            new Vector2(floorWarning ? 0.7f : (missileWarning || descending ? 1.5f : 2f), 0.12f), floorWarning || grenadeWarning || missileWarning || descending);
-        marker.color = missileWarning || descending ? (missileLocked ? Color.red : Color.yellow) : Color.magenta;
+        bool payloadShadow = grenadeWarning || missileWarning || descending;
+        marker.sprite = payloadShadow ? LandingShadow() : square;
+        float descent = descending ? Mathf.Clamp01(elapsed / MissileDescentSeconds)
+            : state == TurretBossAttackState.GrenadeFlight ? Mathf.Clamp01(elapsed / 1.2f) : 0f;
+        float footprint = missileWarning || descending ? 1.5f : 2f;
+        float shadowWidth = footprint * Mathf.Lerp(1.35f, 1f, descent);
+        Display(marker, new Vector2(floorWarning ? FloorOrigin.x : landingX, 0.035f),
+            new Vector2(floorWarning ? 0.7f : shadowWidth, payloadShadow ? 0.24f : 0.12f),
+            floorWarning || payloadShadow);
+        marker.color = payloadShadow ? new Color(1f, 1f, 1f, Mathf.Lerp(0.55f, 1f, descent)) : Color.magenta;
         if (state == TurretBossAttackState.GrenadeFlight)
         {
             float progress = Mathf.Clamp01(elapsed / 1.2f);
