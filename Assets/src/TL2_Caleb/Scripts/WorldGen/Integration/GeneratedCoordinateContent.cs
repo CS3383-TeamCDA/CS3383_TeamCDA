@@ -18,7 +18,8 @@ namespace EscapeThe90s.WorldGen.Integration
             Dispose();
             _streamer = streamer;
             _progress = streamer == null ? null : streamer.Progress;
-            _spawner = new LegacyWorldContentSpawnAdapter(this, art, target, enemyPrefabs);
+            _spawner = new LegacyWorldContentSpawnAdapter(this, art, target, enemyPrefabs,
+                streamer == null ? null : streamer.Profile);
             if (_progress == null) return;
             _progress.OnChunkSpawned += OnChunkSpawned;
             _progress.OnChunkRecycled += OnChunkRecycled;

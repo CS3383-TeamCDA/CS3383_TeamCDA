@@ -73,6 +73,9 @@ namespace EscapeThe90s.WorldGen
         { return GetTileAtCell(x, y) == TileId.Ground; }
 
         public int GetSurfaceHeight(int worldCellX) { return _terrainStamps.SurfaceHeightAt(worldCellX); }
+        /// <summary>Validates the selected artwork's entire horizontal extent against the owning biome.</summary>
+        public bool CanPlaceBuilding(int biome, float minimumWorldX, float maximumWorldX)
+        { return CoordinateBuildingPlacement.FitsBiome(_biomeField, biome, minimumWorldX, maximumWorldX); }
         public WorldChunkKind GetChunkKind(WorldChunkCoord coordinate) { return _terrainStamps.GetChunkKind(coordinate); }
 
         SpawnLocation[] CreateSpawnLocations(WorldChunkCoord coordinate, WorldChunkKind kind, ulong hash)

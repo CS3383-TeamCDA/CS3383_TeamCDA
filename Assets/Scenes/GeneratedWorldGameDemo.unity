@@ -1069,10 +1069,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: TL4Assembly::GeneratedTerrainEnemyPopulation
   collisionTilemap: {fileID: 1412512145}
   player: {fileID: 457964105}
-  clawSpawnPointPrefab: {fileID: 7057206579223619174, guid: 4fba2fe5610b4614b998501c5fd72158, type: 3}
-  berserkerSpawnPointPrefab: {fileID: 7057206579223619174, guid: cc966eb7c2c14251ab694fbf47e1bf04, type: 3}
   groundSpawnPointPrefab: {fileID: 7057206579223619174, guid: a08e0f9c4c5c9471686abd46655fdaea, type: 3}
   turretSpawnPointPrefab: {fileID: 7057206579223619174, guid: da0be32113a24c27ad6354b58e69cbf6, type: 3}
+  clawSpawnPointPrefab: {fileID: 7057206579223619174, guid: 4fba2fe5610b4614b998501c5fd72158, type: 3}
+  berserkerSpawnPointPrefab: {fileID: 7057206579223619174, guid: cc966eb7c2c14251ab694fbf47e1bf04, type: 3}
   flyingSpawnPointPrefab: {fileID: 7057206579223619174, guid: 2f9341d8dd364d1bb5ac33f0af45c1b9, type: 3}
   flyingEvery: 4
   flyingSpawnHeight: 3

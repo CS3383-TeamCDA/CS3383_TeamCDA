@@ -24,6 +24,7 @@ namespace EscapeThe90s.WorldGen
         public ChunkPoolMetrics PoolMetrics
         { get { return _store == null ? new ChunkPoolMetrics(0, 0, 0, 0, 0) : _store.PoolMetrics; } }
         public ILevelProgress Progress { get { return _progress; } }
+        public SideScrollerWorldProfile Profile { get { return _profile; } }
 
         public void Initialize(WorldGenSettings settings, WorldArt worldArt, Transform target, Rigidbody2D body)
         {

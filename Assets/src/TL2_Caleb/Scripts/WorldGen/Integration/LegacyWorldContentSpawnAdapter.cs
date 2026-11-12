@@ -13,6 +13,7 @@ namespace EscapeThe90s.WorldGen.Integration
         readonly WorldArt _art;
         readonly Transform _target;
         readonly GameObject[] _enemyPrefabs;
+        readonly SideScrollerWorldProfile _profile;
         readonly HashSet<MonoBehaviour> _previousPowerUps = new HashSet<MonoBehaviour>();
         Component _enemySpawner;
         Component _powerUpManager;
@@ -21,12 +22,14 @@ namespace EscapeThe90s.WorldGen.Integration
         Type _enemyKindType;
         Type _powerUpType;
 
-        public LegacyWorldContentSpawnAdapter(MonoBehaviour owner, WorldArt art, Transform target, GameObject[] enemyPrefabs)
+        public LegacyWorldContentSpawnAdapter(MonoBehaviour owner, WorldArt art, Transform target, GameObject[] enemyPrefabs,
+            SideScrollerWorldProfile profile)
         {
             _owner = owner;
             _art = art;
             _target = target;
             _enemyPrefabs = enemyPrefabs;
+            _profile = profile;
             SetupEnemySpawner();
             SetupPowerUpManager();
         }
@@ -45,9 +48,13 @@ namespace EscapeThe90s.WorldGen.Integration
             BuildingType type = (BuildingType)location.ContentKindIndex;
             Sprite sprite = _art.GetBuildingSprite(type, 0);
             if (sprite == null) return null;
+            Bounds bounds = sprite.bounds;
+            if (_profile == null || !_profile.CanPlaceBuilding(biome,
+                groundPosition.x + bounds.min.x, groundPosition.x + bounds.max.x)) return null;
 
             var building = new GameObject("World Building " + type);
-            building.transform.position = groundPosition + Vector3.up * sprite.bounds.extents.y;
+            building.transform.position = new Vector3(groundPosition.x,
+                CoordinateBuildingPlacement.OriginY(groundPosition.y, bounds.min.y), groundPosition.z);
             SpriteRenderer renderer = building.AddComponent<SpriteRenderer>();
             renderer.sprite = sprite;
             renderer.sortingOrder = -1;
