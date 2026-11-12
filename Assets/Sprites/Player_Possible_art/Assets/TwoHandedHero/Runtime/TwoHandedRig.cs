@@ -2,6 +2,7 @@ using UnityEngine;
 namespace TwoHandedHero
 {
     // Visual-only rig: input, player physics, damage and projectile ownership remain external.
+    [DefaultExecutionOrder(450)]
     public sealed class TwoHandedRig : MonoBehaviour
     {
         public Animator bodyAnimator;
@@ -12,10 +13,18 @@ namespace TwoHandedHero
         public Vector2 carryGrip = new Vector2(.67f, -.14f);
         public Vector2 runGrip = new Vector2(.67f, -.14f);
         public float runBob = .025f;
+        [Tooltip("Keep the carry/run body animation while the weapon and hands recoil.")]
+        public bool stableBodyWhenFiring;
+        [Min(0f)] public float recoilDistanceMultiplier = 1f;
+        [Min(0f)] public float recoilRiseDegrees;
         public bool Moving { get; private set; }
         public bool FacingRight { get; private set; } = true;
         public TwoHandedWeapon Weapon { get; private set; }
         public string Action { get; private set; } = "Carry";
+        public Vector3 AimOrigin { get; private set; }
+        Vector2 aimDirection;
+
+        public void SetAimDirection(Vector2 direction) { aimDirection = direction.normalized; }
         float actionTime, runTime, recoilTime;
         Vector3 rootScale;
 
@@ -53,11 +62,43 @@ namespace TwoHandedHero
             else Play("Stop");
         }
 
+        // Requires Jump/Fall states in the assigned animator controller.
+        public void SetLocomotion(bool grounded, float horizontalSpeed, float verticalSpeed,
+            bool crouching = false, bool sliding = false)
+        {
+            if (crouching)
+            {
+                Moving = false;
+                string stance = sliding ? "Slide" : Mathf.Abs(horizontalSpeed) > .1f ? "CrouchWalk" : "Crouch";
+                if (Action != stance) Play(stance);
+                return;
+            }
+            if (!grounded || verticalSpeed > .1f)
+            {
+                Moving = false;
+                // Keep the tucked jump pose briefly through the apex; walking off
+                // a ledge goes straight to Fall rather than playing a takeoff.
+                string action = verticalSpeed > .1f ||
+                    (Action == "Jump" && verticalSpeed > -.3f) ? "Jump" : "Fall";
+                if (Action != action) Play(action);
+                return;
+            }
+            if (Action == "Jump" || Action == "Fall" || Action == "Crouch" || Action == "CrouchWalk" || Action == "Slide") Play("Carry");
+            SetMoving(Mathf.Abs(horizontalSpeed) > .1f);
+        }
+
         public bool Fire()
         {
             if (Weapon == null) return false;
             recoilTime = Weapon.recoilSeconds;
-            if (!Moving) Play("Shoot");
+            if (!Moving && Action != "Jump" && Action != "Fall" && Action != "Crouch" && Action != "CrouchWalk" && Action != "Slide")
+            {
+                if (stableBodyWhenFiring)
+                {
+                    if (Action != "Carry") Play("Carry");
+                }
+                else Play("Shoot");
+            }
             return true;
         }
 
@@ -85,9 +126,32 @@ namespace TwoHandedHero
             frontHand.localRotation = Quaternion.Euler(0, 0, stopping ? -20 : 0);
             supportHand.localRotation = Quaternion.Euler(0, 0, stopping ? 5 : 17);
             if (Moving) position.y += Mathf.Sin(runTime * Mathf.PI * 4 / Mathf.Max(.01f, runCycleSeconds)) * runBob;
-            if (Weapon != null && recoilTime > 0)
-                position.x -= Weapon.recoilDistance * recoilTime / Weapon.recoilSeconds;
-            grip.localPosition = (Vector2)shoulder.localPosition + position;
+            float recoil = Weapon != null && recoilTime > 0
+                ? recoilTime / Mathf.Max(.01f, Weapon.recoilSeconds) : 0f;
+            // Kick the shared weapon grip, so rifle, both hands and muzzle stay together.
+            position.x -= Weapon != null ? Weapon.recoilDistance * recoilDistanceMultiplier * recoil : 0f;
+            Vector2 shoulderOffset = Vector2.zero;
+            if (Action == "Slide")
+            {
+                // The seated torso sits behind the feet pivot. Follow its shoulder
+                // through the entry frames instead of using the standing X anchor.
+                var state = bodyAnimator.GetCurrentAnimatorStateInfo(0);
+                float elapsed = state.normalizedTime * state.length;
+                float x = elapsed < .0625f ? -.58f : elapsed < .125f ? -.59f : elapsed < .1875f ? -.62f : -.69f;
+                shoulderOffset = new Vector2(x, 0f);
+            }
+            else if (Action == "Crouch" || Action == "CrouchWalk")
+                shoulderOffset = new Vector2(-.16f, -.1f);
+            Vector2 origin = (Vector2)shoulder.localPosition + shoulderOffset;
+            // Rotate about the shoulder, not the trigger hand. Include mirroring
+            // and the flip pivot when converting the requested world aim to local.
+            Vector3 localAim = aimDirection.sqrMagnitude > .01f
+                ? visualRoot.InverseTransformVector(aimDirection) : Vector3.right;
+            float aimAngle = Mathf.Atan2(localAim.y, localAim.x) * Mathf.Rad2Deg;
+            Quaternion aim = Quaternion.Euler(0, 0, aimAngle);
+            grip.localRotation = Quaternion.Euler(0, 0, aimAngle + recoilRiseDegrees * recoil);
+            grip.localPosition = origin + (Vector2)(aim * position);
+            AimOrigin = visualRoot.TransformPoint(origin);
             // Both hands share weapon recoil; the support hand follows the equipped weapon's anchor.
             frontHand.localPosition = Vector3.zero;
             if (Weapon != null)
