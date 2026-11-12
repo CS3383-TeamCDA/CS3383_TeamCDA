@@ -12,7 +12,7 @@ public sealed class PlayerSandboxMotor : MonoBehaviour
         public bool JumpJustPressed => false;
         public bool JumpBeingHeld => source.JumpBeingHeld;
         public bool JumpReleased => source.JumpReleased;
-        public bool DashJustPressed => source.DashJustPressed;
+        public bool DashJustPressed => false;
     }
     const float CoyoteSeconds = .12f, BufferSeconds = .14f;
     PlayerControllerTL6 controller;
@@ -26,7 +26,11 @@ public sealed class PlayerSandboxMotor : MonoBehaviour
     float jumpPressed = float.NegativeInfinity;
     float lastJump = float.NegativeInfinity;
     bool airJumpAvailable = true, wasGrounded;
+    bool dashConsumedAir;
+    float nextDash;
     public bool AirJumpAvailable => airJumpAvailable;
+    public bool IsDashing => health != null && !health.IsDead && State == "DashingState";
+    public int DashDirection { get; private set; } = 1;
     public string State { get; private set; }
 
     public void Initialize(PlayerControllerTL6 player, PlayerCrouchSlide lowStance, PlayerSandboxFeedback visuals)
@@ -52,6 +56,7 @@ public sealed class PlayerSandboxMotor : MonoBehaviour
             lastGrounded = Time.time;
             airJumpAvailable = true;
             controller.ResetAirDash();
+            dashConsumedAir = false;
         }
         if (source.JumpJustPressed) jumpPressed = Time.time;
         State = states.Update();
@@ -61,7 +66,7 @@ public sealed class PlayerSandboxMotor : MonoBehaviour
             states.ChangeState(new JumpingState(false));
             State = "JumpingState";
         }
-        if (!stance.IsLow && Time.time - jumpPressed <= BufferSeconds)
+        if (!stance.IsLow && Time.time - jumpPressed <= BufferSeconds && !source.DashJustPressed)
         {
             bool groundJump = grounded || Time.time - lastGrounded <= CoyoteSeconds;
             bool extraJump = !groundJump && airJumpAvailable && source.JumpJustPressed && Time.time - lastJump > .08f;
@@ -80,6 +85,28 @@ public sealed class PlayerSandboxMotor : MonoBehaviour
                 }
             }
         }
+        if (!stance.IsLow && source.DashJustPressed && !IsDashing && Time.time >= nextDash &&
+            (grounded || controller.AirDashAvailable))
+        {
+            float move = source.Movement.x;
+            DashDirection = Mathf.Abs(move) > .1f ? (move > 0 ? 1 : -1) : controller.FacingDirection;
+            if (DashDirection == 0) DashDirection = 1;
+            controller.FacingDirection = DashDirection;
+            dashConsumedAir = !grounded;
+            if (dashConsumedAir) controller.ConsumeAirDash();
+            states.ChangeState(new DashingState());
+            State = "DashingState";
+            nextDash = Time.time + controller.DashDuration + .12f;
+            feedback.BeginDash();
+            GetComponent<PlayerMotionEffects>().DashBurst(DashDirection);
+        }
+        // A ground dash that leaves a ledge also spends this airtime's dash.
+        if (IsDashing && !grounded && !dashConsumedAir)
+        {
+            controller.ConsumeAirDash();
+            dashConsumedAir = true;
+        }
+        feedback.SetDashing(IsDashing);
         if (!wasGrounded && grounded) feedback.Land();
         wasGrounded = grounded;
     }
@@ -97,6 +124,8 @@ public sealed class PlayerSandboxMotor : MonoBehaviour
         body.gravityScale = controller.BaseGravityScale;
         lastGrounded = jumpPressed = lastJump = float.NegativeInfinity;
         airJumpAvailable = true; wasGrounded = false;
+        dashConsumedAir = false; nextDash = 0;
+        feedback.SetDashing(false);
         controller.ResetAirDash();
         State = "RunningState";
     }

@@ -2,16 +2,16 @@ using UnityEngine;
 using TwoHandedHero;
 
 /// <summary>Local sandbox contact shadow, foot dust and airborne afterimages.</summary>
-[DefaultExecutionOrder(250)]
+[DefaultExecutionOrder(550)]
 public sealed class PlayerMotionEffects : MonoBehaviour
 {
     sealed class Puff
     {
         public SpriteRenderer renderer;
         public Vector2 velocity;
-        public float life, duration, size;
+        public float life, duration, size, opacity;
     }
-    readonly Puff[] puffs = new Puff[40];
+    readonly Puff[] puffs = new Puff[80];
     Rigidbody2D body;
     Collider2D capsule;
     TwoHandedRig rig;
@@ -22,6 +22,8 @@ public sealed class PlayerMotionEffects : MonoBehaviour
     int cursor, groundMask;
     bool wasGrounded;
     float stepTime, ghostTime, lastFallSpeed;
+    PlayerSandboxMotor motor;
+    SpriteRenderer[] characterParts;
 
     public void Initialize(Rigidbody2D playerBody, TwoHandedRig visual)
     {
@@ -60,6 +62,8 @@ public sealed class PlayerMotionEffects : MonoBehaviour
     void LateUpdate()
     {
         if (body == null) return;
+        if (motor == null) motor = GetComponent<PlayerSandboxMotor>();
+        if (characterParts == null) characterParts = rig.GetComponentsInChildren<SpriteRenderer>();
         Vector2 foot = new Vector2(capsule.bounds.center.x, capsule.bounds.min.y);
         var hit = Physics2D.Raycast(foot + Vector2.up * .08f, Vector2.down, 12f, groundMask);
         bool grounded = hit.collider != null && hit.distance <= .16f && body.linearVelocity.y <= .1f;
@@ -80,16 +84,22 @@ public sealed class PlayerMotionEffects : MonoBehaviour
             stepTime = .11f;
         }
         ghostTime -= Time.deltaTime;
-        if (!grounded && Mathf.Abs(body.linearVelocity.x) > 12 && ghostTime <= 0)
+        if (motor != null && motor.IsDashing && ghostTime <= 0)
         {
-            var puff = Next(.18f);
-            puff.renderer.sprite = bodyRenderer.sprite;
-            puff.renderer.transform.SetPositionAndRotation(bodyRenderer.transform.position, bodyRenderer.transform.rotation);
-            puff.renderer.transform.localScale = bodyRenderer.transform.lossyScale;
-            puff.renderer.sortingOrder = bodyRenderer.sortingOrder - 1;
-            puff.renderer.color = new Color(.3f, .65f, 1f, .2f);
-            puff.size = 0; puff.velocity = Vector2.zero;
-            ghostTime = .055f;
+            foreach (var part in characterParts)
+            {
+                if (!part.enabled || part.sprite == null || part == rig.muzzleFlash || part.transform.IsChildOf(rig.muzzle)) continue;
+                var puff = Next(.16f);
+                puff.renderer.sprite = part.sprite;
+                puff.renderer.transform.SetPositionAndRotation(part.transform.position, part.transform.rotation);
+                puff.renderer.transform.localScale = part.transform.lossyScale;
+                puff.renderer.flipX = part.flipX; puff.renderer.flipY = part.flipY;
+                puff.renderer.sortingOrder = 3;
+                puff.renderer.color = new Color(.3f, .65f, 1f, .3f);
+                puff.opacity = .3f;
+                puff.size = 0; puff.velocity = Vector2.zero;
+            }
+            ghostTime = .025f;
         }
         foreach (var puff in puffs)
         {
@@ -98,7 +108,7 @@ public sealed class PlayerMotionEffects : MonoBehaviour
             puff.renderer.enabled = puff.life > 0;
             puff.renderer.transform.position += (Vector3)(puff.velocity * Time.deltaTime);
             Color color = puff.renderer.color;
-            color.a = Mathf.Max(0, puff.life / puff.duration) * (puff.size > 0 ? .55f : .2f);
+            color.a = Mathf.Max(0, puff.life / puff.duration) * puff.opacity;
             puff.renderer.color = color;
             if (puff.size > 0)
             {
@@ -114,8 +124,42 @@ public sealed class PlayerMotionEffects : MonoBehaviour
     {
         var puff = puffs[cursor++ % puffs.Length];
         puff.life = puff.duration = duration;
+        puff.opacity = .55f;
+        puff.renderer.flipX = puff.renderer.flipY = false;
         puff.renderer.enabled = true;
         return puff;
+    }
+
+    public void DashBurst(int direction)
+    {
+        // A flattened launch ring and short speed streaks remain where the dash began.
+        Vector2 origin = body.position - Vector2.right * direction * .25f;
+        for (int i = 0; i < 16; i++)
+        {
+            var puff = Next(.24f);
+            float angle = i * Mathf.PI * 2 / 16;
+            Vector2 ring = new Vector2(Mathf.Cos(angle) * .12f, Mathf.Sin(angle) * .38f);
+            puff.renderer.sprite = pixel;
+            puff.renderer.sortingOrder = 5;
+            puff.renderer.transform.position = origin + ring;
+            puff.renderer.transform.rotation = Quaternion.identity;
+            puff.size = .055f;
+            puff.velocity = new Vector2(-direction * .8f, ring.y * 2f);
+            puff.renderer.color = new Color(.65f, .88f, 1f, .7f);
+            puff.opacity = .7f;
+        }
+        for (int i = 0; i < 6; i++)
+        {
+            var puff = Next(.15f + i * .012f);
+            puff.renderer.sprite = pixel;
+            puff.renderer.sortingOrder = 4;
+            puff.renderer.transform.position = origin + new Vector2(-direction * Random.Range(.2f, .65f), Random.Range(-.3f, .3f));
+            puff.renderer.transform.rotation = Quaternion.identity;
+            puff.renderer.transform.localScale = new Vector3(Random.Range(.3f, .65f), .02f, 1);
+            puff.size = 0; puff.velocity = Vector2.left * direction * 2;
+            puff.renderer.color = new Color(.5f, .8f, 1, .5f);
+            puff.opacity = .5f;
+        }
     }
 
     public void AirJumpBurst()

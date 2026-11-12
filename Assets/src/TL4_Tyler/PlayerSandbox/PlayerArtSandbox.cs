@@ -116,10 +116,11 @@ public sealed class PlayerArtSandbox : MonoBehaviour
     void LateUpdate()
     {
         if (rig == null) return;
-        if (Mathf.Abs(combat.AimDirection.x) > .1f)
+        if (motor.IsDashing) rig.SetFacingRight(motor.DashDirection > 0);
+        else if (Mathf.Abs(combat.AimDirection.x) > .1f)
             rig.SetFacingRight(combat.AimDirection.x > 0);
         rig.SetLocomotion(controller.IsGrounded(), health.IsDead ? 0f : body.linearVelocity.x,
-            body.linearVelocity.y, stance.IsLow, stance.IsSliding);
+            body.linearVelocity.y, stance.IsLow, stance.IsSliding, motor.IsDashing && !health.IsDead);
     }
 
     void ResetPlayer()

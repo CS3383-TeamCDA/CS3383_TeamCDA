@@ -64,8 +64,14 @@ namespace TwoHandedHero
 
         // Requires Jump/Fall states in the assigned animator controller.
         public void SetLocomotion(bool grounded, float horizontalSpeed, float verticalSpeed,
-            bool crouching = false, bool sliding = false)
+            bool crouching = false, bool sliding = false, bool dashing = false)
         {
+            if (dashing)
+            {
+                Moving = false;
+                if (Action != "Dash") Play("Dash");
+                return;
+            }
             if (crouching)
             {
                 Moving = false;
@@ -83,7 +89,7 @@ namespace TwoHandedHero
                 if (Action != action) Play(action);
                 return;
             }
-            if (Action == "Jump" || Action == "Fall" || Action == "Crouch" || Action == "CrouchWalk" || Action == "Slide") Play("Carry");
+            if (Action == "Jump" || Action == "Fall" || Action == "Crouch" || Action == "CrouchWalk" || Action == "Slide" || Action == "Dash") Play("Carry");
             SetMoving(Mathf.Abs(horizontalSpeed) > .1f);
         }
 
@@ -91,7 +97,7 @@ namespace TwoHandedHero
         {
             if (Weapon == null) return false;
             recoilTime = Weapon.recoilSeconds;
-            if (!Moving && Action != "Jump" && Action != "Fall" && Action != "Crouch" && Action != "CrouchWalk" && Action != "Slide")
+            if (!Moving && Action != "Jump" && Action != "Fall" && Action != "Crouch" && Action != "CrouchWalk" && Action != "Slide" && Action != "Dash")
             {
                 if (stableBodyWhenFiring)
                 {
@@ -142,6 +148,12 @@ namespace TwoHandedHero
             }
             else if (Action == "Crouch" || Action == "CrouchWalk")
                 shoulderOffset = new Vector2(-.16f, -.1f);
+            else if (Action == "Dash")
+            {
+                var state = bodyAnimator.GetCurrentAnimatorStateInfo(0);
+                float elapsed = state.normalizedTime * state.length;
+                shoulderOffset.x = elapsed < .025f ? -.14f : elapsed < .05f ? -.08f : elapsed < .075f ? -.03f : 0;
+            }
             Vector2 origin = (Vector2)shoulder.localPosition + shoulderOffset;
             // Rotate about the shoulder, not the trigger hand. Include mirroring
             // and the flip pivot when converting the requested world aim to local.

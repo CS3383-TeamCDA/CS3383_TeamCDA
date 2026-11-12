@@ -15,6 +15,7 @@ public sealed class PlayerSandboxFeedback : MonoBehaviour
     float previousFallSpeed;
     int previousHealth;
     Rigidbody2D body;
+    bool dashing;
     public bool Invulnerable => hurtRemaining > 0 && !health.IsDead;
 
     public void Initialize(TwoHandedRig visual, PlayerHealth playerHealth)
@@ -51,6 +52,9 @@ public sealed class PlayerSandboxFeedback : MonoBehaviour
         if (previousFallSpeed < -3f) landRemaining = Mathf.Clamp(-previousFallSpeed / 80f, .09f, .18f);
     }
 
+    public void BeginDash() { flipRemaining = landRemaining = 0; }
+    public void SetDashing(bool value) { dashing = value; }
+
     void Update()
     {
         if (rig == null) return;
@@ -74,6 +78,7 @@ public sealed class PlayerSandboxFeedback : MonoBehaviour
         else deathTime = 0;
         pivot.localRotation = Quaternion.Euler(0, 0, angle);
         pivot.localScale = new Vector3(1 + squash * .5f, 1 - squash, 1);
+        if (dashing && !health.IsDead) pivot.localScale = new Vector3(1.08f, .94f, 1);
         // Keep feet planted when compressing; rotation is about the player's center.
         pivot.localPosition = Vector3.down * (.5f * squash + (health.IsDead ? deathTime : 0));
         rig.transform.localPosition = rigPosition;
@@ -89,6 +94,7 @@ public sealed class PlayerSandboxFeedback : MonoBehaviour
     public void ResetFeedback()
     {
         flipRemaining = landRemaining = hurtRemaining = deathTime = 0;
+        dashing = false;
         previousFallSpeed = 0;
         pivot.localPosition = Vector3.zero; pivot.localRotation = Quaternion.identity; pivot.localScale = Vector3.one;
         for (int i = 0; i < renderers.Length; i++) renderers[i].color = colors[i];
