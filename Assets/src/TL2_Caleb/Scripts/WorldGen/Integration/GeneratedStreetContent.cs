@@ -23,6 +23,7 @@ namespace EscapeThe90s.WorldGen.Integration
         Type _powerUpType;
         ulong _streetId;
         bool _reversed;
+        int _difficultyTierOverride = -1;
 
         public void Initialize(StreetView streetView, WorldArt art, Transform target, GameObject[] enemyPrefabs)
         {
@@ -36,9 +37,22 @@ namespace EscapeThe90s.WorldGen.Integration
 
         public void BindStreet(WorldStreet street, bool reversed)
         {
+            BindStreet(street, reversed, -1);
+        }
+
+        public void BindStreet(WorldStreet street, bool reversed, int difficultyTierOverride)
+        {
+            BindStreet(_streetView, street, reversed, difficultyTierOverride);
+        }
+
+        public void BindStreet(StreetView streetView, WorldStreet street, bool reversed,
+            int difficultyTierOverride)
+        {
             Unbind();
+            _streetView = streetView;
             _street = street;
             _reversed = reversed;
+            _difficultyTierOverride = difficultyTierOverride;
             _streetId = street == null ? 0UL : street.Request.Id.Value;
             _enemiesByChunk.Clear();
             _pickupsByChunk.Clear();
@@ -46,6 +60,11 @@ namespace EscapeThe90s.WorldGen.Integration
             EnsureAllEnemyKinds(street.Layout);
             _streetView.Progress.OnChunkSpawned += OnChunkSpawned;
             _streetView.Progress.OnChunkRecycled += OnChunkRecycled;
+        }
+
+        public void SetDifficultyTier(int tier)
+        {
+            _difficultyTierOverride = Mathf.Max(0, tier);
         }
 
         void OnChunkSpawned(ChunkSpawnedInfo info)
@@ -162,7 +181,8 @@ namespace EscapeThe90s.WorldGen.Integration
             var spawned = new List<GameObject>();
             _enemiesByChunk[chunk.Index] = spawned;
             if (_enemySpawner == null || _enemyPrefabs == null || _enemyPrefabs.Length == 0 || chunk.Enemies == null) return;
-            InvokeSpawner("SetSpawnLevel", Mathf.Max(1, _street.Request.DifficultyTier + 1));
+            int tier = _difficultyTierOverride >= 0 ? _difficultyTierOverride : _street.Request.DifficultyTier;
+            InvokeSpawner("SetSpawnLevel", Mathf.Max(1, tier + 1));
             MethodInfo create = null;
             foreach (MethodInfo method in _enemySpawner.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public))
             {

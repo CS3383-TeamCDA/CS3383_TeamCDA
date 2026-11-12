@@ -229,7 +229,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1165686017646547384, guid: 0da14fc95075319448e7ee6e15fa5102, type: 3}
       propertyPath: m_Material
-      value:
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 1306314969548065260, guid: 0da14fc95075319448e7ee6e15fa5102, type: 3}
       propertyPath: m_Name
@@ -417,6 +417,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 0}
     - target: {fileID: 3126469205196626953, guid: 0a6f1cd7220343d45951c063b986deb8, type: 3}
+      propertyPath: m_Actions
+      value: 
+      objectReference: {fileID: -944628639613478452, guid: 7f9b8f6ee749b884993d786607097b55, type: 3}
+    - target: {fileID: 3126469205196626953, guid: 0a6f1cd7220343d45951c063b986deb8, type: 3}
       propertyPath: m_DefaultActionMap
       value: InGame
       objectReference: {fileID: 0}
@@ -476,10 +480,6 @@ PrefabInstance:
       propertyPath: _groundLayer.m_Bits
       value: 8
       objectReference: {fileID: 0}
-    - target: {fileID: 3126469205196626953, guid: 0a6f1cd7220343d45951c063b986deb8, type: 3}
-      propertyPath: m_Actions
-      value:
-      objectReference: {fileID: -944628639613478452, guid: 7f9b8f6ee749b884993d786607097b55, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1032,19 +1032,9 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f03f01e559694814c89d3a23e4b80738, type: 3}
---- !u!1 &1806805236 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 4641950819656687357, guid: f03f01e559694814c89d3a23e4b80738, type: 3}
-  m_PrefabInstance: {fileID: 1806805235}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1806805237 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 777966390090854289, guid: f03f01e559694814c89d3a23e4b80738, type: 3}
-  m_PrefabInstance: {fileID: 1806805235}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &1806805238 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 6627869569352318946, guid: f03f01e559694814c89d3a23e4b80738, type: 3}
   m_PrefabInstance: {fileID: 1806805235}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &1917715689
@@ -1214,6 +1204,9 @@ MonoBehaviour:
   mapRadiusRegions: 2
   startNodeX: 0
   startNodeY: 0
+  endlessRunMode: 1
+  coordinateWorldMode: 1
+  _showChunkDebug: 0
 --- !u!4 &1968481421
 Transform:
   m_ObjectHideFlags: 0
@@ -1247,11 +1240,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ca3f32097be27234dbd86bd1681f964d, type: 3}
---- !u!4 &2880000001 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 6942588277339121587, guid: ca3f32097be27234dbd86bd1681f964d, type: 3}
-  m_PrefabInstance: {fileID: 2880000000}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &2880000002
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1262,26 +1250,21 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 3972370517530935248, guid: ee8e4fdb2fabb5d40b86eccc46bfb3cb, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3972370517530935248, guid: ee8e4fdb2fabb5d40b86eccc46bfb3cb, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3972370517530935248, guid: ee8e4fdb2fabb5d40b86eccc46bfb3cb, type: 3}
       propertyPath: m_LocalScale.z
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ee8e4fdb2fabb5d40b86eccc46bfb3cb, type: 3}
---- !u!224 &2880000003 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 3972370517530935248, guid: ee8e4fdb2fabb5d40b86eccc46bfb3cb, type: 3}
-  m_PrefabInstance: {fileID: 2880000002}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -1293,5 +1276,5 @@ SceneRoots:
   - {fileID: 1917715692}
   - {fileID: 1917715701}
   - {fileID: 1968481421}
-  - {fileID: 2880000001}
-  - {fileID: 2880000003}
+  - {fileID: 2880000000}
+  - {fileID: 2880000002}

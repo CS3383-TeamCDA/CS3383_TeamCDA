@@ -7,6 +7,7 @@ namespace EscapeThe90s.WorldGen
     public static class WorldConstants
     {
         public const int CellPixels = 16;          // one data-grid cell, in pixels
+        public const int WorldChunkSizeCells = 16; // coordinate-world chunk width and height
         public const int ChunkWidthCells = 32;     // chunk width in cells (=512 px at 16 px cells)
         public const int EndSafeChunks = 1;        // chunks at each street end: no buildings, no enemies
         public const int MinStreetChunks = 4;      // shortest legal street (two safe ends + two playable chunks)
@@ -22,6 +23,15 @@ namespace EscapeThe90s.WorldGen
         public static readonly int[] LinkCountWeights = { 25, 40, 25, 10 };   // chance weights for 0,1,2,3 surface connections per adjacent pair
         public const int ViewWidthPixels = 640;    // target resolution
         public const int ViewHeightPixels = 360;
+        public const int WorldSurfaceBaseline = 8;
+        public const int WorldSurfaceAnchorSpanCells = WorldChunkSizeCells * 2;
+        public const int WorldSurfaceVariationCells = 3;
+        public const int WorldFloorCellY = -64;
+        public const int WorldDistancePerDifficulty = 200;
+        public const int WorldBiomeRegionSpanChunks = 16;
+        public const int WorldCityBlockLengthChunks = 3;
+        public const int WorldCityBlockFlatHalfWidthCells = 12;
+        public const int WorldBuildingFootprintHalfWidthCells = 11;
 
         public static int ChunkWidthPixels { get { return CellPixels * ChunkWidthCells; } }
     }
@@ -37,5 +47,6 @@ namespace EscapeThe90s.WorldGen
         public const int Link = 6;        // region-pair connections
         public const int Interior = 7;    // street network inside a region
         public const int Stamps = 8;      // chunk terrain stamp selection
+        public const int RunRouteChoice = 9; // deterministic forward-run street selection
     }
 }

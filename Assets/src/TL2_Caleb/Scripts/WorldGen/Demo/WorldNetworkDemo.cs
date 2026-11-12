@@ -5,7 +5,7 @@ using UnityEngine.InputSystem;
 
 namespace EscapeThe90s.WorldGen.Demo
 {
-/// <summary>Playable Phase 10 demo: walk generated streets, reach intersections, and choose where to go next.</summary>
+/// <summary>Playable generated world. Coordinate streaming is the default; graph mode remains available for compatibility.</summary>
 [DefaultExecutionOrder(-1000)]
 public class WorldNetworkDemo : MonoBehaviour
 {
@@ -22,6 +22,12 @@ public class WorldNetworkDemo : MonoBehaviour
     [Range(1, 5)] public int mapRadiusRegions = 2;
     public int startNodeX;
     public int startNodeY;
+    [Tooltip("Compatibility option for the old graph route mode. Ignored in coordinate world mode.")]
+    public bool endlessRunMode = true;
+    [Tooltip("Use the coordinate-addressed endless world instead of choosing graph streets.")]
+    public bool coordinateWorldMode = true;
+    [SerializeField, Tooltip("Draw loaded chunk bounds and (X, Y) labels. Enable Game view Gizmos to see them there.")]
+    private bool _showChunkDebug;
 
     WorldNetwork _world;
     StreetView _streetView;
@@ -29,6 +35,12 @@ public class WorldNetworkDemo : MonoBehaviour
     Rigidbody2D _playerBody;
     CameraFollow _cameraFollow;
     WorldStreet _currentStreet;
+    RunPath _runPath;
+    RunProgress _runProgress;
+    RunPathStreet _currentRunSegment;
+    Int2 _runOrigin;
+    bool _runModeActive;
+    float _currentStreetBaseX;
     Int2 _entryNode;
     Int2 _destinationNode;
     Int2 _mapCenter;
@@ -39,10 +51,14 @@ public class WorldNetworkDemo : MonoBehaviour
     bool _mapReady;
     bool _ownsPlayer;
     EscapeThe90s.WorldGen.Integration.GeneratedStreetContent _generatedContent;
+    EscapeThe90s.WorldGen.Integration.GeneratedCoordinateContent _generatedCoordinateContent;
+    CoordinateWorldStreamer _coordinateWorld;
     string _message = "";
     readonly List<StreetEdge> _mapEdges = new List<StreetEdge>();
     readonly List<Int2> _mapArcades = new List<Int2>();
     readonly List<Int2> _mapStations = new List<Int2>();
+    readonly List<StreetView> _runStreetViews = new List<StreetView>();
+    readonly List<float> _runStreetEndXs = new List<float>();
     readonly RouteChooserView _routeChooser = new RouteChooserView();
     readonly WorldMapOverlay _mapOverlay = new WorldMapOverlay();
     readonly DemoCameraRig _cameraRig = new DemoCameraRig();
@@ -72,8 +88,6 @@ public class WorldNetworkDemo : MonoBehaviour
             return;
         }
         _demoInitialized = true;
-        DemoWorldBootstrap bootstrap = DemoWorldBootstrap.Create(settings, new Int2(startNodeX, startNodeY));
-        _world = bootstrap.World;
         _streetView = streetView != null ? streetView : GetComponentInChildren<StreetView>();
         if (_streetView == null)
         {
@@ -85,16 +99,53 @@ public class WorldNetworkDemo : MonoBehaviour
         _streetView.art = art;
         _streetView.setupCamera = false;
         CreatePlayer();
+        if (coordinateWorldMode)
+        {
+            var coordinateGenerator = new CoordinateWorldGenerator(settings.SeedValue,
+                settings.WorldSurfaceBaseline, settings.WorldSurfaceVariation,
+                settings.WorldSurfaceAnchorSpan, settings.WorldFloorCellY);
+            _player.position = new Vector3(0f, coordinateGenerator.SurfaceHeightAt(0) + 3f, 0f);
+            StopPlayer();
+            _coordinateWorld = GetComponent<CoordinateWorldStreamer>();
+            if (_coordinateWorld == null) _coordinateWorld = gameObject.AddComponent<CoordinateWorldStreamer>();
+            _generatedCoordinateContent = GetComponent<EscapeThe90s.WorldGen.Integration.GeneratedCoordinateContent>();
+            if (_generatedCoordinateContent == null) _generatedCoordinateContent = gameObject.AddComponent<EscapeThe90s.WorldGen.Integration.GeneratedCoordinateContent>();
+            _coordinateWorld.Initialize(settings, art, _player, _playerBody);
+            _coordinateWorld.SetChunkDebugEnabled(_showChunkDebug);
+            _generatedCoordinateContent.Initialize(_coordinateWorld, art, _player, enemyPrefabsByKind);
+            _cameraFollow = _cameraRig.Attach(_player, null);
+            if (_streetView != null) _streetView.enabled = false;
+            _player.gameObject.SetActive(true);
+            _message = "ENDLESS WORLD — terrain streams by 16×16 X/Y chunks. Move right to explore.";
+            return;
+        }
+        DemoWorldBootstrap bootstrap = DemoWorldBootstrap.Create(settings, new Int2(startNodeX, startNodeY));
+        _world = bootstrap.World;
+        _runModeActive = endlessRunMode;
         _generatedContent = GetComponent<EscapeThe90s.WorldGen.Integration.GeneratedStreetContent>();
         if (_generatedContent == null) _generatedContent = gameObject.AddComponent<EscapeThe90s.WorldGen.Integration.GeneratedStreetContent>();
         _generatedContent.Initialize(_streetView, art, _player, enemyPrefabsByKind);
 
         Int2 start = bootstrap.StartNode;
+        _runOrigin = start;
         BuildMap(start);
         IntersectionExit[] exits = _world.GetIntersection(start);
         if (exits.Length == 0)
         {
             _message = "No street exits at the selected start node.";
+            return;
+        }
+        if (_runModeActive)
+        {
+            _runPath = new RunPath(_world);
+            _runProgress = new RunProgress();
+            if (RunPathSelector.TryChooseNextStreet(_world, start, new Int2(int.MinValue, int.MinValue),
+                _runOrigin, _world.Seed, 0, null, out IntersectionExit firstRoute))
+            {
+                EnterStreet(start, firstRoute.Destination);
+                return;
+            }
+            _message = "No forward street is available at the run start.";
             return;
         }
         for (int i = 0; i < exits.Length; i++)
@@ -109,11 +160,36 @@ public class WorldNetworkDemo : MonoBehaviour
             TryInitializeAfterGameStarts();
             if (!_demoInitialized) return;
         }
+        if (coordinateWorldMode && _coordinateWorld != null)
+        {
+            _coordinateWorld.SetChunkDebugEnabled(_showChunkDebug);
+            return;
+        }
         if (_world == null || _currentStreet == null || _player == null) return;
+        if (_runModeActive && _currentRunSegment != null &&
+            _runPath.TryGetPosition(_currentRunSegment, _player.position.x - _currentStreetBaseX,
+                true, out RunProgressPosition runPosition))
+        {
+            _runProgress.Advance(runPosition);
+            _generatedContent.SetDifficultyTier(Mathf.Max(0, Mathf.FloorToInt(_runProgress.GetCurrentDifficulty())));
+            RetirePassedRunStreets();
+        }
         string prompt = _intersectionController.UpdateStreetPrompt(_world, _currentStreet, _player,
             _entryNode, _destinationNode, _entryX, _destinationX);
         if (prompt != null) _message = prompt;
         if (!_intersectionController.IsAtIntersection) return;
+
+        if (_runModeActive && !_intersectionController.ActiveIntersection.Equals(_currentRunSegment.ExitNode))
+        {
+            _intersectionController.ResetForStreet();
+            return;
+        }
+        if (_runModeActive) FilterToForwardRunRoutes();
+        if (_intersectionController.Exits.Length == 0)
+        {
+            if (_runModeActive) _message = "No forward routes remain. Run complete.";
+            return;
+        }
 
         _intersectionController.SelectBy(ReadVerticalPress());
         if (ConfirmPressed() && _intersectionController.Exits.Length > 0)
@@ -178,25 +254,102 @@ public class WorldNetworkDemo : MonoBehaviour
             _message = "That intersection exit has no generated street.";
             return;
         }
+        if (_runModeActive && !_runPath.TryAppendStreet(from, to, out _currentRunSegment))
+        {
+            _message = "The selected street could not be added to the forward run.";
+            return;
+        }
+        if (_runModeActive)
+        {
+            if (_currentRunSegment.Index == 0)
+            {
+                _currentStreetBaseX = _streetView.transform.position.x;
+            }
+            else
+            {
+                RunPathStreet previousSegment = _runPath.GetStreet(_currentRunSegment.Index - 1);
+                _currentStreetBaseX += previousSegment.Street.Layout.ChunkCount *
+                    WorldConstants.ChunkWidthCells - 14f;
+                _streetView = CreateRunStreetView(_currentStreetBaseX);
+            }
+        }
         _entryNode = from;
         _destinationNode = to;
         _intersectionController.ResetForStreet();
-        bool reverse = from.Equals(_currentStreet.Edge.B);
+        bool reverse = !_runModeActive && from.Equals(_currentStreet.Edge.B);
         float width = _currentStreet.Layout.ChunkCount * WorldConstants.ChunkWidthCells;
-        _entryX = reverse ? width - 7f : 7f;
-        _destinationX = reverse ? 7f : width - 7f;
+        _entryX = _currentStreetBaseX + (reverse ? width - 7f : 7f);
+        _destinationX = _currentStreetBaseX + (reverse ? 7f : width - 7f);
         _player.position = new Vector3(_entryX, 3f, 0f);
         StopPlayer();
+        if (_runModeActive)
+        {
+            _streetView.transform.position = new Vector3(_currentStreetBaseX,
+                _streetView.transform.position.y, _streetView.transform.position.z);
+            _runStreetViews.Add(_streetView);
+            _runStreetEndXs.Add(_currentStreetBaseX + width);
+        }
         // StreetView owns and destroys registered enemies when it rebuilds the old street.
         _streetView.follow = _player;
         _streetView.enabled = true;
-        _generatedContent.BindStreet(_currentStreet, reverse);
+        int runDifficultyTier = _runModeActive
+            ? Mathf.Max(0, Mathf.FloorToInt(_runProgress.GetCurrentDifficulty()))
+            : -1;
+        _generatedContent.BindStreet(_streetView, _currentStreet, reverse, runDifficultyTier);
         _streetView.ShowWorldStreet(_currentStreet, reverse);
         _mapCenter = from;
         BuildMap(from);
         _message = "Walk to the far end of the street to reach the next intersection.";
+        if (_runModeActive)
+            _message = "FORWARD RUN — keep moving to the far end and choose a route.";
         if (_cameraFollow != null) _cameraFollow.street = _streetView;
         _player.gameObject.SetActive(true);
+    }
+
+    StreetView CreateRunStreetView(float worldX)
+    {
+        var streetObject = new GameObject("Run Street " + _runPath.StreetCount);
+        streetObject.transform.SetParent(transform, false);
+        streetObject.transform.position = new Vector3(worldX, 0f, 0f);
+        StreetView view = streetObject.AddComponent<StreetView>();
+        view.settings = settings;
+        view.art = art;
+        view.follow = _player;
+        view.loadRadiusChunks = _streetView.loadRadiusChunks;
+        view.setupCamera = false;
+        return view;
+    }
+
+    void RetirePassedRunStreets()
+    {
+        for (int i = _runStreetViews.Count - 1; i >= 0; i--)
+        {
+            StreetView view = _runStreetViews[i];
+            if (view == null || view == _streetView) continue;
+            float unloadAfterX = _runStreetEndXs[i] +
+                (view.loadRadiusChunks + 1) * WorldConstants.ChunkWidthCells;
+            if (_player.position.x <= unloadAfterX) continue;
+            if (Application.isPlaying) Destroy(view.gameObject);
+            else DestroyImmediate(view.gameObject);
+            _runStreetViews.RemoveAt(i);
+            _runStreetEndXs.RemoveAt(i);
+        }
+    }
+
+    void FilterToForwardRunRoutes()
+    {
+        int recentCount = Mathf.Min(4, _runPath.StreetCount);
+        var recentIds = new StableId[recentCount];
+        for (int i = 0; i < recentCount; i++)
+            recentIds[i] = _runPath.GetStreet(_runPath.StreetCount - 1 - i).Street.Request.Id;
+
+        IntersectionExit[] routes = RunPathSelector.GetCandidates(_world,
+            _intersectionController.ActiveIntersection, _currentRunSegment.EntryNode,
+            _runOrigin, recentIds);
+        RunPathSelector.TryChooseNextStreet(_world, _intersectionController.ActiveIntersection,
+            _currentRunSegment.EntryNode, _runOrigin, _world.Seed, _runPath.StreetCount,
+            recentIds, out IntersectionExit preferred);
+        _intersectionController.ReplaceExits(routes, preferred.StreetId);
     }
 
     void BuildMap(Int2 center)
@@ -232,10 +385,25 @@ public class WorldNetworkDemo : MonoBehaviour
 
     void OnGUI()
     {
+        if (coordinateWorldMode && _coordinateWorld != null)
+        {
+            GUILayout.BeginArea(new Rect(12, 12, 380, 85), GUI.skin.box);
+            GUILayout.Label("ESCAPE THE 90s  /  ENDLESS WORLD");
+            GUILayout.Label("Coordinate chunks: 16×16 tiles   Loaded: " + _coordinateWorld.LoadedChunkCount);
+            GUILayout.Label("Move with A/D    Jump with Space");
+            GUILayout.EndArea();
+            return;
+        }
         if (_world == null) return;
         _mapOverlay.Draw(_mapEdges, _mapArcades, _mapStations, _mapCenter, mapRadiusRegions, _currentStreet, FindMapPlayerPoint(), _mapReady);
         GUILayout.BeginArea(new Rect(12, 12, 365, 155), GUI.skin.box);
         GUILayout.Label("ESCAPE THE 90s  /  STREET NETWORK");
+        if (_runModeActive)
+        {
+            GUILayout.Label("ENDLESS RUN   Streets " + _runPath.StreetCount +
+                "   Distance " + Mathf.FloorToInt((float)_runProgress.GetCurrentDistanceInCells()) + " cells");
+            GUILayout.Label("Enemy tier " + (Mathf.FloorToInt(_runProgress.GetCurrentDifficulty()) + 1));
+        }
         if (_currentStreet != null)
         {
             BiomeRules rules = settings.GetRules()[_currentStreet.Layout.Biome];
@@ -303,6 +471,7 @@ public class WorldNetworkDemo : MonoBehaviour
     void OnDestroy()
     {
         if (_generatedContent != null) _generatedContent.Dispose();
+        if (_generatedCoordinateContent != null) _generatedCoordinateContent.Dispose();
         if (_ownsPlayer && _player != null)
         {
             if (Application.isPlaying) Destroy(_player.gameObject);

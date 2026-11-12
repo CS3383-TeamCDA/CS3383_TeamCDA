@@ -759,10 +759,6 @@ PrefabInstance:
       value: TL2_Caleb
       objectReference: {fileID: 0}
     - target: {fileID: 1481458358478143782, guid: 0da14fc95075319448e7ee6e15fa5102, type: 3}
-      propertyPath: _inputHandler
-      value:
-      objectReference: {fileID: 497186404}
-    - target: {fileID: 1481458358478143782, guid: 0da14fc95075319448e7ee6e15fa5102, type: 3}
       propertyPath: _groundLayer.m_Bits
       value: 8
       objectReference: {fileID: 0}
