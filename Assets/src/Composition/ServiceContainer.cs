@@ -66,6 +66,23 @@ namespace EscapeThe90s.Composition
                 Register<IPowerUpSpawner>(manager);
             }
 
+            // Resolve through the contract so composition does not depend on TL5's assembly.
+            foreach (MonoBehaviour component in FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include))
+            {
+                if (component.gameObject.scene != gameObject.scene ||
+                    !(component is IMetaProgressionManager progression)) continue;
+                if (_services.ContainsKey(typeof(IMetaProgressionManager)))
+                {
+                    Debug.LogError("ServiceContainer: multiple scene currency providers; use one shared provider.", this);
+                    continue;
+                }
+                Register<IMetaProgressionManager>(progression);
+            }
+            if (_services.ContainsKey(typeof(IEnemySpawner)) &&
+                _services.ContainsKey(typeof(IMetaProgressionManager)) &&
+                GetComponent<EnemyCurrencyBinding>() == null)
+                gameObject.AddComponent<EnemyCurrencyBinding>();
+
             Register<IEventBus>(eventBus);
             if (bridge != null)
             {
