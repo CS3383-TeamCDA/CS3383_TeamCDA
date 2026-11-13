@@ -16,6 +16,14 @@ Subscribe in `OnEnabledAfterInitialization`; unsubscribe in
 `OnDisabledAfterInitialization`. TL1 can use ScoreValue; TL5 can use CoinReward.
 Do not subscribe to both legacy reward events and this event or rewards will double.
 
+Composition registers the scene's `IMetaProgressionManager` and adds one
+`EnemyCurrencyBinding` when both providers exist. The binding calls
+`AddCurrency(info.CoinReward)` once per defeat through the contract event.
+Do not add a second currency listener. Standalone scenes without a currency
+provider continue to publish defeat events without crediting a wallet.
+Boss rewards remain in `IBossEncounter.OnEncounterEnded`; this enemy binding
+does not credit boss encounter results.
+
 Composition registers one scene-owned EnemySpawner and adds EnemyGameStateBinding.
 That adapter receives IGameState and permits automatic spawning only in Playing.
 It reads the current state on enable, including late injection, and preserves the
