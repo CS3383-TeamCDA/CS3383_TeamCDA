@@ -71,7 +71,7 @@ public class TL4ContractStateTests
     }
 
     [UnityTest]
-    public IEnumerator DefeatedFlyingEnemyFallsAndSettlesOnTerrain()
+    public IEnumerator DefeatedFlyingEnemyDisablesPhysicsAndCollision()
     {
         GameObject corpse = new GameObject("Flying corpse");
         GameObject terrain = new GameObject("Terrain");
@@ -87,13 +87,12 @@ public class TL4ContractStateTests
             FlyingEnemy enemy = corpse.AddComponent<FlyingEnemy>();
             enemy.TakeDamage(enemy.MaxHealth);
             enemy.Move();
-            Assert.Greater(body.gravityScale, 0f);
-            yield return new WaitForSeconds(0.3f);
-            Assert.Less(body.position.y, 2.9f, "A defeated flyer must leave its airborne perch.");
-            Assert.AreEqual(0f, body.linearVelocity.x);
-            yield return new WaitForSeconds(1.2f);
-            Assert.That(body.position.y, Is.InRange(0.45f, 0.6f), "The solid body must land on terrain.");
-            Assert.Less(Mathf.Abs(body.linearVelocity.y), 0.1f);
+            Assert.IsFalse(body.simulated, "Defeated flyers are visual-only.");
+            Assert.IsFalse(corpse.GetComponent<Collider2D>().enabled);
+            Vector2 deathPosition = body.position;
+            yield return new WaitForFixedUpdate();
+            Assert.AreEqual(deathPosition, body.position);
+            Assert.AreEqual(Vector2.zero, body.linearVelocity);
         }
         finally
         {
@@ -103,7 +102,7 @@ public class TL4ContractStateTests
     }
 
     [UnityTest]
-    public IEnumerator CorpseIgnoresPlayerButKeepsSolidTerrainContact()
+    public IEnumerator CorpseDisablesAllCollidersAndPhysics()
     {
         GameObject corpse = new GameObject("Corpse");
         GameObject player = new GameObject("Player");
@@ -120,15 +119,22 @@ public class TL4ContractStateTests
             Rigidbody2D body = corpse.AddComponent<Rigidbody2D>();
             body.constraints = RigidbodyConstraints2D.FreezeRotation;
             Collider2D corpseCollider = corpse.AddComponent<BoxCollider2D>();
+            var hurtbox = new GameObject("Child hurtbox");
+            hurtbox.transform.SetParent(corpse.transform, false);
+            hurtbox.AddComponent<CircleCollider2D>().isTrigger = true;
             GroundEnemy enemy = corpse.AddComponent<GroundEnemy>();
             enemy.TakeDamage(enemy.MaxHealth);
             Assert.AreEqual(LayerMask.NameToLayer("Corpse"), corpse.layer);
             Assert.AreNotEqual(0, corpse.layer, "Corpses must be excluded from Default ground checks.");
-            Assert.IsTrue(Physics2D.GetIgnoreCollision(corpseCollider, playerCollider));
-            Assert.IsFalse(Physics2D.GetIgnoreCollision(corpseCollider, terrainCollider));
-            Assert.IsFalse(corpseCollider.isTrigger);
-            yield return new WaitForSeconds(1f);
-            Assert.That(body.position.y, Is.InRange(0.45f, 0.6f));
+            foreach (Collider2D collider in corpse.GetComponentsInChildren<Collider2D>(true))
+                Assert.IsFalse(collider.enabled, "No corpse collider may block players, enemies or terrain.");
+            Assert.IsFalse(body.simulated);
+            Assert.AreEqual(Vector2.zero, body.linearVelocity);
+            Assert.IsTrue(playerCollider.enabled);
+            Assert.IsTrue(terrainCollider.enabled);
+            Vector2 deathPosition = body.position;
+            yield return new WaitForFixedUpdate();
+            Assert.AreEqual(deathPosition, body.position);
         }
         finally
         {

@@ -231,8 +231,11 @@ public class NewEnemyTests
     [UnityTest] public IEnumerator DistantPlayerGetsGrenadeAndRageStopsFurtherThrows()
     {
         var enemy = Enemy<GrenadeBerserkerEnemy>("GrenadeBerserker");
-        var player = Player(Vector2.right * 8);
+        // Acquire inside even the smallest awareness radius, then move into throw range.
+        var player = Player(Vector2.right);
         Assert.IsTrue(enemy.TryAcquireTarget(player.transform));
+        player.transform.position = Vector2.right * 8;
+        Physics2D.SyncTransforms();
         yield return null;
         var grenades = Object.FindObjectsByType<BerserkerGrenade>();
         Assert.AreEqual(1, grenades.Length);
@@ -249,7 +252,9 @@ public class NewEnemyTests
     [UnityTest] public IEnumerator GrenadierStopsThrowingBeyondMaximumButRetainsAggroAndResumesInRange()
     {
         var enemy = Enemy<GrenadeBerserkerEnemy>("GrenadeBerserker");
-        var player = Player(Vector2.right * 8);
+        // Establish aggro before moving out of range, independent of randomized awareness.
+        // No frame elapses nearby, so proximity does not trigger rage.
+        var player = Player(Vector2.right);
         Assert.IsTrue(enemy.TryAcquireTarget(player.transform));
         player.transform.position = Vector2.right * (enemy.MaxThrowRange + .1f);
         yield return null;
@@ -289,7 +294,11 @@ public class NewEnemyTests
         ally.transform.position = Vector2.right * .5f;
         ally.GetComponent<Rigidbody2D>().simulated = true;
         enemy.GetComponent<Rigidbody2D>().simulated = true;
-        var player = Player(Vector2.right * 8);
+        // Crowd movement requires an acquired target. Establish it inside every
+        // awareness range, then move away before any proximity-rage update.
+        var player = Player(Vector2.right);
+        Assert.IsTrue(enemy.TryAcquireTarget(player.transform), "Rush fixture must establish aggro.");
+        player.transform.position = Vector2.right * 8;
         enemy.SetTarget(player.transform);
         Assert.IsFalse(Physics2D.GetIgnoreCollision(enemy.GetComponent<Collider2D>(), ally.GetComponent<Collider2D>()));
         enemy.EnterBerserk();

@@ -24,6 +24,8 @@ public class TurretGameplayTests
         var prefab = AssetDatabase.LoadAssetAtPath<TurretHazard>(
             "Assets/prefabs/TL4_Tyler/Enemy_Sprites/Level1_Turret/Level1_Turret.prefab");
         var turret = Object.Instantiate(prefab, Vector3.zero, Quaternion.identity, root.transform);
+        // This test covers aiming and horizontal movement, without a terrain fixture.
+        turret.GetComponent<Rigidbody2D>().simulated = false;
         var target = new GameObject("Player").transform;
         target.SetParent(root.transform);
         target.position = new Vector3(5, 5, 0);

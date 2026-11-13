@@ -34,9 +34,12 @@ public class TVClawArtTests
             var other = ally.AddComponent<GroundEnemy>();
             var otherCollider = ally.AddComponent<BoxCollider2D>();
             ally.transform.position = Vector2.right * .5f;
-            player.transform.position = Vector2.right * 8;
+            // Establish pursuit independently of the randomized detection radius.
+            player.transform.position = claw.transform.position + Vector3.right;
             var playerCollider = player.AddComponent<BoxCollider2D>();
             player.AddComponent<PlayerHealth>();
+            Assert.IsTrue(claw.TryAcquireTarget(player.transform), "Crowd fixture must establish aggro.");
+            player.transform.position = claw.transform.position + Vector3.right * 8;
             claw.SetTarget(player.transform);
             Physics2D.SyncTransforms();
             claw.Move();

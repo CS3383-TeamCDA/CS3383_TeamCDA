@@ -25,15 +25,39 @@ public class TurretBossTests
             target.transform.position = Vector3.left * 7f;
             Assert.AreEqual(TurretBossAttackState.LongChargeWarning, select.Invoke(boss, new object[] { true }));
             target.transform.position = Vector3.left * 2f;
-            Assert.AreEqual(TurretBossAttackState.ShortChargeWarning, select.Invoke(boss, new object[] { true }));
-            Assert.AreEqual(TurretBossAttackState.StompWarning, select.Invoke(boss, new object[] { true }),
-                "A repeated close-range opener should change attacks.");
+            var previousOpening = typeof(TurretBossController).GetField("previousOpening", flags);
+            var random = typeof(TurretBossController).GetField("decisions", flags);
+            int freshCharges = 0, repeatCharges = 0;
+            // Use identical seeded rolls to compare weights rather than require one random outcome.
+            foreach (bool repeated in new[] { false, true })
+            {
+                random.SetValue(boss, new System.Random(17));
+                for (int sample = 0; sample < 200; sample++)
+                {
+                    previousOpening.SetValue(boss, repeated ? TurretBossAttackState.ShortChargeWarning : TurretBossAttackState.Defeated);
+                    var opening = (TurretBossAttackState)select.Invoke(boss, new object[] { true });
+                    CollectionAssert.Contains(new[] { TurretBossAttackState.ShortChargeWarning,
+                        TurretBossAttackState.LongChargeWarning, TurretBossAttackState.StompWarning }, opening);
+                    if (opening == TurretBossAttackState.ShortChargeWarning)
+                    {
+                        if (repeated) repeatCharges++; else freshCharges++;
+                    }
+                }
+            }
+            Assert.Greater(freshCharges, 0);
+            Assert.Less(repeatCharges, freshCharges, "Repeating an opener must reduce its selection weight.");
+            typeof(TurretBossController).GetField("chargeCooldown", flags).SetValue(boss, 2f);
+            for (int sample = 0; sample < 40; sample++)
+                Assert.AreNotEqual(TurretBossAttackState.ShortChargeWarning, select.Invoke(boss, new object[] { true }),
+                    "An opener must respect charge cooldown.");
             typeof(TurretBossController).GetField("chargeCooldown", flags).SetValue(boss, 2f);
             target.transform.position = Vector3.left;
             Assert.AreEqual(TurretBossAttackState.Repositioning, select.Invoke(boss, new object[] { true }));
             typeof(TurretBossController).GetField("chargeCooldown", flags).SetValue(boss, 0f);
             typeof(TurretBossController).GetField("completedAttack", flags).SetValue(boss, TurretBossAttackState.LongCharge);
             typeof(TurretBossController).GetField("comboAttacks", flags).SetValue(boss, 1);
+            // Force the optional extension so this assertion tests its proximity branch.
+            typeof(TurretBossController).GetField("comboExtensionChance", flags).SetValue(boss, 1f);
             var followUp = typeof(TurretBossController).GetMethod("ChooseFollowUp", flags);
             followUp.Invoke(boss, null);
             Assert.AreEqual(TurretBossAttackState.ShortChargeWarning, boss.State,
@@ -296,7 +320,8 @@ public class TurretBossTests
                 if (boss.CoreExposed)
                 {
                     Assert.IsFalse(boss.Launcher.IsActive, "Earned openings must be free of leftover payloads.");
-                    Assert.Greater(boss.RecoveryDuration, 2.5f);
+                    Assert.That(boss.RecoveryDuration, Is.InRange(0.9999f, 1.4001f),
+                        "Mobile openings use the halved recovery window, scaled by commitment.");
                     recoveries++;
                     boss.Advance(boss.RecoveryDuration);
                     Assert.AreEqual(TurretBossAttackState.MobileAssess, boss.State);

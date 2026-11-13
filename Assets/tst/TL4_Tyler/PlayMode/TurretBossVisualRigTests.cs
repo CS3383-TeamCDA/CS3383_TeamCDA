@@ -27,6 +27,8 @@ public sealed class TurretBossVisualRigTests
                 ankles[i] = legs.GetChild(i).Find("Knee pivot/Ankle pivot");
                 previous[i] = ankles[i].position;
             }
+            // Initialize lazy damage effects before measuring reload hierarchy stability.
+            rig.PlayDamageFeedback(1f);
             // Simulate a script reload adding the turret field and clearing runtime leg state.
             int rootChildren = root.transform.childCount;
             var flags = BindingFlags.NonPublic | BindingFlags.Instance;

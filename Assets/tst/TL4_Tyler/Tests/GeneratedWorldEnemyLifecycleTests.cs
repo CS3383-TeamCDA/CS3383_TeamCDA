@@ -55,6 +55,8 @@ public class GeneratedWorldEnemyLifecycleTests
 
         MonoBehaviour demo = FindBehaviour("EscapeThe90s.WorldGen.Demo.WorldNetworkDemo");
         Assert.IsNotNull(demo, "The scene must contain WorldNetworkDemo.");
+        // This fixture exercises the supported street-mode lifecycle, not coordinate streaming.
+        demo.GetType().GetField("coordinateWorldMode").SetValue(demo, false);
         FieldInfo settingsField = demo.GetType().GetField("settings", BindingFlags.Instance | BindingFlags.Public);
         Assert.IsNotNull(settingsField, "WorldNetworkDemo must expose its world-generation settings.");
         worldGenSettings = settingsField.GetValue(demo);
