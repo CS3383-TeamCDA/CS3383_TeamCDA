@@ -5,6 +5,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 using EscapeThe90s.MetaProgression;
+using EscapeThe90s.Contracts;
 
 public class SaveSystemTests
 {
