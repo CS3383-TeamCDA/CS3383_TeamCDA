@@ -1,3 +1,4 @@
+using UnityEngine.EventSystems;
 using UnityEngine;
 using UnityEngine.UI;
 using EscapeThe90s.Contracts;
@@ -26,15 +27,16 @@ namespace EscapeThe90s.MetaProgression
 
         private void OnDisable()
         {
-            plusButton.onClick.RemoveListener(OnPlusClicked); 
+            plusButton.onClick.RemoveListener(OnPlusClicked);
         }
-        
+
         private void OnPlusClicked()
         {
             MetaProgressionManager.Instance?.PurchaseUpgrade(type);
             Refresh();
+            EventSystem.current?.SetSelectedGameObject(null); // clear Selected so hover glow keeps working
         }
-        
+
         /// <summary>Shows the first (level) segments and hides the rest.</summary>
         public void Refresh()
         {
