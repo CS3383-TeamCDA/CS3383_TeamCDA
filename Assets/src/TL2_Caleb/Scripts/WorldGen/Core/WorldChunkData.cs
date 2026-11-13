@@ -20,6 +20,15 @@ namespace EscapeThe90s.WorldGen
 
         public WorldChunkData(WorldChunkCoord coordinate, WorldChunkKind kind, int biome, int worldFloorCellY, float difficulty,
             ulong contentHash, TileId[] tiles, IReadOnlyList<SpawnLocation> spawnLocations)
+            : this(coordinate, kind, biome, worldFloorCellY, difficulty, contentHash, tiles, spawnLocations, true) { }
+
+        /// <summary>Transfers fresh generator-owned arrays into an immutable snapshot without redundant copies.</summary>
+        internal static WorldChunkData FromOwnedArrays(WorldChunkCoord coordinate, WorldChunkKind kind, int biome,
+            int worldFloorCellY, float difficulty, ulong contentHash, TileId[] tiles, SpawnLocation[] spawnLocations)
+        { return new WorldChunkData(coordinate, kind, biome, worldFloorCellY, difficulty, contentHash, tiles, spawnLocations, false); }
+
+        WorldChunkData(WorldChunkCoord coordinate, WorldChunkKind kind, int biome, int worldFloorCellY, float difficulty,
+            ulong contentHash, TileId[] tiles, IReadOnlyList<SpawnLocation> spawnLocations, bool copyInputs)
         {
             if (tiles == null || tiles.Length != WorldChunkCoord.Size * WorldChunkCoord.Size)
                 throw new ArgumentException("A world chunk requires exactly 16 by 16 tile values.", "tiles");
@@ -29,10 +38,11 @@ namespace EscapeThe90s.WorldGen
             WorldFloorCellY = worldFloorCellY;
             Difficulty = DifficultyProgression.ClampDifficulty(difficulty);
             ContentHash = contentHash;
-            _tiles = (TileId[])tiles.Clone();
+            _tiles = copyInputs ? (TileId[])tiles.Clone() : tiles;
             int count = spawnLocations == null ? 0 : spawnLocations.Count;
-            var copy = new SpawnLocation[count];
-            for (int i = 0; i < count; i++) copy[i] = spawnLocations[i];
+            SpawnLocation[] copy = count == 0 ? Array.Empty<SpawnLocation>()
+                : copyInputs ? new SpawnLocation[count] : (SpawnLocation[])spawnLocations;
+            if (copyInputs) for (int i = 0; i < count; i++) copy[i] = spawnLocations[i];
             _spawnLocations = Array.AsReadOnly(copy);
         }
 

@@ -12,6 +12,7 @@ namespace EscapeThe90s.WorldGen
         Tilemap _tilemap;
         TilemapRenderer _renderer;
         PolygonCollider2D _collider;
+        public ulong ContentHash { get; private set; }
 
         void Awake()
         {
@@ -38,12 +39,12 @@ namespace EscapeThe90s.WorldGen
 
         public void Populate(WorldChunkData data, IWorldProfile profile, WorldArt art)
         {
+            ContentHash = data.ContentHash;
             _tilemap.ClearAllTiles();
             WorldChunkCoord coordinate = data.Coordinate;
             int x0 = coordinate.MinCellX;
             int y0 = coordinate.MinCellY;
             transform.position = new Vector3(x0, y0, 0f);
-            gameObject.name = "World Chunk " + coordinate;
             gameObject.SetActive(true);
             art.ApplyPalette(_renderer, WorldArt.PaletteRow(data.Biome, 0));
 
