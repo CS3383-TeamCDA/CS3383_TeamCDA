@@ -1,0 +1,9 @@
+{
+  "name": "TL4.PlayerSandbox",
+  "references": [
+    "TL6Assembly",
+    "TwoHandedHero.Runtime",
+    "Unity.InputSystem",
+    "StateLogic"
+  ]
+}

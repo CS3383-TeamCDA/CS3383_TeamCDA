@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1917715700
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1917715701}
+  - component: {fileID: 1917715702}
+  m_Layer: 0
+  m_Name: TL4 Player Art Sandbox
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1917715701
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1917715700}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1917715702
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1917715700}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9ef93afdfbc74b07be0edc36ee992111, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TL4.PlayerSandbox::PlayerArtSandbox
+  playerPrefab: {fileID: 4047807644510114612, guid: 9e6f9434e184498eb2e45147c59f088e, type: 3}
+  visualPrefab: {fileID: 3530393535061930324, guid: 47ac9f7aa71134bfca8fb13832215861, type: 3}
+  locomotionAnimator: {fileID: 9100000, guid: 47e41be48e184bddb9b6fc8c13ad7405, type: 2}
+  deathFrames:
+  - {fileID: 21300300, guid: 1ca6e3c52b17497ab131152ac4864856, type: 3}
+  - {fileID: 21300301, guid: 1ca6e3c52b17497ab131152ac4864856, type: 3}
+  - {fileID: 21300302, guid: 1ca6e3c52b17497ab131152ac4864856, type: 3}
+  - {fileID: 21300303, guid: 1ca6e3c52b17497ab131152ac4864856, type: 3}
+  - {fileID: 21300304, guid: 1ca6e3c52b17497ab131152ac4864856, type: 3}
+  - {fileID: 21300305, guid: 1ca6e3c52b17497ab131152ac4864856, type: 3}
+  - {fileID: 21300306, guid: 1ca6e3c52b17497ab131152ac4864856, type: 3}
+  - {fileID: 21300307, guid: 1ca6e3c52b17497ab131152ac4864856, type: 3}
+  weapons:
+  - {fileID: 11400000, guid: fd05cd1f288a341e7934f016a5f32365, type: 2}
+  - {fileID: 11400000, guid: 70f13e05eeef64a2f95a7dbe60c8869f, type: 2}
+--- !u!1660057539 &9223372036854775807
+SceneRoots:
+  m_ObjectHideFlags: 0
+  m_Roots:
+  - {fileID: 1917715701}
