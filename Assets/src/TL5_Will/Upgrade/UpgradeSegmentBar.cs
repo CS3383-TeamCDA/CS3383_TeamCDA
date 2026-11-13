@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using EscapeThe90s.Contracts;
 
 namespace EscapeThe90s.MetaProgression
 {

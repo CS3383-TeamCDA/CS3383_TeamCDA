@@ -1,4 +1,6 @@
+using System;
 using UnityEngine;
+using EscapeThe90s.Contracts;
 
 namespace EscapeThe90s.MetaProgression
 {

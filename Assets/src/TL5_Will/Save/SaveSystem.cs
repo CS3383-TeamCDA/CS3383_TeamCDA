@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading;
 using UnityEngine;
+using EscapeThe90s.Contracts;
 
 namespace EscapeThe90s.MetaProgression
 {

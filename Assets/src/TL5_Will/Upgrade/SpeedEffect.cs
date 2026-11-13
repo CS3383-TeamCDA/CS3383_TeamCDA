@@ -1,10 +1,12 @@
 using UnityEngine;
 
-public class SpeedEffect : UpgradeEffect
+namespace EscapeThe90s.MetaProgression
 {
-    public override string Apply()
+    public class SpeedEffect : UpgradeEffect
     {
-        Debug.Log("Speed Apply");
-        return "Speed Apply";
+        public override void Apply(float value)
+        {
+
+        }
     }
 }

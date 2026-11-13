@@ -1,10 +1,14 @@
 using UnityEngine;
 
-public class HealthEffect : UpgradeEffect
+namespace EscapeThe90s.MetaProgression
 {
-    public override string Apply()
+    public class HealthEffect : UpgradeEffect
     {
-        Debug.Log("Health Apply");
-        return "Health Apply";
+        private PlayerHealth health;
+        public override void Apply(float value)
+        {
+            if(value > 0)
+                health.IncreaseMaxHealth((int)value);
+        }
     }
 }

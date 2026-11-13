@@ -1,4 +1,5 @@
-namespace EscapeThe90s.MetaProgression{
+namespace EscapeThe90s.Contracts
+{
     public enum UpgradeType
     {
         Health,

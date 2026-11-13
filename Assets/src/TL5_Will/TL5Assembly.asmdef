@@ -2,9 +2,8 @@
     "name": "TL5Assembly",
     "rootNamespace": "",
     "references": [
-        "EscapeThe90s.Contracts",
-        "GUID:443c6ba2ba607374f916ce67442a29cd",
-        "GUID:7d9e55b8980dc4227ba8a3ed45a4e75d"
+        "GUID:bc6f260f4c10497cbed90727f33e34a1",
+        "GUID:e79fff685693b3748abc147481561945"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

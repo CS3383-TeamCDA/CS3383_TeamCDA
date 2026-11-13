@@ -1,10 +1,10 @@
 using UnityEngine;
 
-public class UpgradeEffect
+namespace EscapeThe90s.MetaProgression
 {
-    public virtual string Apply()
+    public class UpgradeEffect
     {
-        Debug.Log("Base Apply");
-        return "Base Apply";
+        public virtual void Apply(float value){}
     }
 }
+

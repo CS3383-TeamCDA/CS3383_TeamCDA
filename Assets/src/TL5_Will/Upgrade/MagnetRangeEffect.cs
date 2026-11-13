@@ -1,10 +1,12 @@
 using UnityEngine;
 
-public class MagnetRangeEffect : UpgradeEffect
+namespace EscapeThe90s.MetaProgression
 {
-    public override string Apply()
+    public class MagnetRangeEffect : UpgradeEffect
     {
-        Debug.Log("Mag Range Apply");
-        return "Mag Range Apply";
+        public override void Apply(float value)
+        {
+
+        }
     }
 }

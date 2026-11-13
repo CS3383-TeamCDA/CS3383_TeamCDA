@@ -1,25 +1,26 @@
+using EscapeThe90s.Contracts;
 using System;
 using System.Threading;
 using UnityEngine;
-using EscapeThe90s.HUD;
 using System.Collections.Generic;
 using UnityEditor.Overlays;
 
 namespace EscapeThe90s.MetaProgression
 {
-    public class MetaProgressionManager : MonoBehaviour
+    public class MetaProgressionManager : MonoBehaviour, IMetaProgressionManager
     {
         public static MetaProgressionManager Instance { get; private set; }
-        private HUDController hudController;
         [SerializeField] private int currency = 0;
         private int[] upgradeLevels;
         [SerializeField] private List<UpgradeDefinition> definitions;
+
+        public int Currency => currency;
+        public event Action<int> OnCurrencyChanged;
 
         private void Awake()
         {
             if (Instance != null) { Destroy(gameObject); return; }
             Instance = this;
-            DontDestroyOnLoad(gameObject);
             RestoreSnapshot(SaveSystem.Load());
         }
 
@@ -28,9 +29,9 @@ namespace EscapeThe90s.MetaProgression
             if (amount > 0)
             {
                 currency += amount;
-                hudController.UpdateCurrency(currency);
+                OnCurrencyChanged?.Invoke(currency);
             }
-                
+
         }
 
         /// <summary>Returns the stored level for the upgrade, or 0 if none exists.</summary>
@@ -67,18 +68,24 @@ namespace EscapeThe90s.MetaProgression
         /// </summary>
         public bool PurchaseUpgrade(UpgradeType type)
         {
-            if (!CanPurchase(type))
-                return false;
-
+            if (!CanPurchase(type)) return false;
             currency -= GetDefinition(type).GetCost(GetUpgradeLevel(type));
             upgradeLevels[(int)type]++;
+            OnCurrencyChanged?.Invoke(currency);
             SaveSystem.Save(CreateSnapshot());
             return true;
         }
 
-        public void ApplyStartingBonuses(/*PlayerController player*/)
+        public void ApplyStartingBonuses()
         {
-
+            if (definitions != null)
+            {
+                for (int i = 0; i < definitions.Count; i++)
+                {
+                    if (definitions[i].Effect != null)
+                        definitions[i].Effect.Apply(GetEffectValue(definitions[i].Type));
+                }
+            }
         }
 
         public SaveData CreateSnapshot()
@@ -119,7 +126,7 @@ namespace EscapeThe90s.MetaProgression
             {
                 return null;
             }
-                
+
             return definitions.Find(d => d.Type == type);
         }
 
