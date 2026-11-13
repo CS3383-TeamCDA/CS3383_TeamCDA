@@ -22,6 +22,21 @@ namespace EscapeThe90s.WorldGen
         readonly List<WorldChunkCoord> _recycle;
         readonly ChunkPool<CoordinateChunkView> _pool;
         static readonly Comparison<PendingChunk> PendingComparer = PendingChunk.Compare;
+        CoordinateAllocationProbe _callbackAllocations;
+        public bool MeasureCallbacks { get; set; }
+        public bool AllocationProbeOverflowed { get { return _callbackAllocations != null && _callbackAllocations.Overflowed; } }
+        public void DisposeMeasurements() { if (_callbackAllocations != null) _callbackAllocations.Dispose(); }
+        public long ContentAllocationEvents { get; private set; }
+        public long ContentTicks { get; private set; }
+
+        public bool IsLoaded(WorldChunkCoord coordinate) { return _loaded.ContainsKey(coordinate); }
+        public bool TryGetContentHash(WorldChunkCoord coordinate, out ulong hash)
+        {
+            if (_loaded.TryGetValue(coordinate, out CoordinateChunkView view) && view != null)
+            { hash = view.ContentHash; return true; }
+            hash = 0UL;
+            return false;
+        }
 
         public int LoadedCount { get { return _loaded.Count; } }
         public ChunkPoolMetrics PoolMetrics { get { return _pool.Metrics; } }
@@ -67,6 +82,10 @@ namespace EscapeThe90s.WorldGen
 
         public void Stream(WorldStreamWindow window, float originX)
         {
+            ContentAllocationEvents = 0;
+            ContentTicks = 0;
+            if (MeasureCallbacks && _callbackAllocations == null) _callbackAllocations = new CoordinateAllocationProbe();
+            RecycleOutsideWindow(window);
             _pending.Clear();
             for (int y = window.MinY; y <= window.MaxY; y++)
                 for (int x = window.MinX; x <= window.MaxX; x++)
@@ -83,7 +102,6 @@ namespace EscapeThe90s.WorldGen
             _pending.Sort(PendingComparer);
             int count = Mathf.Min(_buildBudget, _pending.Count);
             for (int i = 0; i < count; i++) LoadSurfaceChunk(_pending[i].Coordinate, originX);
-            RecycleOutsideWindow(window);
         }
 
         void LoadSurfaceChunk(WorldChunkCoord coordinate, float originX)
@@ -102,7 +120,14 @@ namespace EscapeThe90s.WorldGen
             var info = new ChunkSpawnedInfo(id, bounds, difficulty,
                 DifficultyProgression.TierAtDifficulty(difficulty), data.Biome,
                 ChunkKind.Ground, data.SpawnLocations);
+            if (MeasureCallbacks) _callbackAllocations.Begin();
+            long ticks = MeasureCallbacks ? System.Diagnostics.Stopwatch.GetTimestamp() : 0;
             _progress.NotifyChunkSpawned(info);
+            if (MeasureCallbacks)
+            {
+                ContentTicks += System.Diagnostics.Stopwatch.GetTimestamp() - ticks;
+                ContentAllocationEvents += _callbackAllocations.End();
+            }
         }
 
         void RecycleOutsideWindow(WorldStreamWindow window)
@@ -123,7 +148,14 @@ namespace EscapeThe90s.WorldGen
             if (!_loaded.TryGetValue(coordinate, out CoordinateChunkView view)) return;
             _loaded.Remove(coordinate);
             if (view == null) return;
+            if (MeasureCallbacks) _callbackAllocations.Begin();
+            long ticks = MeasureCallbacks ? System.Diagnostics.Stopwatch.GetTimestamp() : 0;
             _progress.NotifyChunkRecycled(ChunkId.ForWorldCoordinate(coordinate.X, coordinate.Y));
+            if (MeasureCallbacks)
+            {
+                ContentTicks += System.Diagnostics.Stopwatch.GetTimestamp() - ticks;
+                ContentAllocationEvents += _callbackAllocations.End();
+            }
             view.ResetForPool();
             _pool.Return(view);
         }

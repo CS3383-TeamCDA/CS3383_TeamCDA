@@ -1,0 +1,6 @@
+{
+  "name": "EscapeThe90s.WorldGen.StreamingTests",
+  "references": ["EscapeThe90s.WorldGen.Core", "EscapeThe90s.WorldGen.Unity", "EscapeThe90s.WorldGen.Integration", "EscapeThe90s.WorldGen.Demo", "EscapeThe90s.Contracts", "TL4Assembly"],
+  "optionalUnityReferences": ["TestAssemblies"],
+  "autoReferenced": false
+}

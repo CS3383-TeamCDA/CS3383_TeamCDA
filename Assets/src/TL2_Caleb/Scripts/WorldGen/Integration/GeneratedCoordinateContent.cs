@@ -8,7 +8,8 @@ namespace EscapeThe90s.WorldGen.Integration
     /// <summary>Consumes coordinate chunk contracts and scopes spawned objects to their owner chunk.</summary>
     public sealed class GeneratedCoordinateContent : MonoBehaviour, System.IDisposable
     {
-        readonly Dictionary<ChunkId, List<GameObject>> _ownedObjects = new Dictionary<ChunkId, List<GameObject>>();
+        readonly Dictionary<ChunkId, List<GameObject>> _ownedObjects = new Dictionary<ChunkId, List<GameObject>>(128);
+        readonly Stack<List<GameObject>> _instanceLists = new Stack<List<GameObject>>(128);
         CoordinateWorldStreamer _streamer;
         ILevelProgress _progress;
         IWorldContentSpawnAdapter _spawner;
@@ -28,7 +29,8 @@ namespace EscapeThe90s.WorldGen.Integration
         void OnChunkSpawned(ChunkSpawnedInfo info)
         {
             if (info == null || !info.Id.IsWorldCoordinate || _ownedObjects.ContainsKey(info.Id)) return;
-            var instances = new List<GameObject>(info.SpawnLocations.Count);
+            if (info.SpawnLocations.Count == 0) return;
+            List<GameObject> instances = _instanceLists.Count == 0 ? new List<GameObject>(3) : _instanceLists.Pop();
             _ownedObjects.Add(info.Id, instances);
             for (int i = 0; i < info.SpawnLocations.Count; i++)
             {
@@ -52,6 +54,8 @@ namespace EscapeThe90s.WorldGen.Integration
             if (!_ownedObjects.TryGetValue(id, out List<GameObject> instances)) return;
             for (int i = 0; i < instances.Count; i++) if (instances[i] != null) Destroy(instances[i]);
             _ownedObjects.Remove(id);
+            instances.Clear();
+            _instanceLists.Push(instances);
         }
 
         public void Dispose()
@@ -64,6 +68,7 @@ namespace EscapeThe90s.WorldGen.Integration
             foreach (List<GameObject> instances in _ownedObjects.Values)
                 for (int i = 0; i < instances.Count; i++) if (instances[i] != null) Destroy(instances[i]);
             _ownedObjects.Clear();
+            _instanceLists.Clear();
             _spawner = null;
             _progress = null;
             _streamer = null;

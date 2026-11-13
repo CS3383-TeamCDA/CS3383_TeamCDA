@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using System;
 using EscapeThe90s.Contracts;
 
 namespace EscapeThe90s.WorldGen
@@ -62,7 +62,7 @@ namespace EscapeThe90s.WorldGen
                 hash = WorldHash.Combine(hash, spawn.ContentKindIndex);
                 hash = WorldHash.Combine(hash, (int)(spawn.NormalizedX * 65535f));
             }
-            return new WorldChunkData(coordinate, kind, biome, _worldFloor, difficulty, hash, tiles, spawns);
+            return WorldChunkData.FromOwnedArrays(coordinate, kind, biome, _worldFloor, difficulty, hash, tiles, spawns);
         }
 
         public TileId GetTileAtCell(int worldCellX, int worldCellY)
@@ -80,32 +80,38 @@ namespace EscapeThe90s.WorldGen
 
         SpawnLocation[] CreateSpawnLocations(WorldChunkCoord coordinate, WorldChunkKind kind, ulong hash)
         {
-            if (kind != WorldChunkKind.Surface) return new SpawnLocation[0];
-            if (!TryChooseSurfaceCell(coordinate, hash, out int surfaceCellX)) return new SpawnLocation[0];
-            var spawns = new List<SpawnLocation>(3);
+            if (kind != WorldChunkKind.Surface) return Array.Empty<SpawnLocation>();
+            if (!TryChooseSurfaceCell(coordinate, hash, out int surfaceCellX)) return Array.Empty<SpawnLocation>();
             int enemyPhase = (int)(_seed % 3UL);
             float normalizedX = (coordinate.LocalIndexX(surfaceCellX) + 0.5f) / WorldChunkCoord.Size;
-            if (PositiveMod(coordinate.X + enemyPhase, 3) == 0)
+            bool hasEnemy = PositiveMod(coordinate.X + enemyPhase, 3) == 0;
+            bool hasPowerUp = (hash >> 16) % 7UL == 0UL;
+            int buildingCenterX = coordinate.MinCellX + WorldChunkCoord.Size / 2;
+            bool hasBuilding = _terrainStamps.IsCityBlockCenter(buildingCenterX);
+            int count = (hasEnemy ? 1 : 0) + (hasPowerUp ? 1 : 0) + (hasBuilding ? 1 : 0);
+            if (count == 0) return Array.Empty<SpawnLocation>();
+            var spawns = new SpawnLocation[count];
+            int index = 0;
+            if (hasEnemy)
             {
                 int enemyKind = PositiveMod(WorldChunkCoord.FloorDiv(coordinate.X + enemyPhase, 3), 3);
-                spawns.Add(new SpawnLocation(SpawnLocationKind.Enemy, normalizedX, 0, enemyKind, -1));
+                spawns[index++] = new SpawnLocation(SpawnLocationKind.Enemy, normalizedX, 0, enemyKind, -1);
             }
-            if ((hash >> 16) % 7UL == 0UL)
+            if (hasPowerUp)
             {
-                spawns.Add(new SpawnLocation(SpawnLocationKind.PowerUp, normalizedX, 0, (int)((hash >> 32) % 3UL), -1));
+                spawns[index++] = new SpawnLocation(SpawnLocationKind.PowerUp, normalizedX, 0, (int)((hash >> 32) % 3UL), -1);
             }
-            int buildingCenterX = coordinate.MinCellX + WorldChunkCoord.Size / 2;
-            if (_terrainStamps.IsCityBlockCenter(buildingCenterX))
+            if (hasBuilding)
             {
                 int buildingKind = (hash >> 8) % 5UL == 0UL
                     ? (int)BuildingType.PizzaParlor
                     : (int)BuildingType.Generic;
                 int accent = (int)(hash % WorldConstants.AccentsPerBiome);
                 float buildingNormalizedX = (coordinate.LocalIndexX(buildingCenterX) + 0.5f) / WorldChunkCoord.Size;
-                spawns.Add(new SpawnLocation(SpawnLocationKind.BuildingAnchor,
-                    buildingNormalizedX, accent, buildingKind, -1));
+                spawns[index] = new SpawnLocation(SpawnLocationKind.BuildingAnchor,
+                    buildingNormalizedX, accent, buildingKind, -1);
             }
-            return spawns.ToArray();
+            return spawns;
         }
 
         bool TryChooseSurfaceCell(WorldChunkCoord coordinate, ulong hash, out int surfaceCellX)

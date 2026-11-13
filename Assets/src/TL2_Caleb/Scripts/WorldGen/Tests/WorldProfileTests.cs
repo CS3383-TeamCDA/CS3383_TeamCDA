@@ -7,6 +7,17 @@ namespace EscapeThe90s.WorldGen.Tests
 {
     public sealed class WorldProfileTests
     {
+        [Test]
+        public void WorldChunkData_CallerMutatesSpawnArray_RetainsCopiedLocations()
+        {
+            var tiles = new TileId[256];
+            var locations = new[] { new SpawnLocation(SpawnLocationKind.Enemy, 0.25f, 0, 1, -1) };
+            var data = new WorldChunkData(new WorldChunkCoord(-1, 0), WorldChunkKind.Surface,
+                0, -64, 0f, 1UL, tiles, locations);
+            locations[0] = new SpawnLocation(SpawnLocationKind.PowerUp, 0.75f, 0, 2, -1);
+            Assert.AreEqual(SpawnLocationKind.Enemy, data.SpawnLocations[0].Kind);
+            Assert.AreEqual(0.25f, data.SpawnLocations[0].NormalizedX);
+        }
         [TestCase(431UL, -17, -1)]
         [TestCase(9182UL, -16, -1)]
         [TestCase(73UL, -1, -16)]
