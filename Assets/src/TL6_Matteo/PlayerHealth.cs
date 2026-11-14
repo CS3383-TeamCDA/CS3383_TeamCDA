@@ -1,8 +1,9 @@
 using System;
 using System.Security.Cryptography;
 using UnityEngine;
+using EscapeThe90s.Contracts;
 
-public class PlayerHealth : MonoBehaviour
+public class PlayerHealth : MonoBehaviour, IPlayerHealth
 {
     [SerializeField, Min(1)] private int _defaultMaxHealth = 100;
     [SerializeField, Min(1)] private int _maxHealth = 100;
@@ -50,6 +51,7 @@ public class PlayerHealth : MonoBehaviour
 
     }
 
+    //Sets the maximum health to a new value, adjusting current health accordingly
     public void SetMaxHealth(int newMaxHealth)
     {
         if (newMaxHealth < 1 || newMaxHealth <= _maxHealth) return;
@@ -66,19 +68,22 @@ public class PlayerHealth : MonoBehaviour
 
         OnHealthChanged?.Invoke(CurrentHealth, _maxHealth);
     }
+
+    //Resets Health to maximum
     public void ResetHealth()
     {
         CurrentHealth = _maxHealth;
         OnHealthChanged?.Invoke(CurrentHealth, _maxHealth);
     }
 
-    //MAX HEALTH
+    //Increases the maximum health by a specified amount, adjusting current health accordingly
     public void IncreaseMaxHealth(int amount)
     {
         if (amount<=0) return;
         SetMaxHealth(_maxHealth + amount);
     }
 
+    //Resets Max Health to default value
     public void ResetMaxHealth()
     {
         SetMaxHealth(_defaultMaxHealth);

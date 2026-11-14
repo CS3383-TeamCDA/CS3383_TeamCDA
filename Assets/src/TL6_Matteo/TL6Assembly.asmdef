@@ -2,9 +2,9 @@
     "name": "TL6Assembly",
     "rootNamespace": "",
     "references": [
-        "EscapeThe90s.Contracts",
-        "EscapeThe90s.Infrastructure",
-        "EscapeThe90s.Infrastructure.Unity",
+        "GUID:bc6f260f4c10497cbed90727f33e34a1",
+        "GUID:88a81c3202124f689181107a1722e866",
+        "GUID:4a0cb56bf53a47f1b4463fd86c5415a4",
         "GUID:299c2a5e09b5da843aa30f77ba107074",
         "GUID:75469ad4d38634e559750d17036d5f7c",
         "GUID:4307f53044263cf4b835bd812fc161a4"

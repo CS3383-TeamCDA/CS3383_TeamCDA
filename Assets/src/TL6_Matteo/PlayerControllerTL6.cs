@@ -1,7 +1,8 @@
 using UnityEngine;
+using EscapeThe90s.Contracts;
 
 [DefaultExecutionOrder(100)]
-public class PlayerControllerTL6 : MonoBehaviour
+public class PlayerControllerTL6 : MonoBehaviour, IPlayerControllerTL6
 {
     [SerializeField] private Rigidbody2D _rb;
     [SerializeField] private Collider2D _collider;
@@ -10,7 +11,7 @@ public class PlayerControllerTL6 : MonoBehaviour
     [Header("Horizontal")]
     [SerializeField] private float _xAcceleration = 60f;
     [SerializeField] private float _xDeceleration = 80f;
-    [SerializeField] private float _maxSpeedX = 8f;
+    [SerializeField] private float _defaultMaxSpeedX = 8f;
 
     [Header("Jump")]
     [SerializeField] private float _jumpSpeed = 10f;
@@ -24,6 +25,7 @@ public class PlayerControllerTL6 : MonoBehaviour
     [SerializeField] private float _dashDuration = 0.2f;
     [SerializeField] private bool _disableGravityDuringDash = true;
 
+    private float _maxSpeedX;
     // Give our states access to the player's components/settings.
     public Rigidbody2D Rb => _rb;
     public IPlayerMovementInput Input;
@@ -53,6 +55,7 @@ public class PlayerControllerTL6 : MonoBehaviour
         _stateManager = new PlayerStateManager(this);
         Input = GetComponent<IPlayerMovementInput>();
         BaseGravityScale = Rb.gravityScale;
+        _maxSpeedX = _defaultMaxSpeedX;
     }
 
     void Start()
@@ -69,6 +72,19 @@ public class PlayerControllerTL6 : MonoBehaviour
     {
         _stateManager.FixedUpdate();
     }
+
+    //RUNNING
+    public void SetMaxSpeedX(float newMaxSpeedX)
+    {
+        _maxSpeedX = newMaxSpeedX;
+    }
+
+    public void ResetMaxSpeedX()
+    {
+        _maxSpeedX = _defaultMaxSpeedX;
+    }
+
+
 
     //JUMPING
     public bool IsGrounded()

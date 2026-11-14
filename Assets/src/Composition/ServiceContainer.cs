@@ -8,6 +8,7 @@ using EscapeThe90s.Infrastructure.Unity;
 using EscapeThe90s.PowerUps;
 using LegacyUnityPublisher = EscapeThe90s.Dependencies.Unity.IUnityGameStateEventPublisher;
 using UnityEngine;
+using UnityPipeline.Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace EscapeThe90s.Composition
 {
@@ -83,6 +84,13 @@ namespace EscapeThe90s.Composition
                 GetComponent<EnemyCurrencyBinding>() == null)
                 gameObject.AddComponent<EnemyCurrencyBinding>();
 
+            PlayerHealth playerHealth = FindAnyObjectByType<PlayerHealth>(FindObjectsInactive.Include);
+
+            if(playerHealth != null)
+                Register<IPlayerHealth>(playerHealth);
+            else
+                Debug.LogError("ServiceContainer: PlayerHealth could not be found.", this);
+            
             Register<IEventBus>(eventBus);
             if (bridge != null)
             {

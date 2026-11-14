@@ -1,8 +1,23 @@
 {
     "name": "EscapeThe90s.Composition",
     "rootNamespace": "EscapeThe90s.Composition",
-    "references": ["EscapeThe90s.Contracts", "EscapeThe90s.Infrastructure", "EscapeThe90s.Infrastructure.Unity", "EscapeThe90s.Dependencies.Unity", "GUID:443c6ba2ba607374f916ce67442a29cd", "TL4Assembly", "Joe.Game"],
-    "includePlatforms": [], "excludePlatforms": [], "allowUnsafeCode": false,
-    "overrideReferences": false, "precompiledReferences": [], "autoReferenced": true,
-    "defineConstraints": [], "versionDefines": [], "noEngineReferences": false
+    "references": [
+        "GUID:bc6f260f4c10497cbed90727f33e34a1",
+        "GUID:88a81c3202124f689181107a1722e866",
+        "GUID:4a0cb56bf53a47f1b4463fd86c5415a4",
+        "GUID:e99c5b8bff9c4b9f8e7d72303e884900",
+        "GUID:443c6ba2ba607374f916ce67442a29cd",
+        "GUID:7d9e55b8980dc4227ba8a3ed45a4e75d",
+        "GUID:48ead3c22fc9e4b97bc5183622b0c2aa",
+        "GUID:e79fff685693b3748abc147481561945"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }
