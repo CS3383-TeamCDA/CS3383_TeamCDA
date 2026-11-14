@@ -1,4 +1,5 @@
 
+using EscapeThe90s.Contracts;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -333,5 +334,84 @@ public class PlayerHealthTests
         Assert.IsFalse(_health.IsDead);
     }
 
+    [Test]
+    public void ResetMaxHealthRemovesUpgradesAndFullyHeals()
+    {
+        _health.IncreaseMaxHealth(50); // 150/150
+        _health.TakeDamage(80);       // 70/150
 
+        _health.ResetMaxHealth();
+
+        Assert.AreEqual(100, _health.MaxHealth);
+        Assert.AreEqual(100, _health.CurrentHealth);
+        Assert.IsFalse(_health.IsDead);
+    }
+
+    [Test]
+    public void ResetMaxHealthPublishesHealthChangedEvent()
+    {
+        _health.IncreaseMaxHealth(50);
+        _health.TakeDamage(80);
+
+        int eventCount = 0;
+        int reportedCurrent = -1;
+        int reportedMax = -1;
+
+        _health.OnHealthChanged += (current, max) =>
+        {
+            eventCount++;
+            reportedCurrent = current;
+            reportedMax = max;
+        };
+
+        _health.ResetMaxHealth();
+
+        Assert.AreEqual(1, eventCount);
+        Assert.AreEqual(100, reportedCurrent);
+        Assert.AreEqual(100, reportedMax);
+    }
+
+    [Test]
+    public void ResetMaxHealthAfterDeathRestoresPlayer()
+    {
+        _health.IncreaseMaxHealth(50);
+        _health.TakeDamage(150);
+
+        Assert.IsTrue(_health.IsDead);
+
+        _health.ResetMaxHealth();
+
+        Assert.AreEqual(100, _health.MaxHealth);
+        Assert.AreEqual(100, _health.CurrentHealth);
+        Assert.IsFalse(_health.IsDead);
+    }
+
+    [Test]
+    public void HealthContractExposesHealthChangesAndDeath()
+    {
+        IPlayerHealth health = _health;
+
+        int healthChangeCount = 0;
+        int deathCount = 0;
+        int reportedCurrent = -1;
+        int reportedMax = -1;
+
+        health.OnHealthChanged += (current, max) =>
+        {
+            healthChangeCount++;
+            reportedCurrent = current;
+            reportedMax = max;
+        };
+
+        health.OnPlayerDied += () => deathCount++;
+
+        health.TakeDamage(100);
+
+        Assert.AreEqual(0, health.CurrentHealth);
+        Assert.AreEqual(100, health.MaxHealth);
+        Assert.AreEqual(1, healthChangeCount);
+        Assert.AreEqual(0, reportedCurrent);
+        Assert.AreEqual(100, reportedMax);
+        Assert.AreEqual(1, deathCount);
+    }
 }

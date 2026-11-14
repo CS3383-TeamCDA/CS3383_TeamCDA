@@ -487,7 +487,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3126469205196626953, guid: 0a6f1cd7220343d45951c063b986deb8, type: 3}
       propertyPath: m_ActionEvents.Array.size
-      value: 12
+      value: 13
       objectReference: {fileID: 0}
     - target: {fileID: 3356497043908997782, guid: 0a6f1cd7220343d45951c063b986deb8, type: 3}
       propertyPath: m_LocalPosition.x
@@ -541,7 +541,8 @@ PrefabInstance:
       propertyPath: _groundLayer.m_Bits
       value: 8
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 0}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []

@@ -17,6 +17,7 @@ GameObject:
   - component: {fileID: -8560513394296968916}
   - component: {fileID: 6366694467067482550}
   - component: {fileID: -5111774361161408091}
+  - component: {fileID: 3372549212717250394}
   m_Layer: 0
   m_Name: PlayerTL6
   m_TagString: Untagged
@@ -36,7 +37,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 54455657312530305}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &8842234704902634124
@@ -56,7 +58,7 @@ MonoBehaviour:
   _inputHandler: {fileID: 7691105525367031125}
   _xAcceleration: 65
   _xDeceleration: 85
-  _maxSpeedX: 8
+  _defaultMaxSpeedX: 8
   _jumpSpeed: 13.5
   _groundLayer:
     serializedVersion: 2
@@ -235,7 +237,7 @@ SpriteRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4047807644510114612}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 0
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
@@ -313,3 +315,103 @@ MonoBehaviour:
   m_EditorClassIdentifier: TL6Assembly::PlayerHealth
   _defaultMaxHealth: 100
   _maxHealth: 100
+--- !u!114 &3372549212717250394
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4047807644510114612}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99c7deb9bbaffde4ab619db3d227bf4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TL6Assembly::PlayerVisualController
+  _rig: {fileID: 7816070326934607844}
+  _controller: {fileID: 8842234704902634124}
+  _rb: {fileID: 2713222599689475892}
+--- !u!1001 &6667078670132913840
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 3356497043908997782}
+    m_Modifications:
+    - target: {fileID: 2775580494959554114, guid: 47ac9f7aa71134bfca8fb13832215861, type: 3}
+      propertyPath: m_Name
+      value: TwoHandedHero
+      objectReference: {fileID: 0}
+    - target: {fileID: 6649370904940022065, guid: 47ac9f7aa71134bfca8fb13832215861, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 6649370904940022065, guid: 47ac9f7aa71134bfca8fb13832215861, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 6649370904940022065, guid: 47ac9f7aa71134bfca8fb13832215861, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6649370904940022065, guid: 47ac9f7aa71134bfca8fb13832215861, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6649370904940022065, guid: 47ac9f7aa71134bfca8fb13832215861, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6649370904940022065, guid: 47ac9f7aa71134bfca8fb13832215861, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6649370904940022065, guid: 47ac9f7aa71134bfca8fb13832215861, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6649370904940022065, guid: 47ac9f7aa71134bfca8fb13832215861, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6649370904940022065, guid: 47ac9f7aa71134bfca8fb13832215861, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6649370904940022065, guid: 47ac9f7aa71134bfca8fb13832215861, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6649370904940022065, guid: 47ac9f7aa71134bfca8fb13832215861, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6649370904940022065, guid: 47ac9f7aa71134bfca8fb13832215861, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6649370904940022065, guid: 47ac9f7aa71134bfca8fb13832215861, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 47ac9f7aa71134bfca8fb13832215861, type: 3}
+--- !u!4 &54455657312530305 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6649370904940022065, guid: 47ac9f7aa71134bfca8fb13832215861, type: 3}
+  m_PrefabInstance: {fileID: 6667078670132913840}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &7816070326934607844 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3530393535061930324, guid: 47ac9f7aa71134bfca8fb13832215861, type: 3}
+  m_PrefabInstance: {fileID: 6667078670132913840}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13c60fe7198b1434182d4ca287950191, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TwoHandedHero.Runtime::TwoHandedHero.TwoHandedRig

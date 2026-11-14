@@ -86,7 +86,9 @@ public class PlayerHealth : MonoBehaviour, IPlayerHealth
     //Resets Max Health to default value
     public void ResetMaxHealth()
     {
-        SetMaxHealth(_defaultMaxHealth);
+        _maxHealth = _defaultMaxHealth;
+        CurrentHealth = _maxHealth;
+        OnHealthChanged?.Invoke(CurrentHealth, _maxHealth);
     }
 
 
