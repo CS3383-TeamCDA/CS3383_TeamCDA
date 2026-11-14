@@ -223,6 +223,10 @@ PrefabInstance:
       propertyPath: m_LocalPosition.y
       value: 9
       objectReference: {fileID: 0}
+    - target: {fileID: 117427488278186170, guid: 0da14fc95075319448e7ee6e15fa5102, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 300081244274800435, guid: 0da14fc95075319448e7ee6e15fa5102, type: 3}
       propertyPath: m_Enabled
       value: 0
@@ -1093,6 +1097,9 @@ MonoBehaviour:
   mapRadiusRegions: 2
   startNodeX: 0
   startNodeY: 0
+  endlessRunMode: 1
+  coordinateWorldMode: 1
+  _showChunkDebug: 0
 --- !u!4 &1968481421
 Transform:
   m_ObjectHideFlags: 0
