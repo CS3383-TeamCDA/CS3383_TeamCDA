@@ -1,9 +1,10 @@
+using EscapeThe90s.Contracts;
 using EscapeThe90s.GameStates;
 using UnityEngine;
 
 namespace EscapeThe90s.HUD
 {
-    public class HUDController : MonoBehaviour
+    public class HUDController : MonoBehaviour, IDependent<IMetaProgressionManager>
     {
         // [SerializeField] private GameStateManager stateManager;
         [SerializeField] private MainMenuPanel mainMenuPanel;
@@ -18,6 +19,32 @@ namespace EscapeThe90s.HUD
         private int currentScore;
         private int currentCurrency;
         private GameState displayedState;
+        private IMetaProgressionManager progression;
+
+        // Called by ServiceContainer (via DependencyScope) during scene composition.
+        public void Inject(IMetaProgressionManager dependency)
+        {
+            if (progression != null)
+            {
+                progression.OnCurrencyChanged -= UpdateCurrency;
+            }
+
+            progression = dependency;
+
+            if (progression != null)
+            {
+                progression.OnCurrencyChanged += UpdateCurrency;
+                UpdateCurrency(progression.Currency);
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (progression != null)
+            {
+                progression.OnCurrencyChanged -= UpdateCurrency;
+            }
+        }
 
         private void Awake()
         {
@@ -28,7 +55,9 @@ namespace EscapeThe90s.HUD
                 pausePanel = GetComponentInChildren<PausePanel>(true);
             }
 
-            Initialize(startingHealth, startingScore, startingCurrency);
+            // Injection may already have happened (Awake order isn't guaranteed), so prefer the real balance.
+            int initialCurrency = progression != null ? progression.Currency : startingCurrency;
+            Initialize(startingHealth, startingScore, initialCurrency);
         }
 
         private void OnEnable()
