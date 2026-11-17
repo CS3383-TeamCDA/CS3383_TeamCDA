@@ -7,6 +7,7 @@ using UnityEditor.Overlays;
 
 namespace EscapeThe90s.MetaProgression
 {
+    [DefaultExecutionOrder(-100)]
     public class MetaProgressionManager : MonoBehaviour, IMetaProgressionManager
     {
         public static MetaProgressionManager Instance { get; private set; }
