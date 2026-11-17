@@ -130,5 +130,14 @@ namespace EscapeThe90s.MetaProgression
             return definitions.Find(d => d.Type == type);
         }
 
+        //Only for testing remove before final product
+        public void RemoveCurrency(int amount)
+        {
+            if (amount > 0)
+            {
+                currency = Mathf.Max(0, currency - amount);
+                OnCurrencyChanged?.Invoke(currency);
+            }
+        }
     }
 }

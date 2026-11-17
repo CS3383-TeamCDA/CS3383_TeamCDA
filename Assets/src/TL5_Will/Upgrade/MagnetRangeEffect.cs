@@ -1,4 +1,5 @@
 using UnityEngine;
+using EscapeThe90s.Contracts;
 
 namespace EscapeThe90s.MetaProgression
 {
@@ -6,7 +7,7 @@ namespace EscapeThe90s.MetaProgression
     {
         public override void Apply(float value)
         {
-
+            
         }
     }
 }

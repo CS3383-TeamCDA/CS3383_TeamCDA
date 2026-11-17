@@ -256,6 +256,24 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!1 &1245860876 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2449684244981939039, guid: b64a73987263cbd4ebd04e94fbbbf407, type: 3}
+  m_PrefabInstance: {fileID: 4138569434494213873}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1245860878
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1245860876}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b6d018b7489d31479748d654abedb6f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TL5Assembly::EscapeThe90s.MetaProgression.DebugCurrencyCheat
+  amount: 100
 --- !u!1 &1932215396 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5199530699885178941, guid: b64a73987263cbd4ebd04e94fbbbf407, type: 3}
@@ -4258,6 +4276,9 @@ PrefabInstance:
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 2449684244981939039, guid: b64a73987263cbd4ebd04e94fbbbf407, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1245860878}
     - targetCorrespondingSourceObject: {fileID: 5199530699885178941, guid: b64a73987263cbd4ebd04e94fbbbf407, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1932215401}
@@ -4270,6 +4291,22 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2145309236692795550, guid: b032560a94153034d8ca6ef68c20dd41, type: 3}
+      propertyPath: definitions.Array.data[0].costGrowth
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2145309236692795550, guid: b032560a94153034d8ca6ef68c20dd41, type: 3}
+      propertyPath: definitions.Array.data[1].costGrowth
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2145309236692795550, guid: b032560a94153034d8ca6ef68c20dd41, type: 3}
+      propertyPath: definitions.Array.data[2].costGrowth
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2145309236692795550, guid: b032560a94153034d8ca6ef68c20dd41, type: 3}
+      propertyPath: definitions.Array.data[3].costGrowth
+      value: 1.5
+      objectReference: {fileID: 0}
     - target: {fileID: 3737333513292289386, guid: b032560a94153034d8ca6ef68c20dd41, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
