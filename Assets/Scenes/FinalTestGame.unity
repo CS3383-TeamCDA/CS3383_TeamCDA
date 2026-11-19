@@ -1104,6 +1104,9 @@ MonoBehaviour:
   - {fileID: 4311587290486528061, guid: 2f6a23a66998f4ebbbac180c85c633cb, type: 3}
   - {fileID: 5927830652048804934, guid: 3f4f7257c1046461594f3f310cdc5921, type: 3}
   - {fileID: 6743709566900238644, guid: d45a3f8f106404f2593561d5678976b6, type: 3}
+  - {fileID: 0}
+  - {fileID: 4311587290486528061, guid: f73f8e11040441bf88137fd41989bf0e, type: 3}
+  - {fileID: 4311587290486528061, guid: 6dfeb327087347f6be4aa7d898ca9b00, type: 3}
   streetView: {fileID: 170804353}
   player: {fileID: 457964105}
   demoPlayerSpeed: 16

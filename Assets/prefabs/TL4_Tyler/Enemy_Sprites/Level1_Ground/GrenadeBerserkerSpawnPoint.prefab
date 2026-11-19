@@ -46,8 +46,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: TL4Assembly::EnemySpawnPoint
   enemyType: 5
   enemyPrefab: {fileID: 7036625746818960747, guid: 6dfeb327087347f6be4aa7d898ca9b00, type: 3}
-  clearanceSize: {x: 2, y: 2}
-  clearanceOffset: {x: 0, y: 1}
+  clearanceSize: {x: 2, y: 3.2}
+  clearanceOffset: {x: 0, y: 1.6}
   blockingLayers:
     serializedVersion: 2
     m_Bits: 0

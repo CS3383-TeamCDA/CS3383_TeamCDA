@@ -6,6 +6,15 @@ namespace EscapeThe90s.WorldGen
     /// <summary>World profile for an endless horizontal run with vertical ground and sky fill.</summary>
     public sealed class SideScrollerWorldProfile : IWorldProfile
     {
+        static readonly EnemyType[] EnemyRotation =
+        {
+            EnemyType.Ground,
+            EnemyType.Flying,
+            EnemyType.Turret,
+            EnemyType.TVClaw,
+            EnemyType.GrenadeBerserker
+        };
+
         readonly ulong _seed;
         readonly CoordinateWorldGenerator _generator;
         readonly CoordinateTerrainStampField _terrainStamps;
@@ -94,8 +103,10 @@ namespace EscapeThe90s.WorldGen
             int index = 0;
             if (hasEnemy)
             {
-                int enemyKind = PositiveMod(WorldChunkCoord.FloorDiv(coordinate.X + enemyPhase, 3), 3);
-                spawns[index++] = new SpawnLocation(SpawnLocationKind.Enemy, normalizedX, 0, enemyKind, -1);
+                int enemyIndex = PositiveMod(
+                    WorldChunkCoord.FloorDiv(coordinate.X + enemyPhase, 3), EnemyRotation.Length);
+                spawns[index++] = new SpawnLocation(
+                    SpawnLocationKind.Enemy, normalizedX, 0, (int)EnemyRotation[enemyIndex], -1);
             }
             if (hasPowerUp)
             {

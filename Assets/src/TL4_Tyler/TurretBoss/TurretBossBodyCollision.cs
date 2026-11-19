@@ -4,7 +4,7 @@ using UnityEngine;
 [DefaultExecutionOrder(75)]
 public sealed class TurretBossBodyCollision : MonoBehaviour
 {
-    [SerializeField] private Vector2 worldSize = new Vector2(1.8f, 2.1f);
+    [SerializeField] private Vector2 worldSize = new Vector2(4.293f, 5.0085f);
     private TurretBossController boss;
     private PlayerHealth player;
     private BoxCollider2D shape;
