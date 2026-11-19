@@ -65,7 +65,7 @@ MonoBehaviour:
     costGrowth: 1
     maxLevel: 20
   - type: 3
-    baseValue: 1
+    baseValue: 0
     valuePerLevel: 1
     baseCost: 1
     costGrowth: 1
