@@ -14,6 +14,7 @@ namespace EscapeThe90s.UI
         [SerializeField] private HUDPanel hudPanel;
         [SerializeField] private PausePanel pausePanel;
         [SerializeField] private GameOverPanel gameOverPanel;
+        [SerializeField] private UpgradeMenuPanel upgradeMenuPanel;
 
         private GameState displayedState;
 
@@ -107,6 +108,18 @@ namespace EscapeThe90s.UI
             if (gameOverPanel == null)
             {
                 gameOverPanel = FindAnyObjectByType<GameOverPanel>(FindObjectsInactive.Include);
+            }
+
+            // So is TL5's upgrade menu. It is a sub-screen of the game over panel and never belongs to a new state,
+            // so close it on every change (Restart, Menu, or Escape while it is open).
+            if (upgradeMenuPanel == null)
+            {
+                upgradeMenuPanel = FindAnyObjectByType<UpgradeMenuPanel>(FindObjectsInactive.Include);
+            }
+
+            if (upgradeMenuPanel != null)
+            {
+                upgradeMenuPanel.Close();
             }
 
             if (mainMenuPanel != null)
