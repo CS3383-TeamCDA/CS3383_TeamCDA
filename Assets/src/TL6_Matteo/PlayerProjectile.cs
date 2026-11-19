@@ -29,5 +29,7 @@ public class PlayerProjectile : MonoBehaviour
     public void Initialize(Vector2 direction)
     {
         _rb.linearVelocity = direction.normalized * _speed;
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        transform.rotation = Quaternion.Euler(0f, 0f, angle);
     }
 }
