@@ -21,7 +21,7 @@ settings or give other teams permission to edit each other's implementations.
 | Player and input | PlayerTL6 prefab / Matteo | Existing integration assigns input and ground settings |
 | Power-ups | Existing PowerUpSystem prefab / Joe | Existing generated pickups and drops retained |
 | Enemy system | TL4EnemySystem prefab / Tyler | One EnemySpawner with EnemyGameStateBinding and Ground/Flying/Turret references |
-| Combat input | TL4CombatInput prefab / Tyler | Existing click-to-delete attack retained as temporary combat input |
+| Combat input | PlayerTL6 prefab / Matteo | Player projectiles apply damage on impact |
 | Meta progression, health/score HUD and game over | Team contracts / respective owners | End-to-end wiring still needs completion and verification |
 
 The generated-street adapter owns enemy placement and calls the manual spawner
