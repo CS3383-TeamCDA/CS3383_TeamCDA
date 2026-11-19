@@ -8,7 +8,7 @@ public enum EnemyAttackMode { MeleeOnly, RangedOnly, Both }
 public enum EnemyAggroRange { Close, Medium, Far }
 public enum EnemyAwareness { Low, High }
 
-public abstract class EnemyBase : MonoBehaviour, IDependent<IPowerUpSpawner>
+public abstract class EnemyBase : MonoBehaviour, IEnemyDamageable, IDependent<IPowerUpSpawner>
 {
     private static readonly PowerUpType[] dropTypes = (PowerUpType[])Enum.GetValues(typeof(PowerUpType));
 
