@@ -85,13 +85,18 @@ public class TL4ContractStateTests
             body.constraints = RigidbodyConstraints2D.FreezeRotation;
             corpse.AddComponent<BoxCollider2D>();
             FlyingEnemy enemy = corpse.AddComponent<FlyingEnemy>();
+            Physics2D.SyncTransforms();
             enemy.TakeDamage(enemy.MaxHealth);
             enemy.Move();
             Assert.IsFalse(body.simulated, "Defeated flyers are visual-only.");
             Assert.IsFalse(corpse.GetComponent<Collider2D>().enabled);
-            Vector2 deathPosition = body.position;
-            yield return new WaitForFixedUpdate();
-            Assert.AreEqual(deathPosition, body.position);
+            float deathY = corpse.transform.position.y;
+            float deadline = Time.realtimeSinceStartup + 3f;
+            while (corpse.transform.position.y > .30f && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.Less(corpse.transform.position.y, deathY);
+            Assert.That(corpse.transform.position.y, Is.EqualTo(.2923f).Within(.01f));
+            Assert.IsFalse(body.simulated);
             Assert.AreEqual(Vector2.zero, body.linearVelocity);
         }
         finally
@@ -132,9 +137,9 @@ public class TL4ContractStateTests
             Assert.AreEqual(Vector2.zero, body.linearVelocity);
             Assert.IsTrue(playerCollider.enabled);
             Assert.IsTrue(terrainCollider.enabled);
-            Vector2 deathPosition = body.position;
+            Vector3 deathPosition = corpse.transform.position;
             yield return new WaitForFixedUpdate();
-            Assert.AreEqual(deathPosition, body.position);
+            Assert.AreEqual(deathPosition, corpse.transform.position);
         }
         finally
         {

@@ -10,6 +10,7 @@ public enum EnemyAwareness { Low, High }
 
 public abstract class EnemyBase : MonoBehaviour, IEnemyDamageable, IDependent<IPowerUpSpawner>
 {
+    protected const float CorpseGroundInset = .05f;
     private static readonly PowerUpType[] dropTypes = (PowerUpType[])Enum.GetValues(typeof(PowerUpType));
 
     [Header("Combat identity")]
@@ -230,6 +231,8 @@ public abstract class EnemyBase : MonoBehaviour, IEnemyDamageable, IDependent<IP
             ConfigureCorpseCollision();
             TryDropPowerUp();
             Defeated?.Invoke(this);
+            if (Type != EnemyType.Turret)
+                transform.position += Vector3.down * CorpseGroundInset;
         }
         return defeated;
     }

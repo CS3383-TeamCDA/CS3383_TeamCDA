@@ -43,7 +43,7 @@ public class TL4EnemyStatsTests
             enemy.TakeDamage(0);
             Assert.AreEqual(expected, items.Count);
             if (expected > 0)
-                Assert.AreEqual(enemy.transform.position, items[0].transform.position);
+                Assert.AreEqual(new Vector3(7, 3, 0), items[0].transform.position);
         }
         finally
         {

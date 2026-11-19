@@ -111,7 +111,9 @@ public class GroundEnemyPursuitTests
         float separation = leader.transform.position.x - enemy.transform.position.x;
         Assert.That(leader.transform.position.x, Is.EqualTo(1.2f).Within(.05f),
             "A pursuing enemy should not shove an idle ally.");
-        Assert.That(separation, Is.InRange(.4f, .65f),
+        float bodySpacing = enemy.GetComponent<Collider2D>().bounds.extents.x +
+            leader.GetComponent<Collider2D>().bounds.extents.x;
+        Assert.That(separation, Is.InRange(bodySpacing - .02f, bodySpacing + .2f),
             "Enemies should partially overlap visually but retain separate bodies.");
         Assert.IsTrue(enemy.GetComponent<SpriteRenderer>().bounds.Intersects(
             leader.GetComponent<SpriteRenderer>().bounds));

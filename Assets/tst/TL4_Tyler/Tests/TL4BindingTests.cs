@@ -106,7 +106,7 @@ public class TL4BindingTests
         Assert.IsTrue(enemy1.TakeDamage(1));
         Assert.AreEqual(1, notifications);
         Assert.AreEqual(EnemyType.Ground, reportedType);
-        Assert.AreEqual(enemy1.transform.position, reportedPosition);
+        Assert.AreEqual(new Vector3(2, 3, 0), reportedPosition);
     }
 
     [Test]

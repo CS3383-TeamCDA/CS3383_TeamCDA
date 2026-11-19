@@ -8,7 +8,7 @@ public sealed class TVClawArtDriver : MonoBehaviour
     private TVClawEnemy enemy;
     private SpriteRenderer visual;
     private Rigidbody2D body;
-    private float clock, deathTime, hitTime = -10;
+    private float clock, deathTime;
     private bool dead;
     public TVClawArtSet Art => art;
 
@@ -22,7 +22,6 @@ public sealed class TVClawArtDriver : MonoBehaviour
         if (animator != null) animator.enabled = false;
         Render(0);
     }
-    public void ShowHit() { hitTime = clock; }
     private void LateUpdate() { Render(Time.deltaTime); }
     public void Render(float delta)
     {
@@ -59,8 +58,7 @@ public sealed class TVClawArtDriver : MonoBehaviour
                     break;
                 default:
                     bool moving = body != null && Mathf.Abs(body.linearVelocity.x) > .1f;
-                    frame = clock - hitTime < .3f ? TVClawArtSet.Frame(art.hit, (clock - hitTime) / .3f) :
-                        TVClawArtSet.Frame(moving ? art.run : art.idle, clock * (moving ? 1.6f : .8f), true);
+                    frame = TVClawArtSet.Frame(moving ? art.run : art.idle, clock * (moving ? 1.6f : .8f), true);
                     break;
             }
         }
