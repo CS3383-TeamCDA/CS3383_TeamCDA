@@ -77,7 +77,7 @@ state is ignored, so you don't need to check the state first.
 | `RequestResume()` | Paused | Playing |
 | `RequestGameOver()` | Playing | GameOver |
 | `RequestRestart()` | Paused, GameOver | Reloads the scene, then Playing (new run) |
-| `RequestReturnToMenu()` | Playing, Paused, GameOver | Menu |
+| `RequestReturnToMenu()` | Playing, Paused, GameOver | Reloads the scene, then Menu |
 
 ## Setup
 
@@ -186,9 +186,10 @@ public class LivesCounter : DependencyBehaviour, IDependent<IGameState>
 4. **Use the interface, not the singleton.** Ask for `IGameState` through
    `IDependent<IGameState>`. Don't use `GameStateManager.Instance`, which ties
    your code to TL1's assembly.
-5. **Restart reloads the scene.** Your objects are destroyed and recreated, and
-   the new ones receive a change with `IsNewRun` set. Don't keep anything on
-   them that must survive a restart.
+5. **Restart and Return to Menu reload the scene.** Your objects are destroyed and
+   recreated. After a restart the new ones receive a change with `IsNewRun` set;
+   after returning to the menu they start in `Menu`, and the next Start is a new
+   run. Don't keep anything on them that must survive either.
 
 ## Testing
 

@@ -1,15 +1,15 @@
 using EscapeThe90s.Contracts;
-using EscapeThe90s.GameStates;
 using UnityEngine;
 
 namespace EscapeThe90s.HUD
 {
-    public class HUDController : MonoBehaviour, IDependent<IMetaProgressionManager>, IDependent<IPlayerHealth>
+    /// <summary>
+    /// Keeps the values on the gameplay HUD up to date: health (from IPlayerHealth), currency (from IMetaProgressionManager) and score.
+    /// Which screen is visible for each game state is handled separately by UIPanelController.
+    /// </summary>
+    public class HUDController : MonoBehaviour, IDependent<IMetaProgressionManager>, IDependent<IPlayerHealth>, IDependent<IGameState>
     {
-        // [SerializeField] private GameStateManager stateManager;
-        [SerializeField] private MainMenuPanel mainMenuPanel;
         [SerializeField] private HUDPanel hudPanel;
-        [SerializeField] private PausePanel pausePanel;
 
         [SerializeField] private int startingHealth = 100;
         [SerializeField] private int startingScore = 0;
@@ -18,9 +18,9 @@ namespace EscapeThe90s.HUD
         private int currentHealth;
         private int currentScore;
         private int currentCurrency;
-        private GameState displayedState;
         private IMetaProgressionManager progression;
         private IPlayerHealth playerHealth;
+        private IGameState gameState;
 
         // Called by ServiceContainer (via DependencyScope) during scene composition.
         public void Inject(IMetaProgressionManager dependency)
@@ -56,11 +56,39 @@ namespace EscapeThe90s.HUD
             }
         }
 
+        // Called by ServiceContainer (via DependencyScope), which registers GameStateManager as IGameState.
+        public void Inject(IGameState dependency)
+        {
+            if (gameState != null)
+            {
+                gameState.OnStateTypeChanged -= HandleStateTypeChanged;
+            }
+
+            gameState = dependency;
+
+            if (gameState != null)
+            {
+                gameState.OnStateTypeChanged += HandleStateTypeChanged;
+            }
+        }
+
         private void HandlePlayerHealthChanged(int current, int max)
         {
             UpdateHealth(current);
         }
 
+        private void HandleStateTypeChanged(GameStateChange change)
+        {
+            // By the time a run starts the player is active, so its real health is available.
+            if (change.Current == GameStateType.Playing)
+            {
+                ShowPlayerHealth();
+            }
+        }
+
+        // Shows the player's current health. Injection can happen before PlayerHealth.Awake has set it
+        // (the player can start inactive), which reads as 0; a player can't be dead before the game starts,
+        // so show full health in that case. It is read again when a run starts (see HandleStateTypeChanged).
         private void ShowPlayerHealth()
         {
             if (playerHealth == null || hudPanel == null)
@@ -83,63 +111,26 @@ namespace EscapeThe90s.HUD
             {
                 playerHealth.OnHealthChanged -= HandlePlayerHealthChanged;
             }
+
+            // GameStateManager survives scene reloads, so this HUD must stop listening when it is destroyed.
+            if (gameState != null)
+            {
+                gameState.OnStateTypeChanged -= HandleStateTypeChanged;
+            }
         }
 
         private void Awake()
         {
-            // PauseMenu is nested inside the HUD prefab, so find it there if the field was left empty.
-            // 'true' includes inactive children, since the panel starts hidden.
-            if (pausePanel == null)
+            // The HUD panel is nested inside the HUD prefab, so find it there if the field was left empty.
+            if (hudPanel == null)
             {
-                pausePanel = GetComponentInChildren<PausePanel>(true);
+                hudPanel = GetComponentInChildren<HUDPanel>(true);
             }
 
             // Injection may already have happened (Awake order isn't guaranteed), so prefer the real balance.
             int initialCurrency = progression != null ? progression.Currency : startingCurrency;
             Initialize(startingHealth, startingScore, initialCurrency);
             ShowPlayerHealth();
-        }
-
-        private void OnEnable()
-        {
-            // if (stateManager == null)
-            if (GameStateManager.Instance == null)
-            {
-                return;
-            }
-
-            // displayedState = stateManager.CurrentState;
-            displayedState = GameStateManager.Instance.CurrentState;
-            if (displayedState != null)
-            {
-                OnStateChange(displayedState);
-            }
-            else
-            {
-                if (mainMenuPanel != null)
-                {
-                    mainMenuPanel.Show();
-                }
-
-                hudPanel.Hide();
-            }
-        }
-
-        private void Update()
-        {
-            // if (stateManager == null)
-            if (GameStateManager.Instance == null)
-            {
-                return;
-            }
-
-            // GameState activeState = stateManager.CurrentState;
-            GameState activeState = GameStateManager.Instance.CurrentState;
-            if (activeState != displayedState)
-            {
-                displayedState = activeState;
-                OnStateChange(activeState);
-            }
         }
 
         public void Initialize(int initialHealth = 100, int initialScore = 0, int initialCurrency = 0)
@@ -166,69 +157,5 @@ namespace EscapeThe90s.HUD
             currentCurrency = currency;
             hudPanel.UpdateCurrencyDisplay(currentCurrency);
         }
-
-        public void Show()
-        {
-            // if (stateManager != null && stateManager.CurrentState is PlayingState)
-            if (GameStateManager.Instance != null && GameStateManager.Instance.CurrentState is PlayingState)
-            {
-                hudPanel.Show();
-            }
-        }
-
-        public void Hide()
-        {
-            hudPanel.Hide();
-        }
-
-        private void OnStateChange(GameState state)
-        {
-            // The main menu is a separate prefab, so it can't be assigned on the HUD prefab. Find it in the scene.
-            // Look each time until found: it may be hidden (inactive) by other systems when the game starts.
-            if (mainMenuPanel == null)
-            {
-                mainMenuPanel = FindAnyObjectByType<MainMenuPanel>(FindObjectsInactive.Include);
-            }
-
-            if (mainMenuPanel != null)
-            {
-                mainMenuPanel.Hide();
-            }
-
-            if (pausePanel != null)
-            {
-                pausePanel.Hide();
-            }
-
-            hudPanel.Hide();
-
-            if (state == null || state is MenuState)
-            {
-                if (mainMenuPanel != null)
-                {
-                    mainMenuPanel.Show();
-                }
-            }
-            else if (state is PlayingState)
-            {
-                hudPanel.Show();
-
-                // By now the player is active, so its real health is available.
-                ShowPlayerHealth();
-            }
-            else if (state is PauseState)
-            {
-                // Gameplay HUD stays hidden while paused (doc Scenario 2, step 5a); values are kept.
-                if (pausePanel != null)
-                {
-                    pausePanel.Show();
-                }
-                else
-                {
-                    Debug.LogWarning("HUDController: no PausePanel assigned or found under this HUD, so nothing is shown while paused.", this);
-                }
-            }
-        }
-
     }
 }

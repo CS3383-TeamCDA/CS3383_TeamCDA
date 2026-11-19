@@ -1,6 +1,7 @@
 using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using EscapeThe90s;
 using EscapeThe90s.GameStates;
@@ -31,6 +32,22 @@ public class GameStateManagerTransitionTests
     }
 
     #region Helpers
+
+    // Returning to the menu reloads the scene. Replace the reload so the test scene isn't unloaded,
+    // and count how often it was asked for.
+    private int reloadsRequested;
+
+    private void FakeSceneReload()
+    {
+        reloadsRequested = 0;
+        TL1TestUtil.SetField(manager, "reloadScene", (System.Action)(() => reloadsRequested++));
+    }
+
+    // What Unity does once the reloaded scene has loaded.
+    private void FinishSceneReload()
+    {
+        TL1TestUtil.Invoke(manager, "OnReloadedSceneLoaded", default(Scene), LoadSceneMode.Single);
+    }
 
     private void GoToPlaying()
     {
@@ -118,8 +135,10 @@ public class GameStateManagerTransitionTests
     public void RequestReturnToMenu_FromPlaying_EntersMenu()
     {
         GoToPlaying();
+        FakeSceneReload();
 
         manager.RequestReturnToMenu();
+        FinishSceneReload();
 
         Assert.IsInstanceOf<MenuState>(manager.CurrentState);
     }
@@ -128,8 +147,10 @@ public class GameStateManagerTransitionTests
     public void RequestReturnToMenu_FromPause_EntersMenu()
     {
         GoToPaused();
+        FakeSceneReload();
 
         manager.RequestReturnToMenu();
+        FinishSceneReload();
 
         Assert.IsInstanceOf<MenuState>(manager.CurrentState);
     }
@@ -138,10 +159,42 @@ public class GameStateManagerTransitionTests
     public void RequestReturnToMenu_FromGameOver_EntersMenu()
     {
         GoToGameOver();
+        FakeSceneReload();
+
+        manager.RequestReturnToMenu();
+        FinishSceneReload();
+
+        Assert.IsInstanceOf<MenuState>(manager.CurrentState);
+    }
+
+    [Test]
+    public void RequestReturnToMenu_FromGameOver_ReloadsSceneBeforeEnteringMenu()
+    {
+        // A finished run must not carry over: Start from the menu has to begin with a fresh player and level.
+        GoToGameOver();
+        FakeSceneReload();
 
         manager.RequestReturnToMenu();
 
+        Assert.AreEqual(1, reloadsRequested, "Returning to the menu should reload the scene.");
+        Assert.IsInstanceOf<GameOverState>(manager.CurrentState, "The menu should only be entered once the new scene has loaded.");
+
+        FinishSceneReload();
         Assert.IsInstanceOf<MenuState>(manager.CurrentState);
+    }
+
+    [Test]
+    public void RequestReturnToMenu_WhileReloading_IsIgnored()
+    {
+        GoToGameOver();
+        FakeSceneReload();
+        manager.RequestReturnToMenu();
+
+        manager.RequestReturnToMenu();
+        manager.RequestRestart();
+
+        Assert.AreEqual(1, reloadsRequested, "Only one reload should be started.");
+        FinishSceneReload();
     }
 
     [Test]

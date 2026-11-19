@@ -18,7 +18,7 @@ namespace EscapeThe90s.GameStates
             previousCursorVisible = Cursor.visible;
 
             // Stop gameplay (enemies, projectiles) once the player has lost.
-            // The game over panel is shown by HUDController through OnStateChanged, not here.
+            // The game over panel is shown by UIPanelController when the state changes, not here.
             Time.timeScale = 0f;
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;

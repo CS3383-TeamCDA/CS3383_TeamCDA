@@ -109,6 +109,13 @@ namespace EscapeThe90s.Composition
             // startup events from firing before all listeners have been wired.
             _scope.InjectSceneDependencies();
             _scope.ActivateSceneDependencies();
+
+            // GameStateManager lives in DontDestroyOnLoad, outside this scene, so scene injection skips it.
+            // Inject it explicitly so it receives this scene's IPlayerHealth (player death ends the run).
+            if (gameStateManager != null) 
+            {
+                _scope.Inject(gameStateManager.gameObject);
+            }
         }
 
         GameStateManager ResolveGameStateManager()

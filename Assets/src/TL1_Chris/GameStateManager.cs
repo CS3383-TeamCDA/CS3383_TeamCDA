@@ -7,12 +7,18 @@ using EscapeThe90s.Contracts;
 
 namespace EscapeThe90s
 {
-    public class GameStateManager : MonoBehaviour, IGameState
+    public class GameStateManager : MonoBehaviour, IGameState, IDependent<IPlayerHealth>
     {
         #region Fields
 
         private readonly StateMachine<GameState> machine = new StateMachine<GameState>();
-        private bool isRestarting;
+        // True from a scene-reload request until the new scene has loaded (Restart and Return to Menu).
+        private bool isReloading;
+        private GameState stateAfterReload;
+
+        // Reloads the active scene. Tests replace this so they can check a reload without unloading the test scene.
+        private Action reloadScene = ReloadActiveScene;
+        private IPlayerHealth playerHealth;
 
         #endregion
 
@@ -84,8 +90,40 @@ namespace EscapeThe90s
             }
 
             machine.OnStateChanged -= HandleStateChanged;
-            SceneManager.sceneLoaded -= OnRestartSceneLoaded;
+            SceneManager.sceneLoaded -= OnReloadedSceneLoaded;
+            if (playerHealth != null)
+            {
+                playerHealth.OnPlayerDied -= HandlePlayerDied;
+            }
             Instance = null;
+        }
+
+        #endregion
+
+        #region Player
+
+        // Called by the scene's ServiceContainer. This manager survives scene loads, so each scene
+        // (including every restart) injects its own player; stop listening to the previous one first.
+        public void Inject(IPlayerHealth dependency)
+        {
+            if (playerHealth != null)
+            {
+                playerHealth.OnPlayerDied -= HandlePlayerDied;
+            }
+
+            playerHealth = dependency;
+
+            if (playerHealth != null)
+            {
+                playerHealth.OnPlayerDied += HandlePlayerDied;
+            }
+        }
+
+        // Losing all health ends the run. RequestGameOver only works from Playing,
+        // so a death reported while paused or already in GameOver is ignored.
+        private void HandlePlayerDied()
+        {
+            RequestGameOver();
         }
 
         #endregion
@@ -126,24 +164,26 @@ namespace EscapeThe90s
 
         public void RequestRestart()
         {
-            if (isRestarting || (CurrentStateType != GameStateType.GameOver && CurrentStateType != GameStateType.Paused))
+            if (isReloading || (CurrentStateType != GameStateType.GameOver && CurrentStateType != GameStateType.Paused))
             {
                 return;
             }
 
-            // Reloading the scene resets the runtime (level, player, enemies, HUD start values).
-            // This manager survives the reload (DontDestroyOnLoad) and enters PlayingState once the new scene is loaded,
-            // so only the fresh scene's objects receive the state change.
-            isRestarting = true;
-            SceneManager.sceneLoaded += OnRestartSceneLoaded;
-            ReloadActiveScene();
+            ReloadSceneInto(new PlayingState());
         }
 
         public void RequestReturnToMenu()
         {
+            if (isReloading)
+            {
+                return;
+            }
+
             if (CurrentStateType == GameStateType.Playing || CurrentStateType == GameStateType.Paused || CurrentStateType == GameStateType.GameOver)
             {
-                machine.ChangeState(new MenuState());
+                // Leaving a run must reset it: Start from the menu begins a new run (IsNewRun), so the player, enemies
+                // and level have to be fresh. Without the reload, Start continued the old run, e.g. with a dead player.
+                ReloadSceneInto(new MenuState());
             }
         }
 
@@ -157,13 +197,23 @@ namespace EscapeThe90s
 
         #endregion
 
-        #region Restart
+        #region Scene Reload
 
-        private void OnRestartSceneLoaded(Scene scene, LoadSceneMode mode)
+        private void ReloadSceneInto(GameState nextState)
         {
-            SceneManager.sceneLoaded -= OnRestartSceneLoaded;
-            machine.ChangeState(new PlayingState());
-            isRestarting = false;
+            isReloading = true;
+            stateAfterReload = nextState;
+            SceneManager.sceneLoaded += OnReloadedSceneLoaded;
+            reloadScene();
+        }
+
+        private void OnReloadedSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            SceneManager.sceneLoaded -= OnReloadedSceneLoaded;
+            GameState nextState = stateAfterReload;
+            stateAfterReload = null;
+            machine.ChangeState(nextState);
+            isReloading = false;
         }
 
         private static void ReloadActiveScene()
@@ -194,7 +244,7 @@ namespace EscapeThe90s
             GameStateType current = CurrentStateType;
 
             // A restart also leaves the paused state, but it begins a new run rather than resuming one.
-            bool isNewRun = current == GameStateType.Playing && (previous != GameStateType.Paused || isRestarting);
+            bool isNewRun = current == GameStateType.Playing && (previous != GameStateType.Paused || isReloading);
 
             OnStateTypeChanged?.Invoke(new GameStateChange(previous, current, isNewRun));
         }
