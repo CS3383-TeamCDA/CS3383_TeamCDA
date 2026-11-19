@@ -10,6 +10,20 @@ public sealed class EnemyAirBurst : MonoBehaviour
     public void Initialize(float blastRadius)
     {
         radius = Mathf.Max(.1f, blastRadius);
+        Sprite sprite = GetPuffSprite();
+        for (int i = 0; i < flames.Length; i++)
+        {
+            var child = new GameObject("Radial fire puff");
+            child.transform.SetParent(transform, false);
+            flames[i] = child.AddComponent<SpriteRenderer>();
+            flames[i].sprite = sprite;
+            flames[i].sortingOrder = 45 + (i == 8 ? 1 : 0);
+        }
+        Draw();
+    }
+
+    private static Sprite GetPuffSprite()
+    {
         if (puff == null)
         {
             var texture = new Texture2D(16, 16) { filterMode = FilterMode.Point };
@@ -21,15 +35,7 @@ public sealed class EnemyAirBurst : MonoBehaviour
             texture.SetPixels(pixels); texture.Apply();
             puff = Sprite.Create(texture, new Rect(0, 0, 16, 16), Vector2.one * .5f, 16);
         }
-        for (int i = 0; i < flames.Length; i++)
-        {
-            var child = new GameObject("Radial fire puff");
-            child.transform.SetParent(transform, false);
-            flames[i] = child.AddComponent<SpriteRenderer>();
-            flames[i].sprite = puff;
-            flames[i].sortingOrder = 45 + (i == 8 ? 1 : 0);
-        }
-        Draw();
+        return puff;
     }
     private void Update()
     {

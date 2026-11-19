@@ -68,9 +68,10 @@ public class TVClawArtTests
     {
         var enemy = Object.Instantiate(AssetDatabase.LoadAssetAtPath<TVClawEnemy>(Prefab));
         var target = new GameObject("Art test player");
-        target.transform.position = Vector2.right * .8f;
+        target.transform.position = enemy.BiteMouthPosition(1);
         target.AddComponent<PlayerHealth>();
         target.AddComponent<BoxCollider2D>();
+        Physics2D.SyncTransforms();
         try
         {
             enemy.GetComponent<Rigidbody2D>().simulated = false;

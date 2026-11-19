@@ -83,7 +83,9 @@ public class NewEnemyTests
         TVClawCombatState windup, float duration)
     {
         var claw = Enemy<TVClawEnemy>("TVClaw");
-        var player = Player(Vector2.right * distance);
+        var player = Player(windup == TVClawCombatState.BiteWindup
+            ? claw.BiteMouthPosition(1) : Vector2.right * distance);
+        Physics2D.SyncTransforms();
         claw.TryAcquireTarget(player.transform);
         claw.TickCombat(.01f);
         Assert.AreEqual(300, claw.MaxHealth);
@@ -143,7 +145,8 @@ public class NewEnemyTests
     public void BiteReachesPlayerInFrontOfMouthWithoutBodyOverlap(float direction, bool escape)
     {
         var claw = Enemy<TVClawEnemy>("TVClaw");
-        var player = Player(new Vector2(direction * 2, 0));
+        Vector2 mouth = claw.BiteMouthPosition(direction);
+        var player = Player(mouth + new Vector2(direction * .55f, -.65f));
         var collider = player.GetComponent<BoxCollider2D>();
         collider.offset = new Vector2(0, .65f);
         collider.size = new Vector2(.7f, 1.3f);
@@ -165,14 +168,15 @@ public class NewEnemyTests
         claw.TryAcquireTarget(player.transform);
         claw.TickCombat(.01f);
         Assert.AreEqual(TVClawCombatState.Pursuing, claw.CombatState);
-        player.transform.position = new Vector2(2, 0);
+        Vector2 mouth = claw.BiteMouthPosition(1);
+        player.transform.position = mouth + new Vector2(.65f, -.65f);
         var collider = player.GetComponent<BoxCollider2D>();
         collider.offset = new Vector2(0, .65f);
         collider.size = new Vector2(.7f, 1.3f);
         var wall = new GameObject("Bite blocker");
         wall.transform.SetParent(root.transform);
         wall.layer = 3;
-        wall.transform.position = new Vector2(1.45f, 1);
+        wall.transform.position = mouth + Vector2.right * .15f;
         wall.AddComponent<BoxCollider2D>().size = new Vector2(.1f, 2);
         Physics2D.SyncTransforms();
         claw.TickCombat(.01f);

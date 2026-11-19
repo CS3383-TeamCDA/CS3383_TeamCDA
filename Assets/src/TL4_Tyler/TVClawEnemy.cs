@@ -116,17 +116,6 @@ public class TVClawEnemy : GroundEnemy
         }
     }
 
-    public override bool TakeDamage(int amount)
-    {
-        bool defeated = base.TakeDamage(amount);
-        if (!defeated && amount > 0)
-        {
-            var art = GetComponent<TVClawArtDriver>();
-            if (art != null) art.ShowHit();
-        }
-        return defeated;
-    }
-
     private void LockAttack()
     {
         LockedDirection = AggroTarget.position.x >= transform.position.x ? 1 : -1;
