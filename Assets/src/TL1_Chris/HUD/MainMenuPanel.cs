@@ -23,6 +23,12 @@ namespace EscapeThe90s.HUD
             statsPanel.Close();
         }
 
+        // Opens TL5's upgrade menu over the main menu; its Back button returns here.
+        public void OpenUpgrades()
+        {
+            UpgradeMenuPanel.OpenFrom(this);
+        }
+
         public void QuitGame()
         {
             GameStateManager.Instance.RequestQuit();
