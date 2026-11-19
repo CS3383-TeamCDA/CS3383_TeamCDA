@@ -172,3 +172,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: TL6Assembly::PlayerProjectile
   _speed: 30
   _lifetime: 3
+  _baseDamage: 10
