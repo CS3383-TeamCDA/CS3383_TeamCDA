@@ -18,7 +18,7 @@ namespace EscapeThe90s.GameStates
             previousCursorVisible = Cursor.visible;
 
             // The menu is shown over the gameplay scene, so gameplay must be frozen while it is open.
-            // Menu panels are shown by HUDController through OnStateChanged, not here, to keep UI decoupled from state logic.
+            // Menu panels are shown by UIPanelController when the state changes, not here, to keep UI decoupled from state logic.
             Time.timeScale = 0f;
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;

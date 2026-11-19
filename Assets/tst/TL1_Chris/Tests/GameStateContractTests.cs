@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using EscapeThe90s;
 using EscapeThe90s.Contracts;
@@ -112,7 +113,10 @@ public class GameStateContractTests
         gameState.RequestStart();
 
         gameState.RequestPause();
+        // Returning to the menu reloads the scene; fake the reload so the test scene stays loaded.
+        TL1TestUtil.SetField(manager, "reloadScene", (System.Action)(() => { }));
         gameState.RequestReturnToMenu();
+        TL1TestUtil.Invoke(manager, "OnReloadedSceneLoaded", default(Scene), LoadSceneMode.Single);
 
         Assert.IsFalse(changes[1].IsNewRun, "Entering Pause is not a new run.");
         Assert.IsFalse(changes[2].IsNewRun, "Entering Menu is not a new run.");

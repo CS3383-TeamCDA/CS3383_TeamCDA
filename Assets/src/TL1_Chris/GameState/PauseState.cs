@@ -17,7 +17,7 @@ namespace EscapeThe90s.GameStates
             previousCursorLockMode = Cursor.lockState;
             previousCursorVisible = Cursor.visible;
 
-            // Freeze gameplay while paused. The pause panel is shown by HUDController through OnStateChanged, not here.
+            // Freeze gameplay while paused. The pause panel is shown by UIPanelController when the state changes, not here.
             Time.timeScale = 0f;
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;

@@ -15,6 +15,7 @@ public class UIPanelControllerTests
     private HUDPanel hudPanel;
     private MainMenuPanel mainMenuPanel;
     private PausePanel pausePanel;
+    private GameOverPanel gameOverPanel;
     private GameStateManager manager;
 
     [UnitySetUp]
@@ -27,7 +28,7 @@ public class UIPanelControllerTests
     [UnityTearDown]
     public IEnumerator TearDown()
     {
-        foreach (Object obj in new Object[] { controllerObject, hudPanel, mainMenuPanel, pausePanel, manager })
+        foreach (Object obj in new Object[] { controllerObject, hudPanel, mainMenuPanel, pausePanel, gameOverPanel, manager })
         {
             if (obj != null)
             {
@@ -45,6 +46,7 @@ public class UIPanelControllerTests
         hudPanel = new GameObject("HUDPanel").AddComponent<HUDPanel>();
         mainMenuPanel = new GameObject("MainMenuPanel").AddComponent<MainMenuPanel>();
         pausePanel = new GameObject("PausePanel").AddComponent<PausePanel>();
+        gameOverPanel = new GameObject("GameOverPanel").AddComponent<GameOverPanel>();
 
         controllerObject = new GameObject("UIPanelController");
         controllerObject.SetActive(false);
@@ -52,6 +54,7 @@ public class UIPanelControllerTests
         TL1TestUtil.SetField(controller, "hudPanel", hudPanel);
         TL1TestUtil.SetField(controller, "mainMenuPanel", mainMenuPanel);
         TL1TestUtil.SetField(controller, "pausePanel", pausePanel);
+        TL1TestUtil.SetField(controller, "gameOverPanel", gameOverPanel);
         controllerObject.SetActive(true);   // OnEnable shows the panel for the current state
     }
 
@@ -60,6 +63,7 @@ public class UIPanelControllerTests
         Assert.AreEqual(expected == mainMenuPanel, mainMenuPanel.gameObject.activeSelf, "Main menu panel visibility is wrong.");
         Assert.AreEqual(expected == hudPanel, hudPanel.gameObject.activeSelf, "HUD panel visibility is wrong.");
         Assert.AreEqual(expected == pausePanel, pausePanel.gameObject.activeSelf, "Pause panel visibility is wrong.");
+        Assert.AreEqual(expected == gameOverPanel, gameOverPanel.gameObject.activeSelf, "Game over panel visibility is wrong.");
     }
 
     [Test]
@@ -92,5 +96,18 @@ public class UIPanelControllerTests
         yield return null;
 
         AssertOnlyVisible(pausePanel);
+    }
+
+    [UnityTest]
+    public IEnumerator GameOverState_ShowsOnlyGameOverPanel()
+    {
+        CreateController();
+        manager.RequestStart();
+        yield return null;
+
+        manager.RequestGameOver();
+        yield return null;
+
+        AssertOnlyVisible(gameOverPanel);
     }
 }

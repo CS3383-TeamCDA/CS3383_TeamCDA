@@ -466,6 +466,7 @@ GameObject:
   - component: {fileID: 4855536395251078958}
   - component: {fileID: 393161016896390392}
   - component: {fileID: 4316462484588914170}
+  - component: {fileID: 8306440512907754117}
   m_Layer: 5
   m_Name: HUD
   m_TagString: Untagged
@@ -570,12 +571,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 62e94717a219849afbe0f6ac07235396, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Chris.Game::EscapeThe90s.HUD.HUDController
-  mainMenuPanel: {fileID: 0}
   hudPanel: {fileID: 4643988428405326288}
-  pausePanel: {fileID: 0}
   startingHealth: 100
   startingScore: 0
   startingCurrency: 0
+--- !u!114 &8306440512907754117
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2206133737117962463}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 461cb03feeb8401d94da312de605bf5b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Chris.Game::EscapeThe90s.UI.UIPanelController
+  mainMenuPanel: {fileID: 0}
+  hudPanel: {fileID: 4643988428405326288}
+  pausePanel: {fileID: 0}
 --- !u!1 &2638491686768223826
 GameObject:
   m_ObjectHideFlags: 0
