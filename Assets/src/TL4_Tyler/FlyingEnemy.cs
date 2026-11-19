@@ -1,3 +1,4 @@
+using System.Collections;
 using EscapeThe90s.Contracts;
 using UnityEngine;
 
@@ -12,6 +13,8 @@ public class FlyingEnemy : EnemyBase
     [SerializeField] private Vector2 heightRange = new Vector2(1.5f, 4);
     [SerializeField, Min(.1f)] private float minimumRepositionDistance = 1;
     [SerializeField, Min(1)] private float repickAfterSeconds = 5;
+    // Visible bottom of the final death frame relative to the sprite pivot.
+    [SerializeField, Min(0)] private float wreckBottomOffset = .3423f;
     private Vector2 destinationOffset, lastPosition;
     private bool hasDestination;
     private float distanceTravelled, requiredTravel, repositionElapsed;
@@ -101,6 +104,33 @@ public class FlyingEnemy : EnemyBase
 
     private void FixedUpdate() { Move(); }
 
+    public override bool TakeDamage(int amount)
+    {
+        bool wasDefeated = IsDefeated;
+        bool defeated = base.TakeDamage(amount);
+        if (defeated && !wasDefeated && isActiveAndEnabled)
+            StartCoroutine(SettleWreck());
+        return defeated;
+    }
+
+    private IEnumerator SettleWreck()
+    {
+        Vector3 position = transform.position;
+        Vector2 floor = EnemyBlast.GroundVisualAnchor(position, 62f);
+        if (floor.y >= position.y)
+            yield break;
+
+        float landingY = floor.y + wreckBottomOffset * Mathf.Abs(transform.lossyScale.y) - CorpseGroundInset;
+        float speed = 0f;
+        while (position.y > landingY)
+        {
+            yield return null;
+            speed += Mathf.Abs(Physics2D.gravity.y) * Time.deltaTime;
+            position.y = Mathf.MoveTowards(position.y, landingY, speed * Time.deltaTime);
+            transform.position = position;
+        }
+    }
+
     private bool TerrainAhead(Vector2 direction, float distance)
     {
         if (bodyCollider == null) return false;
@@ -115,14 +145,7 @@ public class FlyingEnemy : EnemyBase
 
     public override void Move()
     {
-        if (body == null || !body.simulated || body.bodyType != RigidbodyType2D.Dynamic) return;
-        if (IsDefeated)
-        {
-            // Stop flight control, but let the solid body fall and settle on terrain.
-            body.gravityScale = Mathf.Max(1f, body.gravityScale);
-            body.linearVelocity = new Vector2(0f, Mathf.Min(0f, body.linearVelocity.y));
-            return;
-        }
+        if (IsDefeated || body == null || !body.simulated || body.bodyType != RigidbodyType2D.Dynamic) return;
         if (attacks != null && attacks.IsMovementLocked)
         {
             body.linearVelocity = Vector2.zero;
