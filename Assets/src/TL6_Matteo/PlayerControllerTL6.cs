@@ -42,6 +42,7 @@ public class PlayerControllerTL6 : MonoBehaviour, IPlayerControllerTL6
     public int FacingDirection = 1;
 
     public bool AirDashAvailable { get; private set; } = true;
+    public bool IsDashing { get; private set; }
     public float BaseGravityScale { get; private set; }
 
     private PlayerStateManager _stateManager;
@@ -121,5 +122,10 @@ public class PlayerControllerTL6 : MonoBehaviour, IPlayerControllerTL6
     public void ResetAirDash()
     {
         AirDashAvailable = true;
+    }
+
+    public void SetDashing(bool isDashing)
+    {
+        IsDashing = isDashing;
     }
 }

@@ -1,4 +1,3 @@
-
 using NUnit.Framework;
 using UnityEngine;
 
@@ -112,7 +111,6 @@ public class DashingStateTests
         Assert.AreEqual(0f, _rb.linearVelocity.y, 0.001f);
     }
 
-
     [Test]
     public void FacingRightDashesRight()
     {
@@ -144,5 +142,44 @@ public class DashingStateTests
         Assert.AreEqual(-1, _controller.FacingDirection);
     }
 
+    // NEW TESTS
 
+    [Test]
+    public void DashSetsIsDashingTrueOnEnter()
+    {
+        var dash = new DashingState();
+
+        Assert.IsFalse(_controller.IsDashing);
+
+        dash.EnterState(_manager);
+
+        Assert.IsTrue(_controller.IsDashing);
+    }
+
+    [Test]
+    public void DashResetsIsDashingOnExit()
+    {
+        var dash = new DashingState();
+
+        dash.EnterState(_manager);
+        dash.ExitState(_manager);
+
+        Assert.IsFalse(_controller.IsDashing);
+    }
+
+    [Test]
+    public void DashRestoresCustomGravityOnExit()
+    {
+        _rb.gravityScale = 2.5f;
+
+        var dash = new DashingState();
+
+        dash.EnterState(_manager);
+
+        Assert.AreEqual(0f, _rb.gravityScale);
+
+        dash.ExitState(_manager);
+
+        Assert.AreEqual(2.5f, _rb.gravityScale);
+    }
 }

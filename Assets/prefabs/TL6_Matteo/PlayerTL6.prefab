@@ -13,11 +13,13 @@ GameObject:
   - component: {fileID: 2713222599689475892}
   - component: {fileID: 1621651890346431947}
   - component: {fileID: 7691105525367031125}
+  - component: {fileID: 3005138855605685460}
   - component: {fileID: 3126469205196626953}
   - component: {fileID: -8560513394296968916}
   - component: {fileID: 6366694467067482550}
   - component: {fileID: -5111774361161408091}
   - component: {fileID: 3372549212717250394}
+  - component: {fileID: 1047451965866462000}
   m_Layer: 0
   m_Name: PlayerTL6
   m_TagString: Untagged
@@ -38,7 +40,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 54455657312530305}
+  - {fileID: 2864628151470004521}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &8842234704902634124
@@ -62,7 +64,7 @@ MonoBehaviour:
   _jumpSpeed: 13.5
   _groundLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 8
   _groundCheckDistance: 0.05
   _fallGravityMultiplier: 5.4
   _lowJumpGravityMultiplier: 2.2
@@ -147,6 +149,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: TL6Assembly::PlayerMovementInputHandler
   _playerInput: {fileID: 3126469205196626953}
+--- !u!114 &3005138855605685460
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4047807644510114612}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ea774fd0b1bbf344a93387f45ef409d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TL6Assembly::PlayerCombatInputHandler
 --- !u!114 &3126469205196626953
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -224,6 +238,14 @@ MonoBehaviour:
       m_Calls: []
     m_ActionId: f8e6bc3c-82ed-4dba-be51-91e7f8c7ec7b
     m_ActionName: 'InGame/Dash[/Keyboard/shift]'
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: cf07c910-0cd3-47b0-a88b-70b95b47bda6
+    m_ActionName: 'InGame/Fire[/Mouse/leftButton]'
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 863eb66f-4a48-4f5b-a48a-c614f8c16a03
+    m_ActionName: 'InGame/AimPointer[/Mouse/position]'
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: InGame
@@ -327,10 +349,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 99c7deb9bbaffde4ab619db3d227bf4d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: TL6Assembly::PlayerVisualController
-  _rig: {fileID: 7816070326934607844}
-  _controller: {fileID: 8842234704902634124}
-  _rb: {fileID: 2713222599689475892}
---- !u!1001 &6667078670132913840
+  rig: {fileID: 5438098255076598092}
+  controller: {fileID: 8842234704902634124}
+  rb: {fileID: 2713222599689475892}
+  combatInput: {fileID: 3005138855605685460}
+--- !u!114 &1047451965866462000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4047807644510114612}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a88c3460e1153554e984cfdd3cb9ba70, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TL6Assembly::PlayerCombatController
+  _visualController: {fileID: 0}
+  _secondsBetweenShots: 0.18
+--- !u!1001 &8900937760478629912
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -338,21 +375,13 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 3356497043908997782}
     m_Modifications:
+    - target: {fileID: 2644634543339448874, guid: 47ac9f7aa71134bfca8fb13832215861, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: 7cc52520282773b4987db30e238f88d2, type: 2}
     - target: {fileID: 2775580494959554114, guid: 47ac9f7aa71134bfca8fb13832215861, type: 3}
       propertyPath: m_Name
       value: TwoHandedHero
-      objectReference: {fileID: 0}
-    - target: {fileID: 6649370904940022065, guid: 47ac9f7aa71134bfca8fb13832215861, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 0.6
-      objectReference: {fileID: 0}
-    - target: {fileID: 6649370904940022065, guid: 47ac9f7aa71134bfca8fb13832215861, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 0.6
-      objectReference: {fileID: 0}
-    - target: {fileID: 6649370904940022065, guid: 47ac9f7aa71134bfca8fb13832215861, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6649370904940022065, guid: 47ac9f7aa71134bfca8fb13832215861, type: 3}
       propertyPath: m_LocalPosition.x
@@ -399,15 +428,15 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 47ac9f7aa71134bfca8fb13832215861, type: 3}
---- !u!4 &54455657312530305 stripped
+--- !u!4 &2864628151470004521 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6649370904940022065, guid: 47ac9f7aa71134bfca8fb13832215861, type: 3}
-  m_PrefabInstance: {fileID: 6667078670132913840}
+  m_PrefabInstance: {fileID: 8900937760478629912}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &7816070326934607844 stripped
+--- !u!114 &5438098255076598092 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 3530393535061930324, guid: 47ac9f7aa71134bfca8fb13832215861, type: 3}
-  m_PrefabInstance: {fileID: 6667078670132913840}
+  m_PrefabInstance: {fileID: 8900937760478629912}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1

@@ -38,6 +38,7 @@ public class DashingState : MovementState
                 ? 0f
                 : rb.linearVelocity.y
         );
+        player.SetDashing(true);
     }
 
     public override void UpdateState(
@@ -84,5 +85,6 @@ public class DashingState : MovementState
 
         // Restore the player's original gravity.
         manager.Player.Rb.gravityScale = _originalGravityScale;
+        manager.Player.SetDashing(false);
     }
 }

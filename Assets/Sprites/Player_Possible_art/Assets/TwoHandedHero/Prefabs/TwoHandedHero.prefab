@@ -372,6 +372,11 @@ MonoBehaviour:
   carryGrip: {x: 0.67, y: -0.14}
   runGrip: {x: 0.67, y: -0.14}
   runBob: 0.025
+  stableBodyWhenFiring: 0
+  recoilDistanceMultiplier: 1
+  recoilRiseDegrees: 0
+  deathFrames: []
+  deathFramesPerSecond: 10
 --- !u!1 &3065107578021431139
 GameObject:
   m_ObjectHideFlags: 0
@@ -571,7 +576,7 @@ Animator:
   m_GameObject: {fileID: 8677907129043488179}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 7a3a5a89de1694b22987c434223de8b8, type: 2}
+  m_Controller: {fileID: 9100000, guid: 7cc52520282773b4987db30e238f88d2, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
