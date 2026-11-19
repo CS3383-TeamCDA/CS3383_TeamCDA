@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace EscapeThe90s.HUD
 {
-    public class HUDController : MonoBehaviour, IDependent<IMetaProgressionManager>
+    public class HUDController : MonoBehaviour, IDependent<IMetaProgressionManager>, IDependent<IPlayerHealth>
     {
         // [SerializeField] private GameStateManager stateManager;
         [SerializeField] private MainMenuPanel mainMenuPanel;
@@ -20,6 +20,7 @@ namespace EscapeThe90s.HUD
         private int currentCurrency;
         private GameState displayedState;
         private IMetaProgressionManager progression;
+        private IPlayerHealth playerHealth;
 
         // Called by ServiceContainer (via DependencyScope) during scene composition.
         public void Inject(IMetaProgressionManager dependency)
@@ -38,11 +39,49 @@ namespace EscapeThe90s.HUD
             }
         }
 
+        // Called by ServiceContainer (via DependencyScope), which registers the scene's PlayerHealth as IPlayerHealth.
+        public void Inject(IPlayerHealth dependency)
+        {
+            if (playerHealth != null)
+            {
+                playerHealth.OnHealthChanged -= HandlePlayerHealthChanged;
+            }
+
+            playerHealth = dependency;
+
+            if (playerHealth != null)
+            {
+                playerHealth.OnHealthChanged += HandlePlayerHealthChanged;
+                ShowPlayerHealth();
+            }
+        }
+
+        private void HandlePlayerHealthChanged(int current, int max)
+        {
+            UpdateHealth(current);
+        }
+
+        private void ShowPlayerHealth()
+        {
+            if (playerHealth == null || hudPanel == null)
+            {
+                return;
+            }
+
+            int health = playerHealth.CurrentHealth;
+            UpdateHealth(health > 0 ? health : playerHealth.MaxHealth);
+        }
+
         private void OnDestroy()
         {
             if (progression != null)
             {
                 progression.OnCurrencyChanged -= UpdateCurrency;
+            }
+
+            if (playerHealth != null)
+            {
+                playerHealth.OnHealthChanged -= HandlePlayerHealthChanged;
             }
         }
 
@@ -58,6 +97,7 @@ namespace EscapeThe90s.HUD
             // Injection may already have happened (Awake order isn't guaranteed), so prefer the real balance.
             int initialCurrency = progression != null ? progression.Currency : startingCurrency;
             Initialize(startingHealth, startingScore, initialCurrency);
+            ShowPlayerHealth();
         }
 
         private void OnEnable()
@@ -172,6 +212,9 @@ namespace EscapeThe90s.HUD
             else if (state is PlayingState)
             {
                 hudPanel.Show();
+
+                // By now the player is active, so its real health is available.
+                ShowPlayerHealth();
             }
             else if (state is PauseState)
             {
