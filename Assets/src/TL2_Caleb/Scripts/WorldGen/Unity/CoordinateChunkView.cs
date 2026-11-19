@@ -31,8 +31,11 @@ namespace EscapeThe90s.WorldGen
             if (_tilemap == null) _tilemap = _tileRoot.gameObject.AddComponent<Tilemap>();
             _renderer = _tileRoot.GetComponent<TilemapRenderer>();
             if (_renderer == null) _renderer = _tileRoot.gameObject.AddComponent<TilemapRenderer>();
-            _collider = _tileRoot.GetComponent<PolygonCollider2D>();
-            if (_collider == null) _collider = _tileRoot.gameObject.AddComponent<PolygonCollider2D>();
+            // The render tilemap is offset for the dual grid. The collision
+            // outline uses unshifted terrain cell coordinates.
+            gameObject.layer = LayerMask.NameToLayer("Ground");
+            _collider = GetComponent<PolygonCollider2D>();
+            if (_collider == null) _collider = gameObject.AddComponent<PolygonCollider2D>();
             _renderer.sortingOrder = 0;
             ResetForPool();
         }

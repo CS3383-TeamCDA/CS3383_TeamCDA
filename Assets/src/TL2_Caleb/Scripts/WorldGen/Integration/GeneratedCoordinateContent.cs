@@ -36,13 +36,17 @@ namespace EscapeThe90s.WorldGen.Integration
             {
                 SpawnLocation spawn = info.SpawnLocations[i];
                 float x = info.Bounds.MinX + spawn.NormalizedX * WorldChunkCoord.Size;
-                int cellX = Mathf.RoundToInt(x);
+                int cellX = Mathf.FloorToInt(x);
                 int surfaceHeight = _streamer.SurfaceHeightAt(cellX);
                 float y = spawn.Kind == SpawnLocationKind.BuildingAnchor
                     ? surfaceHeight + 0.5f
                     : surfaceHeight + 0.85f;
-                if (spawn.Kind == SpawnLocationKind.Enemy && spawn.ContentKindIndex == 1) y += 3f;
-                if (spawn.Kind == SpawnLocationKind.Enemy && spawn.ContentKindIndex == 2) y -= 0.25f;
+                if (spawn.Kind == SpawnLocationKind.Enemy)
+                {
+                    // The top of the highest solid cell is one unit above its index.
+                    y = surfaceHeight + 1.05f;
+                    if (spawn.ContentKindIndex == (int)EnemyType.Flying) y += 3f;
+                }
                 if (spawn.Kind == SpawnLocationKind.PowerUp) y += 0.9f;
                 GameObject instance = _spawner.Spawn(spawn, new Vector3(x, y, 0f), info.Biome);
                 if (instance != null) instances.Add(instance);
