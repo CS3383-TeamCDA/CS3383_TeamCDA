@@ -12,6 +12,10 @@ public class PlayerVisualController : MonoBehaviour
     private Camera playerCamera;
     private Vector2 _aimDirection = Vector2.right;
 
+    public Vector2 AimDirection => _aimDirection;
+    public Vector2 MuzzlePosition =>
+        (Vector2)rig.muzzle.position;
+
     private void LateUpdate()
     {
         if (rig == null || controller == null || rb == null)

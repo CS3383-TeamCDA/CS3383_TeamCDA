@@ -4,6 +4,7 @@ public class PlayerCombatController : MonoBehaviour
 {
     [SerializeField] private PlayerVisualController _visualController;
     [SerializeField] private float _secondsBetweenShots = 0.18f;
+    [SerializeField] private PlayerProjectile _projectilePrefab;
 
     private IPlayerCombatInput _combatInput;
     private FireCooldown _fireCooldown;
@@ -27,7 +28,22 @@ public class PlayerCombatController : MonoBehaviour
             if (_visualController.TryPlayFireAnimation())
             {
                 _fireCooldown.RecordSuccessfulShot(Time.time);
+                SpawnProjectile();
             }
         }
+    }
+
+    private void SpawnProjectile()
+    {
+        if (_projectilePrefab == null)
+            return;
+
+        PlayerProjectile projectile = Instantiate(
+            _projectilePrefab,
+            _visualController.MuzzlePosition,
+            Quaternion.identity
+        );
+
+        projectile.Initialize(_visualController.AimDirection);
     }
 }
