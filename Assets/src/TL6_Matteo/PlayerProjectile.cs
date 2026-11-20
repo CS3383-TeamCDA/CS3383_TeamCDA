@@ -45,7 +45,7 @@ public class PlayerProjectile : MonoBehaviour
 
     public void Initialize(Vector2 direction, int bonusDamage)
     {
-        _damage = _baseDamage + bonusDamage;
+        _damage = Mathf.Max(0, _baseDamage + bonusDamage);
         _rb.linearVelocity = direction.normalized * _speed;
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
         transform.rotation = Quaternion.Euler(0f, 0f, angle);

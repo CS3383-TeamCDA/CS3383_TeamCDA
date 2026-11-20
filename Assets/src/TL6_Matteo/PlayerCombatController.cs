@@ -27,7 +27,7 @@ public class PlayerCombatController : MonoBehaviour, IDependent<IMetaProgression
 
     private void Update()
     {
-        if (_combatInput == null || _visualController == null)
+        if (_combatInput == null || _visualController == null || _projectilePrefab == null)
             return;
 
         if (_fireCooldown.CanFire(_combatInput.FireHeld, Time.time))

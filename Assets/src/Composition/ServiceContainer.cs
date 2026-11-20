@@ -107,6 +107,7 @@ namespace EscapeThe90s.Composition
 
             // Inject every dependency first, then activate gated components. This prevents
             // startup events from firing before all listeners have been wired.
+
             _scope.InjectSceneDependencies();
             _scope.ActivateSceneDependencies();
 

@@ -2,7 +2,7 @@ using UnityEngine;
 using EscapeThe90s.Contracts;
 
 [DefaultExecutionOrder(100)]
-public class PlayerControllerTL6 : MonoBehaviour, IPlayerControllerTL6
+public class PlayerControllerTL6 : MonoBehaviour, IPlayerControllerTL6, IDependent<IMetaProgressionManager>
 {
     [SerializeField] private Rigidbody2D _rb;
     [SerializeField] private Collider2D _collider;
@@ -25,19 +25,33 @@ public class PlayerControllerTL6 : MonoBehaviour, IPlayerControllerTL6
     [SerializeField] private float _dashDuration = 0.2f;
     [SerializeField] private bool _disableGravityDuringDash = true;
 
-    private float _maxSpeedX;
+    private float _temporarySpeedMultiplier = 1f;
     // Give our states access to the player's components/settings.
     public Rigidbody2D Rb => _rb;
     public IPlayerMovementInput Input;
     public float XAcceleration => _xAcceleration;
     public float XDeceleration => _xDeceleration;
-    public float MaxSpeedX => _maxSpeedX;
     public float JumpSpeed => _jumpSpeed;
     public float DashSpeed => _dashSpeed;
     public float DashDuration => _dashDuration;
     public float FallGravityMultiplier => _fallGravityMultiplier;
     public float LowJumpGravityMultiplier => _lowJumpGravityMultiplier;
     public bool DisableGravityDuringDash => _disableGravityDuringDash;
+    public float MaxSpeedX
+    {
+        get
+        {
+            float permanentBonus =
+                _progression?.GetEffectValue(UpgradeType.Speed) ?? 0f;
+
+            float permanentSpeed = Mathf.Max(
+                0f,
+                _defaultMaxSpeedX + permanentBonus
+            );
+
+            return permanentSpeed * _temporarySpeedMultiplier;
+        }
+    }
 
     public int FacingDirection = 1;
 
@@ -46,6 +60,7 @@ public class PlayerControllerTL6 : MonoBehaviour, IPlayerControllerTL6
     public float BaseGravityScale { get; private set; }
 
     private PlayerStateManager _stateManager;
+    private IMetaProgressionManager _progression;
 
     void Awake()
     {
@@ -56,7 +71,6 @@ public class PlayerControllerTL6 : MonoBehaviour, IPlayerControllerTL6
         _stateManager = new PlayerStateManager(this);
         Input = GetComponent<IPlayerMovementInput>();
         BaseGravityScale = Rb.gravityScale;
-        _maxSpeedX = _defaultMaxSpeedX;
     }
 
     void Start()
@@ -74,18 +88,22 @@ public class PlayerControllerTL6 : MonoBehaviour, IPlayerControllerTL6
         _stateManager.FixedUpdate();
     }
 
+    public void Inject(IMetaProgressionManager dependency)
+    {
+        _progression = dependency;
+        Debug.Log("TL6: MetaProgressionManager injected successfully");
+    }
+
     //RUNNING
-    public void SetMaxSpeedX(float newMaxSpeedX)
+    public void SetTemporarySpeedMultiplier(float multiplier)
     {
-        _maxSpeedX = newMaxSpeedX;
+        _temporarySpeedMultiplier = Mathf.Max(0f, multiplier);
     }
 
-    public void ResetMaxSpeedX()
+    public void ResetTemporarySpeedMultiplier()
     {
-        _maxSpeedX = _defaultMaxSpeedX;
+        _temporarySpeedMultiplier = 1f;
     }
-
-
 
     //JUMPING
     public bool IsGrounded()
