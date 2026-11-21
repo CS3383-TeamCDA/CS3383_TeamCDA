@@ -8,7 +8,7 @@ namespace EscapeThe90s.MetaProgression
         public override void Apply(float value)
         {
             if(value > 0)
-                health.IncreaseMaxHealth((int)value);
+                health?.IncreaseMaxHealth((int)value);
         }
     }
 }

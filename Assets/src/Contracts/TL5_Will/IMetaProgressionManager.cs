@@ -12,7 +12,8 @@ namespace EscapeThe90s.Contracts
         event Action<int> OnCurrencyChanged;
 
         // Commands
-        void AddCurrency(int amount);                   
+        void AddCurrency(int amount);       
+        //public void ApplyStartingBonuses();            
 
     }
 }
