@@ -1,14 +1,10 @@
-
-using System;
 using NUnit.Framework;
 using UnityEngine;
-using EscapeThe90s.Contracts;
 
 public class PlayerPermanentSpeedTests
 {
     private GameObject _player;
     private PlayerControllerTL6 _controller;
-    private FakeMetaProgressionManager _progression;
 
     [SetUp]
     public void SetUp()
@@ -19,14 +15,12 @@ public class PlayerPermanentSpeedTests
         _player.AddComponent<BoxCollider2D>();
 
         _controller = _player.AddComponent<PlayerControllerTL6>();
-
-        _progression = new FakeMetaProgressionManager();
     }
 
     [TearDown]
     public void TearDown()
     {
-        UnityEngine.Object.DestroyImmediate(_player);
+        Object.DestroyImmediate(_player);
     }
 
     // DEFAULT SPEED
@@ -38,9 +32,8 @@ public class PlayerPermanentSpeedTests
     }
 
     [Test]
-    public void MissingProgressionUsesDefaultSpeed()
+    public void PlayerWithoutPermanentUpgradeUsesDefaultSpeed()
     {
-        // No progression manager injected.
         Assert.AreEqual(8f, _controller.MaxSpeedX, 0.001f);
 
         _controller.SetTemporarySpeedMultiplier(1.25f);
@@ -53,38 +46,63 @@ public class PlayerPermanentSpeedTests
     [Test]
     public void PermanentUpgradeIncreasesSpeed()
     {
-        _progression.SpeedBonus = 2f;
-        _controller.Inject(_progression);
+        _controller.SetPermanentSpeedBonus(2f);
 
         Assert.AreEqual(10f, _controller.MaxSpeedX, 0.001f);
     }
 
     [Test]
-    public void MultiplePermanentUpgradesIncreaseSpeed()
+    public void MultiplePermanentUpgradeLevelsIncreaseSpeed()
     {
-        _controller.Inject(_progression);
-
-        _progression.SpeedBonus = 2f;
+        _controller.SetPermanentSpeedBonus(2f);
         Assert.AreEqual(10f, _controller.MaxSpeedX, 0.001f);
 
-        _progression.SpeedBonus = 4f;
+        _controller.SetPermanentSpeedBonus(4f);
         Assert.AreEqual(12f, _controller.MaxSpeedX, 0.001f);
 
-        _progression.SpeedBonus = 6f;
+        _controller.SetPermanentSpeedBonus(6f);
         Assert.AreEqual(14f, _controller.MaxSpeedX, 0.001f);
     }
 
     [Test]
-    public void ProgressionChangesUpdateSpeedImmediately()
+    public void PermanentUpgradeChangesUpdateSpeedImmediately()
     {
-        _progression.SpeedBonus = 1f;
-        _controller.Inject(_progression);
+        _controller.SetPermanentSpeedBonus(1f);
 
         Assert.AreEqual(9f, _controller.MaxSpeedX, 0.001f);
 
-        _progression.SpeedBonus = 5f;
+        _controller.SetPermanentSpeedBonus(5f);
 
         Assert.AreEqual(13f, _controller.MaxSpeedX, 0.001f);
+    }
+
+    [Test]
+    public void ApplyingSamePermanentBonusTwiceDoesNotStack()
+    {
+        _controller.SetPermanentSpeedBonus(2f);
+        _controller.SetPermanentSpeedBonus(2f);
+
+        Assert.AreEqual(10f, _controller.MaxSpeedX, 0.001f);
+    }
+
+    [Test]
+    public void NegativePermanentBonusIsClampedToZero()
+    {
+        _controller.SetPermanentSpeedBonus(-20f);
+
+        Assert.AreEqual(8f, _controller.MaxSpeedX, 0.001f);
+    }
+
+    [Test]
+    public void SettingPermanentBonusToZeroRestoresBaseSpeed()
+    {
+        _controller.SetPermanentSpeedBonus(4f);
+
+        Assert.AreEqual(12f, _controller.MaxSpeedX, 0.001f);
+
+        _controller.SetPermanentSpeedBonus(0f);
+
+        Assert.AreEqual(8f, _controller.MaxSpeedX, 0.001f);
     }
 
     // TEMPORARY MULTIPLIERS
@@ -122,8 +140,7 @@ public class PlayerPermanentSpeedTests
     [Test]
     public void ResetTemporaryMultiplierPreservesPermanentUpgrade()
     {
-        _progression.SpeedBonus = 2f;
-        _controller.Inject(_progression);
+        _controller.SetPermanentSpeedBonus(2f);
 
         _controller.SetTemporarySpeedMultiplier(1.5f);
 
@@ -137,62 +154,29 @@ public class PlayerPermanentSpeedTests
     [Test]
     public void PermanentUpgradeAppliesDuringTemporaryMultiplier()
     {
-        _controller.Inject(_progression);
-
         _controller.SetTemporarySpeedMultiplier(1.5f);
 
         Assert.AreEqual(12f, _controller.MaxSpeedX, 0.001f);
 
-        _progression.SpeedBonus = 2f;
+        _controller.SetPermanentSpeedBonus(2f);
 
         Assert.AreEqual(15f, _controller.MaxSpeedX, 0.001f);
 
-        _progression.SpeedBonus = 4f;
+        _controller.SetPermanentSpeedBonus(4f);
 
         Assert.AreEqual(18f, _controller.MaxSpeedX, 0.001f);
     }
 
     [Test]
-    public void NegativeTotalSpeedIsClampedToZero()
+    public void ResettingPermanentBonusPreservesTemporaryMultiplier()
     {
-        _progression.SpeedBonus = -20f;
-        _controller.Inject(_progression);
-
-        Assert.AreEqual(0f, _controller.MaxSpeedX, 0.001f);
-
+        _controller.SetPermanentSpeedBonus(2f);
         _controller.SetTemporarySpeedMultiplier(1.5f);
 
-        Assert.AreEqual(0f, _controller.MaxSpeedX, 0.001f);
-    }
-}
+        Assert.AreEqual(15f, _controller.MaxSpeedX, 0.001f);
 
-// Test-only implementation of TL5's progression contract.
-public class FakeMetaProgressionManager : IMetaProgressionManager
-{
-    public int Currency { get; private set; }
+        _controller.SetPermanentSpeedBonus(0f);
 
-    public float SpeedBonus { get; set; }
-
-    public int SpeedLevel { get; set; }
-
-    public event Action<int> OnCurrencyChanged;
-
-    public int GetUpgradeLevel(UpgradeType type)
-    {
-        return type == UpgradeType.Speed ? SpeedLevel : 0;
-    }
-
-    public float GetEffectValue(UpgradeType type)
-    {
-        return type == UpgradeType.Speed ? SpeedBonus : 0f;
-    }
-
-    public void AddCurrency(int amount)
-    {
-        if (amount <= 0)
-            return;
-
-        Currency += amount;
-        OnCurrencyChanged?.Invoke(Currency);
+        Assert.AreEqual(12f, _controller.MaxSpeedX, 0.001f);
     }
 }

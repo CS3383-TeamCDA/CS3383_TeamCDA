@@ -2,7 +2,7 @@ using UnityEngine;
 using EscapeThe90s.Contracts;
 
 [DefaultExecutionOrder(100)]
-public class PlayerControllerTL6 : MonoBehaviour, IPlayerControllerTL6, IDependent<IMetaProgressionManager>
+public class PlayerControllerTL6 : MonoBehaviour, IPlayerControllerTL6
 {
     [SerializeField] private Rigidbody2D _rb;
     [SerializeField] private Collider2D _collider;
@@ -25,6 +25,7 @@ public class PlayerControllerTL6 : MonoBehaviour, IPlayerControllerTL6, IDepende
     [SerializeField] private float _dashDuration = 0.2f;
     [SerializeField] private bool _disableGravityDuringDash = true;
 
+    private float _permanentSpeedBonus = 0f;
     private float _temporarySpeedMultiplier = 1f;
     // Give our states access to the player's components/settings.
     public Rigidbody2D Rb => _rb;
@@ -41,13 +42,8 @@ public class PlayerControllerTL6 : MonoBehaviour, IPlayerControllerTL6, IDepende
     {
         get
         {
-            float permanentBonus =
-                _progression?.GetEffectValue(UpgradeType.Speed) ?? 0f;
-
-            float permanentSpeed = Mathf.Max(
-                0f,
-                _defaultMaxSpeedX + permanentBonus
-            );
+            float permanentSpeed =
+                Mathf.Max(0f, _defaultMaxSpeedX + _permanentSpeedBonus);
 
             return permanentSpeed * _temporarySpeedMultiplier;
         }
@@ -60,7 +56,8 @@ public class PlayerControllerTL6 : MonoBehaviour, IPlayerControllerTL6, IDepende
     public float BaseGravityScale { get; private set; }
 
     private PlayerStateManager _stateManager;
-    private IMetaProgressionManager _progression;
+
+
 
     void Awake()
     {
@@ -88,12 +85,6 @@ public class PlayerControllerTL6 : MonoBehaviour, IPlayerControllerTL6, IDepende
         _stateManager.FixedUpdate();
     }
 
-    public void Inject(IMetaProgressionManager dependency)
-    {
-        _progression = dependency;
-        Debug.Log("TL6: MetaProgressionManager injected successfully");
-    }
-
     //RUNNING
     public void SetTemporarySpeedMultiplier(float multiplier)
     {
@@ -103,6 +94,11 @@ public class PlayerControllerTL6 : MonoBehaviour, IPlayerControllerTL6, IDepende
     public void ResetTemporarySpeedMultiplier()
     {
         _temporarySpeedMultiplier = 1f;
+    }
+
+    public void SetPermanentSpeedBonus(float totalBonus)
+    {
+        _permanentSpeedBonus = Mathf.Max(0f, totalBonus);
     }
 
     //JUMPING

@@ -67,6 +67,18 @@ namespace EscapeThe90s.Composition
                 Register<IPowerUpSpawner>(manager);
             }
 
+            foreach (MonoBehaviour component in FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include))
+            {
+                if (component.gameObject.scene != gameObject.scene)
+                    continue;
+
+                if (component is IPlayerPermanentUpgradeReceiver receiver)
+                {
+                    Register<IPlayerPermanentUpgradeReceiver>(receiver);
+                    break;
+                }
+            }
+
             // Resolve through the contract so composition does not depend on TL5's assembly.
             foreach (MonoBehaviour component in FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include))
             {

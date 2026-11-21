@@ -1,7 +1,7 @@
 using UnityEngine;
 using EscapeThe90s.Contracts;
 
-public class PlayerCombatController : MonoBehaviour, IDependent<IMetaProgressionManager>
+public class PlayerCombatController : MonoBehaviour
 {
     [SerializeField] private PlayerVisualController _visualController;
     [SerializeField] private float _secondsBetweenShots = 0.18f;
@@ -9,11 +9,12 @@ public class PlayerCombatController : MonoBehaviour, IDependent<IMetaProgression
 
     private IPlayerCombatInput _combatInput;
     private FireCooldown _fireCooldown;
-    private IMetaProgressionManager _progression;
+    private int _permanentAttackBonus = 0;
 
-    public void Inject(IMetaProgressionManager dependency)
+    public void SetPermanentAttackBonus(float totalBonus)
     {
-        _progression = dependency;
+        _permanentAttackBonus =
+            Mathf.Max(0, Mathf.RoundToInt(totalBonus));
     }
 
     private void Awake()
@@ -51,7 +52,6 @@ public class PlayerCombatController : MonoBehaviour, IDependent<IMetaProgression
             Quaternion.identity
         );
 
-        float attackBonus = _progression?.GetEffectValue(UpgradeType.Attack) ?? 0f;
-        projectile.Initialize(_visualController.AimDirection, Mathf.RoundToInt(attackBonus));
+        projectile.Initialize(_visualController.AimDirection, _permanentAttackBonus);
     }
 }
