@@ -47,26 +47,26 @@ MonoBehaviour:
   currency: 100
   definitions:
   - type: 0
-    baseValue: 1
-    valuePerLevel: 1
+    baseValue: 0
+    valuePerLevel: 5
     baseCost: 1
-    costGrowth: 1
+    costGrowth: 1.5
     maxLevel: 20
   - type: 1
     baseValue: 1
-    valuePerLevel: 1
+    valuePerLevel: 1.15
     baseCost: 1
-    costGrowth: 1
+    costGrowth: 1.5
     maxLevel: 20
   - type: 2
     baseValue: 1
-    valuePerLevel: 1
+    valuePerLevel: 1.2
     baseCost: 1
-    costGrowth: 1
+    costGrowth: 1.5
     maxLevel: 20
   - type: 3
-    baseValue: 0
-    valuePerLevel: 1
+    baseValue: 1
+    valuePerLevel: 4
     baseCost: 1
-    costGrowth: 1
+    costGrowth: 1.5
     maxLevel: 20
