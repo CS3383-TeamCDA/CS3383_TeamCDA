@@ -1,7 +1,7 @@
 
-using EscapeThe90s.Contracts;
 using NUnit.Framework;
 using UnityEngine;
+using EscapeThe90s.Contracts;
 
 public class PlayerHealthTests
 {
@@ -21,12 +21,17 @@ public class PlayerHealthTests
         Object.DestroyImmediate(_player);
     }
 
+    // DEFAULT HEALTH
+
     [Test]
     public void PlayerStartsAtMaxHealth()
     {
         Assert.AreEqual(100, _health.MaxHealth);
         Assert.AreEqual(100, _health.CurrentHealth);
+        Assert.IsFalse(_health.IsDead);
     }
+
+    // DAMAGE
 
     [Test]
     public void TakingDamageReducesHealth()
@@ -43,6 +48,26 @@ public class PlayerHealthTests
 
         Assert.AreEqual(0, _health.CurrentHealth);
     }
+
+    [TestCase(0)]
+    [TestCase(-10)]
+    public void InvalidDamageIsIgnored(int damage)
+    {
+        _health.TakeDamage(damage);
+
+        Assert.AreEqual(100, _health.CurrentHealth);
+    }
+
+    [Test]
+    public void DamageAfterDeathIsIgnored()
+    {
+        _health.TakeDamage(100);
+        _health.TakeDamage(25);
+
+        Assert.AreEqual(0, _health.CurrentHealth);
+    }
+
+    // HEALING
 
     [Test]
     public void HealingRestoresHealth()
@@ -64,30 +89,12 @@ public class PlayerHealthTests
 
     [TestCase(0)]
     [TestCase(-10)]
-    public void InvalidDamageIsIgnored(int damage)
-    {
-        _health.TakeDamage(damage);
-
-        Assert.AreEqual(100, _health.CurrentHealth);
-    }
-
-    [TestCase(0)]
-    [TestCase(-10)]
     public void InvalidHealingIsIgnored(int amount)
     {
         _health.TakeDamage(30);
         _health.Heal(amount);
 
         Assert.AreEqual(70, _health.CurrentHealth);
-    }
-
-    [Test]
-    public void DamageAfterDeathIsIgnored()
-    {
-        _health.TakeDamage(100);
-        _health.TakeDamage(25);
-
-        Assert.AreEqual(0, _health.CurrentHealth);
     }
 
     [Test]
@@ -98,6 +105,8 @@ public class PlayerHealthTests
 
         Assert.AreEqual(0, _health.CurrentHealth);
     }
+
+    // HEALTH EVENTS
 
     [Test]
     public void HealthChangedEventProvidesCorrectValues()
@@ -154,6 +163,8 @@ public class PlayerHealthTests
         Assert.AreEqual(0, eventCount);
     }
 
+    // DEATH
+
     [Test]
     public void PlayerDeathEventFiresExactlyOnce()
     {
@@ -180,47 +191,121 @@ public class PlayerHealthTests
         Assert.AreEqual(0, deathCount);
     }
 
-
     [Test]
-    public void IncreasingMaxHealthAlsoIncreasesCurrentHealth()
+    public void IsDeadReturnsTrueWhenHealthReachesZero()
     {
-        _health.TakeDamage(40); // 60/100
-        _health.SetMaxHealth(125);
+        Assert.IsFalse(_health.IsDead);
 
-        Assert.AreEqual(125, _health.MaxHealth);
-        Assert.AreEqual(85, _health.CurrentHealth);
+        _health.TakeDamage(100);
+
+        Assert.IsTrue(_health.IsDead);
     }
 
+    // PERMANENT HEALTH UPGRADES
+
     [Test]
-    public void IncreasingMaxHealthAtFullHealthKeepsPlayerFull()
+    public void PermanentHealthBonusIncreasesMaxAndCurrentHealth()
     {
-        _health.SetMaxHealth(125);
+        _health.SetPermanentHealthBonus(25);
 
         Assert.AreEqual(125, _health.MaxHealth);
         Assert.AreEqual(125, _health.CurrentHealth);
     }
 
     [Test]
-    public void MaxHealthCannotBeDecreased()
+    public void PermanentHealthBonusPreservesMissingHealth()
     {
-        _health.SetMaxHealth(75);
+        _health.TakeDamage(40); // 60/100
+
+        _health.SetPermanentHealthBonus(25);
+
+        Assert.AreEqual(125, _health.MaxHealth);
+        Assert.AreEqual(85, _health.CurrentHealth);
+    }
+
+    [Test]
+    public void ReapplyingSamePermanentHealthBonusDoesNotStack()
+    {
+        _health.SetPermanentHealthBonus(25);
+        _health.SetPermanentHealthBonus(25);
+
+        Assert.AreEqual(125, _health.MaxHealth);
+        Assert.AreEqual(125, _health.CurrentHealth);
+    }
+
+    [Test]
+    public void IncreasingPermanentHealthBonusUpdatesTotal()
+    {
+        _health.SetPermanentHealthBonus(20);
+
+        Assert.AreEqual(120, _health.MaxHealth);
+
+        _health.SetPermanentHealthBonus(40);
+
+        Assert.AreEqual(140, _health.MaxHealth);
+        Assert.AreEqual(140, _health.CurrentHealth);
+    }
+
+    [Test]
+    public void DecreasingPermanentHealthBonusPreservesMissingHealth()
+    {
+        _health.SetPermanentHealthBonus(40); // 140/140
+        _health.TakeDamage(40);              // 100/140
+
+        _health.SetPermanentHealthBonus(20);
+
+        Assert.AreEqual(120, _health.MaxHealth);
+        Assert.AreEqual(80, _health.CurrentHealth);
+    }
+
+    [Test]
+    public void SettingPermanentHealthBonusToZeroRestoresDefaultMax()
+    {
+        _health.SetPermanentHealthBonus(50);
+
+        Assert.AreEqual(150, _health.MaxHealth);
+
+        _health.SetPermanentHealthBonus(0);
 
         Assert.AreEqual(100, _health.MaxHealth);
         Assert.AreEqual(100, _health.CurrentHealth);
     }
 
     [Test]
-    public void InvalidMaxHealthIsIgnored()
+    public void NegativePermanentHealthBonusIsClampedToZero()
     {
-        _health.SetMaxHealth(0);
-        _health.SetMaxHealth(-50);
+        _health.SetPermanentHealthBonus(-25);
 
         Assert.AreEqual(100, _health.MaxHealth);
         Assert.AreEqual(100, _health.CurrentHealth);
     }
 
     [Test]
-    public void MaxHealthChangePublishesHealthChangedEvent()
+    public void NegativePermanentHealthBonusRemovesExistingBonus()
+    {
+        _health.SetPermanentHealthBonus(30);
+        _health.SetPermanentHealthBonus(-10);
+
+        Assert.AreEqual(100, _health.MaxHealth);
+        Assert.AreEqual(100, _health.CurrentHealth);
+    }
+
+    [Test]
+    public void PermanentHealthBonusDoesNotReviveDeadPlayer()
+    {
+        _health.TakeDamage(100);
+
+        Assert.IsTrue(_health.IsDead);
+
+        _health.SetPermanentHealthBonus(50);
+
+        Assert.AreEqual(150, _health.MaxHealth);
+        Assert.AreEqual(0, _health.CurrentHealth);
+        Assert.IsTrue(_health.IsDead);
+    }
+
+    [Test]
+    public void PermanentHealthChangePublishesHealthChangedEvent()
     {
         int eventCount = 0;
         int reportedCurrent = -1;
@@ -233,23 +318,29 @@ public class PlayerHealthTests
             reportedMax = max;
         };
 
-        _health.SetMaxHealth(125);
+        _health.SetPermanentHealthBonus(25);
 
         Assert.AreEqual(1, eventCount);
         Assert.AreEqual(125, reportedCurrent);
         Assert.AreEqual(125, reportedMax);
     }
 
-
     [Test]
-    public void IsDeadReturnsTrueWhenHealthReachesZero()
+    public void ReapplyingSameBonusDoesNotPublishAnotherEvent()
     {
-        Assert.IsFalse(_health.IsDead);
+        _health.SetPermanentHealthBonus(25);
 
-        _health.TakeDamage(100);
+        int eventCount = 0;
 
-        Assert.IsTrue(_health.IsDead);
+        _health.OnHealthChanged += (current, max) =>
+            eventCount++;
+
+        _health.SetPermanentHealthBonus(25);
+
+        Assert.AreEqual(0, eventCount);
     }
+
+    // RESET HEALTH
 
     [Test]
     public void ResetHealthRestoresFullHealth()
@@ -262,9 +353,9 @@ public class PlayerHealthTests
     }
 
     [Test]
-    public void ResetHealthPreservesMaxHealthUpgrades()
+    public void ResetHealthPreservesPermanentHealthBonus()
     {
-        _health.SetMaxHealth(150);
+        _health.SetPermanentHealthBonus(50);
         _health.TakeDamage(80);
         _health.ResetHealth();
 
@@ -275,11 +366,11 @@ public class PlayerHealthTests
     [Test]
     public void ResetHealthPublishesHealthChangedEvent()
     {
+        _health.TakeDamage(50);
+
         int eventCount = 0;
         int reportedCurrent = -1;
         int reportedMax = -1;
-
-        _health.TakeDamage(50);
 
         _health.OnHealthChanged += (current, max) =>
         {
@@ -293,32 +384,6 @@ public class PlayerHealthTests
         Assert.AreEqual(1, eventCount);
         Assert.AreEqual(100, reportedCurrent);
         Assert.AreEqual(100, reportedMax);
-    }
-
-    [Test]
-    public void IncreaseMaxHealthAddsSpecifiedAmount()
-    {
-        _health.TakeDamage(40);
-        _health.IncreaseMaxHealth(25);
-
-        Assert.AreEqual(125, _health.MaxHealth);
-        Assert.AreEqual(85, _health.CurrentHealth);
-    }
-
-
-    [TestCase(0)]
-    [TestCase(-25)]
-    public void InvalidMaxHealthIncreaseIsIgnored(int amount)
-    {
-        int eventCount = 0;
-
-        _health.OnHealthChanged += (current, max) => eventCount++;
-
-        _health.IncreaseMaxHealth(amount);
-
-        Assert.AreEqual(100, _health.MaxHealth);
-        Assert.AreEqual(100, _health.CurrentHealth);
-        Assert.AreEqual(0, eventCount);
     }
 
     [Test]
@@ -334,57 +399,7 @@ public class PlayerHealthTests
         Assert.IsFalse(_health.IsDead);
     }
 
-    [Test]
-    public void ResetMaxHealthRemovesUpgradesAndFullyHeals()
-    {
-        _health.IncreaseMaxHealth(50); // 150/150
-        _health.TakeDamage(80);       // 70/150
-
-        _health.ResetMaxHealth();
-
-        Assert.AreEqual(100, _health.MaxHealth);
-        Assert.AreEqual(100, _health.CurrentHealth);
-        Assert.IsFalse(_health.IsDead);
-    }
-
-    [Test]
-    public void ResetMaxHealthPublishesHealthChangedEvent()
-    {
-        _health.IncreaseMaxHealth(50);
-        _health.TakeDamage(80);
-
-        int eventCount = 0;
-        int reportedCurrent = -1;
-        int reportedMax = -1;
-
-        _health.OnHealthChanged += (current, max) =>
-        {
-            eventCount++;
-            reportedCurrent = current;
-            reportedMax = max;
-        };
-
-        _health.ResetMaxHealth();
-
-        Assert.AreEqual(1, eventCount);
-        Assert.AreEqual(100, reportedCurrent);
-        Assert.AreEqual(100, reportedMax);
-    }
-
-    [Test]
-    public void ResetMaxHealthAfterDeathRestoresPlayer()
-    {
-        _health.IncreaseMaxHealth(50);
-        _health.TakeDamage(150);
-
-        Assert.IsTrue(_health.IsDead);
-
-        _health.ResetMaxHealth();
-
-        Assert.AreEqual(100, _health.MaxHealth);
-        Assert.AreEqual(100, _health.CurrentHealth);
-        Assert.IsFalse(_health.IsDead);
-    }
+    // CONTRACT
 
     [Test]
     public void HealthContractExposesHealthChangesAndDeath()

@@ -6,7 +6,7 @@ using EscapeThe90s.Contracts;
 public class PlayerHealth : MonoBehaviour, IPlayerHealth
 {
     [SerializeField, Min(1)] private int _defaultMaxHealth = 100;
-    [SerializeField, Min(1)] private int _maxHealth = 100;
+    private int _maxHealth;
 
     public int MaxHealth => _maxHealth;
     public int CurrentHealth { get; private set; }
@@ -17,6 +17,7 @@ public class PlayerHealth : MonoBehaviour, IPlayerHealth
 
     private void Awake()
     {
+        _maxHealth = _defaultMaxHealth;
         CurrentHealth = _maxHealth;
 
         OnHealthChanged += (current, max) =>
@@ -90,7 +91,29 @@ public class PlayerHealth : MonoBehaviour, IPlayerHealth
         CurrentHealth = _maxHealth;
         OnHealthChanged?.Invoke(CurrentHealth, _maxHealth);
     }
+    public void SetPermanentHealthBonus(int totalBonus)
+    {
+        int newMaxHealth = _defaultMaxHealth + Mathf.Max(0, totalBonus);
 
+        if (newMaxHealth == _maxHealth)
+            return;
+
+        int difference = newMaxHealth - _maxHealth;
+        bool wasDead = IsDead;
+
+        _maxHealth = newMaxHealth;
+
+        if (!wasDead)
+        {
+            CurrentHealth = Mathf.Clamp(
+                CurrentHealth + difference,
+                1,
+                _maxHealth
+            );
+        }
+
+        OnHealthChanged?.Invoke(CurrentHealth, _maxHealth);
+    }
 
     [ContextMenu("Test/Take 25 Damage")]
     private void TestDamage()

@@ -13,7 +13,8 @@ namespace EscapeThe90s.Contracts
         public void TakeDamage(int damage);
         public void Heal(int amount);
         public void ResetHealth();
+
+        //REMOVE AFTER PERMANENT UPGRADE IS SWITCHED TO NEW INTERFACE
         public void IncreaseMaxHealth(int amount);
-        public void ResetMaxHealth();
     }
 }

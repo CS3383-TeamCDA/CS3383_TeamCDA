@@ -4,5 +4,6 @@ namespace EscapeThe90s.Contracts
     {
         void SetPermanentSpeedBonus(float totalBonus);
         void SetPermanentAttackBonus(float totalBonus);
+        void SetPermanentHealthBonus(float totalBonus);
     }
 }

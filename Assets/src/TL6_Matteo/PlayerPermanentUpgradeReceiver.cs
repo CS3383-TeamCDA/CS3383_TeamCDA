@@ -3,7 +3,8 @@ using EscapeThe90s.Contracts;
 
 [RequireComponent(
     typeof(PlayerControllerTL6),
-    typeof(PlayerCombatController)
+    typeof(PlayerCombatController),
+    typeof(PlayerHealth)
 )]
 public class PlayerPermanentUpgradeReceiver :
     MonoBehaviour, IPlayerPermanentUpgradeReceiver
@@ -18,5 +19,11 @@ public class PlayerPermanentUpgradeReceiver :
     {
         GetComponent<PlayerCombatController>()
             .SetPermanentAttackBonus(totalBonus);
+    }
+
+    public void SetPermanentHealthBonus(float totalBonus)
+    {
+        GetComponent<PlayerHealth>()
+            .SetPermanentHealthBonus(Mathf.RoundToInt(totalBonus));
     }
 }
