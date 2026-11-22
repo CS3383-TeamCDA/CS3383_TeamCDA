@@ -4,25 +4,61 @@ using System.Threading;
 using UnityEngine;
 using System.Collections.Generic;
 using UnityEditor.Overlays;
+using System.ComponentModel.Design;
+using EscapeThe90s.Infrastructure.Unity;
 
 namespace EscapeThe90s.MetaProgression
 {
     [DefaultExecutionOrder(-100)]
-    public class MetaProgressionManager : MonoBehaviour, IMetaProgressionManager
+    public class MetaProgressionManager : DependencyBehaviour, IMetaProgressionManager, IDependent<IGameState>
     {
         public static MetaProgressionManager Instance { get; private set; }
         [SerializeField] private int currency = 0;
+        private static SaveData cache;   // survives scene loads; null until first use
         private int[] upgradeLevels;
         [SerializeField] private List<UpgradeDefinition> definitions;
 
         public int Currency => currency;
         public event Action<int> OnCurrencyChanged;
+        private IGameState gameState;
+        private IPlayerPermanentUpgradeReceiver player;
 
-        private void Awake()
+        public void Inject(IGameState dependency)
         {
-            if (Instance != null) { Destroy(gameObject); return; }
+            if (gameState != null) gameState.OnStateTypeChanged -= HandleStateChanged; // in case of re-injection
+            gameState = dependency;
+            if (gameState != null) gameState.OnStateTypeChanged += HandleStateChanged;
+        }
+
+        private void OnDestroy()
+        {
+            if (gameState != null) gameState.OnStateTypeChanged -= HandleStateChanged;
+            if (Instance == this) Instance = null;
+        }
+
+        private void HandleStateChanged(GameStateChange change)
+        {
+            if (gameState.CurrentStateType == GameStateType.Playing)
+                StartCoroutine(ApplyWhenPlayerExists());
+        }
+
+        private System.Collections.IEnumerator ApplyWhenPlayerExists()
+        {
+            for (int frame = 0; frame < 120 && player == null; frame++)   // give up after ~2 s
+            {
+                foreach (var mb in FindObjectsByType<MonoBehaviour>())
+                    if (mb is IPlayerPermanentUpgradeReceiver receiver) { player = receiver; break; }
+                if (player == null) yield return null;
+            }
+            ApplyStartingBonuses();
+        }
+
+        protected override void Awake()
+        {
+            base.Awake();
             Instance = this;
-            RestoreSnapshot(SaveSystem.Load());
+            RestoreSnapshot(cache ?? SaveSystem.Load());
+            cache = CreateSnapshot();
         }
 
         public void AddCurrency(int amount)
@@ -30,9 +66,9 @@ namespace EscapeThe90s.MetaProgression
             if (amount > 0)
             {
                 currency += amount;
+                cache = CreateSnapshot();
                 OnCurrencyChanged?.Invoke(currency);
             }
-
         }
 
         /// <summary>Returns the stored level for the upgrade, or 0 if none exists.</summary>
@@ -72,19 +108,21 @@ namespace EscapeThe90s.MetaProgression
             if (!CanPurchase(type)) return false;
             currency -= GetDefinition(type).GetCost(GetUpgradeLevel(type));
             upgradeLevels[(int)type]++;
+            cache = CreateSnapshot();
             OnCurrencyChanged?.Invoke(currency);
-            SaveSystem.Save(CreateSnapshot());
+            SaveSystem.Save(cache);
             return true;
         }
 
         public void ApplyStartingBonuses()
         {
+
             if (definitions != null)
             {
                 for (int i = 0; i < definitions.Count; i++)
                 {
                     if (definitions[i].Effect != null)
-                        definitions[i].Effect.Apply(GetEffectValue(definitions[i].Type));
+                        definitions[i].Effect.Apply(GetEffectValue(definitions[i].Type), player);
                 }
             }
         }
@@ -131,14 +169,12 @@ namespace EscapeThe90s.MetaProgression
             return definitions.Find(d => d.Type == type);
         }
 
-        //Only for testing remove before final product
-        public void RemoveCurrency(int amount)
+        /// <summary>Called by the player when it spawns; applies bonuses if a run is already active.</summary>
+        public void RegisterPlayer(IPlayerPermanentUpgradeReceiver receiver)
         {
-            if (amount > 0)
-            {
-                currency = Mathf.Max(0, currency - amount);
-                OnCurrencyChanged?.Invoke(currency);
-            }
+            player = receiver;
+            if (gameState != null && gameState.CurrentStateType == GameStateType.Playing)
+                ApplyStartingBonuses();
         }
     }
 }

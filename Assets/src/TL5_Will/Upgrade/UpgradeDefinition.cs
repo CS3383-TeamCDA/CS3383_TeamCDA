@@ -26,6 +26,7 @@ namespace EscapeThe90s.MetaProgression
             UpgradeType.Health => new HealthEffect(),
             UpgradeType.Speed => new SpeedEffect(),
             UpgradeType.MagnetRange => new MagnetRangeEffect(),
+            UpgradeType.Attack => new AttackEffect(),
             _ => new UpgradeEffect()
         };
 

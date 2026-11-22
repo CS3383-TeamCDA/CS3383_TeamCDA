@@ -1,14 +1,14 @@
 using UnityEngine;
+using EscapeThe90s.Contracts;
 
 namespace EscapeThe90s.MetaProgression
 {
     public class HealthEffect : UpgradeEffect
     {
-        private PlayerHealth health;
-        public override void Apply(float value)
+        public override void Apply(float value, IPlayerPermanentUpgradeReceiver playerUpgrade)
         {
             if(value > 0)
-                health?.IncreaseMaxHealth((int)value);
+                playerUpgrade.SetPermanentHealthBonus(value);
         }
     }
 }
