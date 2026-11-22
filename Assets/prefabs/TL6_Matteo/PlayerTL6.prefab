@@ -112,6 +112,7 @@ GameObject:
   - component: {fileID: -5111774361161408091}
   - component: {fileID: 3372549212717250394}
   - component: {fileID: 1047451965866462000}
+  - component: {fileID: 7887908570609946394}
   m_Layer: 0
   m_Name: PlayerTL6
   m_TagString: Untagged
@@ -428,7 +429,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: TL6Assembly::PlayerHealth
   _defaultMaxHealth: 100
-  _maxHealth: 100
 --- !u!114 &3372549212717250394
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -460,6 +460,18 @@ MonoBehaviour:
   _visualController: {fileID: 3372549212717250394}
   _secondsBetweenShots: 0.18
   _projectilePrefab: {fileID: 2106747323601965680, guid: 33ae4a9c3fbf3e74483647bcc541d616, type: 3}
+--- !u!114 &7887908570609946394
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4047807644510114612}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: afc4b4ffe4b24e941b07770d2f518a85, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TL6Assembly::PlayerPermanentUpgradeReceiver
 --- !u!1001 &8900937760478629912
 PrefabInstance:
   m_ObjectHideFlags: 0
