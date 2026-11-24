@@ -6,7 +6,8 @@
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "TL5Assembly",
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "EscapeThe90s.Infrastructure.Unity"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
