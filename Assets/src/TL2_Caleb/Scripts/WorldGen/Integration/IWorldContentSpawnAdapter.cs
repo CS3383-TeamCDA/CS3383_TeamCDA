@@ -7,6 +7,6 @@ namespace EscapeThe90s.WorldGen.Integration
     public interface IWorldContentSpawnAdapter
     {
         /// <summary>Creates one generated content item at its world position using the owning biome.</summary>
-        GameObject Spawn(SpawnLocation location, Vector3 worldPosition, int biome);
+        GameObject Spawn(SpawnLocation location, Vector3 worldPosition, int biome, int difficultyTier = 0);
     }
 }

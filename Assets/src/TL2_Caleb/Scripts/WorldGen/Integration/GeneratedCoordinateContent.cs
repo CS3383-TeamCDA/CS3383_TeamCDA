@@ -48,7 +48,7 @@ namespace EscapeThe90s.WorldGen.Integration
                     if (spawn.ContentKindIndex == (int)EnemyType.Flying) y += 3f;
                 }
                 if (spawn.Kind == SpawnLocationKind.PowerUp) y += 0.9f;
-                GameObject instance = _spawner.Spawn(spawn, new Vector3(x, y, 0f), info.Biome);
+                GameObject instance = _spawner.Spawn(spawn, new Vector3(x, y, 0f), info.Biome, info.Tier);
                 if (instance != null) instances.Add(instance);
             }
         }

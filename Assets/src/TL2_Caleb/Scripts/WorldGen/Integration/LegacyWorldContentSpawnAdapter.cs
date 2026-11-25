@@ -34,9 +34,9 @@ namespace EscapeThe90s.WorldGen.Integration
             SetupPowerUpManager();
         }
 
-        public GameObject Spawn(SpawnLocation location, Vector3 worldPosition, int biome)
+        public GameObject Spawn(SpawnLocation location, Vector3 worldPosition, int biome, int difficultyTier = 0)
         {
-            if (location.Kind == SpawnLocationKind.Enemy) return SpawnEnemy(location.ContentKindIndex, worldPosition);
+            if (location.Kind == SpawnLocationKind.Enemy) return SpawnEnemy(location.ContentKindIndex, worldPosition, difficultyTier);
             if (location.Kind == SpawnLocationKind.PowerUp) return SpawnPowerUp(location.ContentKindIndex, worldPosition);
             if (location.Kind == SpawnLocationKind.BuildingAnchor) return SpawnBuilding(location, worldPosition, biome);
             return null;
@@ -62,12 +62,23 @@ namespace EscapeThe90s.WorldGen.Integration
             return building;
         }
 
-        GameObject SpawnEnemy(int kind, Vector3 position)
+        GameObject SpawnEnemy(int kind, Vector3 position, int difficultyTier)
         {
             if (_enemySpawner == null || _createEnemy == null || _enemyPrefabs == null ||
                 kind < 0 || kind >= _enemyPrefabs.Length || _enemyPrefabs[kind] == null) return null;
-            object result = _createEnemy.Invoke(_enemySpawner,
-                new[] { Enum.ToObject(_enemyKindType, kind), (object)position });
+            if (!(_enemySpawner is IEnemySpawner spawner)) return null;
+            int previousLevel = spawner.SpawnLevel;
+            object result;
+            try
+            {
+                spawner.SetSpawnLevel(Mathf.Max(0, difficultyTier) + 1);
+                result = _createEnemy.Invoke(_enemySpawner,
+                    new[] { Enum.ToObject(_enemyKindType, kind), (object)position });
+            }
+            finally
+            {
+                spawner.SetSpawnLevel(previousLevel);
+            }
             GameObject enemy = result as GameObject;
             if (enemy == null && result is Component) enemy = ((Component)result).gameObject;
             if (enemy == null) return null;

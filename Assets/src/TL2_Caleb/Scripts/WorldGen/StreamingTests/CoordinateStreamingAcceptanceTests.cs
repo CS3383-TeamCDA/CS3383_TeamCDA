@@ -45,6 +45,50 @@ namespace EscapeThe90s.WorldGen.Tests
         { return RunSpeeds(true); }
 
         [Test]
+        public void StreamOnce_RebasedDifficulty_AppliesChunkTierToSpawnedEnemy()
+        {
+            _root = new GameObject("Coordinate enemy difficulty regression");
+            var target = new GameObject("Target");
+            target.transform.SetParent(_root.transform);
+            target.transform.position = new Vector3(0f, 8f, 0f);
+            _settings = ScriptableObject.CreateInstance<WorldGenSettings>();
+            _settings.seed = 431;
+            WorldArt art = AssetDatabase.LoadAssetAtPath<WorldArt>("Assets/src/TL2_Caleb/Art/WorldGen/WorldArt.asset");
+            var streamer = _root.AddComponent<CoordinateWorldStreamer>();
+            streamer.enabled = false;
+            streamer.Initialize(_settings, art, target.transform, null);
+            streamer.Progress.SetDifficulty(3f);
+
+            var spawner = _root.AddComponent<EnemySpawner>();
+            spawner.SetSpawnLevel(8);
+            string path = AssetDatabase.GUIDToAssetPath("2f6a23a66998f4ebbbac180c85c633cb");
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            Assert.IsNotNull(prefab);
+            _content = _root.AddComponent<GeneratedCoordinateContent>();
+            _content.Initialize(streamer, art, target.transform, new[] { prefab });
+
+            EnemyBase observed = null;
+            void Observe(EnemyBase enemy)
+            {
+                int chunkX = Mathf.FloorToInt(enemy.transform.position.x / WorldChunkCoord.Size);
+                if (chunkX == -2) observed = enemy;
+            }
+
+            spawner.OnEnemySpawned += Observe;
+            try
+            {
+                for (int i = 0; i < 16 && observed == null; i++) streamer.StreamOnce();
+                Assert.IsTrue(observed != null, "Expected seed 431 to spawn a ground enemy in chunk (-2, 0).");
+                Assert.AreEqual(4, observed.Level);
+                Assert.AreEqual(8, spawner.SpawnLevel);
+            }
+            finally
+            {
+                spawner.OnEnemySpawned -= Observe;
+            }
+        }
+
+        [Test]
         public void Stream_ReplacementWindow_ReusesRetiringViewBeforeRent()
         {
             _root = new GameObject("Single-view replacement regression");
