@@ -4,6 +4,10 @@ namespace EscapeThe90s.WorldGen
     public sealed class CoordinateTerrainStampField
     {
         readonly CoordinateWorldGenerator _baseSurface;
+        readonly ulong _seed;
+        readonly int _gapChancePercent;
+        readonly int _gapApproachCells;
+        readonly int _spawnSafeBlocks;
         readonly int _worldFloor;
         readonly int _blockLengthCells;
         readonly int _flatHalfWidthCells;
@@ -13,9 +17,16 @@ namespace EscapeThe90s.WorldGen
         public CoordinateTerrainStampField(CoordinateWorldGenerator baseSurface, int worldFloor,
             int blockLengthCells = WorldConstants.WorldCityBlockLengthChunks * WorldChunkCoord.Size,
             int flatHalfWidthCells = WorldConstants.WorldCityBlockFlatHalfWidthCells,
-            int buildingFootprintHalfWidthCells = WorldConstants.WorldBuildingFootprintHalfWidthCells)
+            int buildingFootprintHalfWidthCells = WorldConstants.WorldBuildingFootprintHalfWidthCells,
+            ulong seed = 0UL, int gapChancePercent = WorldConstants.WorldGapChancePercent,
+            int gapApproachCells = WorldConstants.WorldGapApproachCells,
+            int spawnSafeBlocks = WorldConstants.WorldSpawnSafeBlocks)
         {
             _baseSurface = baseSurface;
+            _seed = seed;
+            _gapChancePercent = System.Math.Max(0, System.Math.Min(100, gapChancePercent));
+            _gapApproachCells = System.Math.Max(WorldConstants.WorldGapApproachCells, gapApproachCells);
+            _spawnSafeBlocks = System.Math.Max(WorldConstants.WorldSpawnSafeBlocks, spawnSafeBlocks);
             _worldFloor = worldFloor;
             int blockChunks = blockLengthCells / WorldChunkCoord.Size;
             if (blockChunks < WorldConstants.WorldCityBlockLengthChunks) blockChunks = WorldConstants.WorldCityBlockLengthChunks;
@@ -35,6 +46,18 @@ namespace EscapeThe90s.WorldGen
 
         /// <summary>Returns the stamped surface height at a world cell.</summary>
         public int SurfaceHeightAt(int worldCellX)
+        {
+            int height = CitySurfaceHeightAt(worldCellX);
+            if (!TryGetGap(worldCellX, out int first, out int width)) return height;
+            int center = first + width / 2;
+            int distance = System.Math.Abs(worldCellX - center);
+            int runwayRadius = width / 2 + _gapApproachCells;
+            int gapHeight = _baseSurface.SurfaceHeightAt(center);
+            int allowance = System.Math.Max(0, distance - runwayRadius);
+            return System.Math.Max(gapHeight - allowance, System.Math.Min(gapHeight + allowance, height));
+        }
+
+        int CitySurfaceHeightAt(int worldCellX)
         {
             int segment = WorldChunkCoord.FloorDiv(worldCellX, _blockLengthCells);
             int start = segment * _blockLengthCells;
@@ -63,9 +86,13 @@ namespace EscapeThe90s.WorldGen
             int firstCell = centerCellX - halfWidthCells;
             int lastCell = centerCellX + halfWidthCells;
             for (int x = firstCell; x <= lastCell; x++)
-                if (SurfaceHeightAt(x) != expectedHeight) return false;
+                if (IsGapColumn(x) || SurfaceHeightAt(x) != expectedHeight) return false;
             return true;
         }
+
+        internal int GetCityBlockCenter(int block) => block * _blockLengthCells + _blockLengthCells / 2;
+
+        internal int GetCityBlockIndex(int worldCellX) => WorldChunkCoord.FloorDiv(worldCellX, _blockLengthCells);
 
         /// <summary>Checks whether a cell is the center of a flat, building-sized city lot.</summary>
         public bool IsCityBlockCenter(int worldCellX)
@@ -77,13 +104,35 @@ namespace EscapeThe90s.WorldGen
 
         /// <summary>Returns whether a world cell contains solid terrain above the world floor.</summary>
         public bool IsFilled(int worldCellX, int worldCellY)
-        { return worldCellY > _worldFloor && worldCellY <= SurfaceHeightAt(worldCellX); }
+        { return !IsGapColumn(worldCellX) && worldCellY > _worldFloor && worldCellY <= SurfaceHeightAt(worldCellX); }
+
+        /// <summary>Gaps belong to block joins, independently of chunk ownership; the opening two blocks are safe.</summary>
+        public bool IsGapColumn(int worldCellX)
+        { return TryGetGap(worldCellX, out int first, out int width) && worldCellX >= first && worldCellX < first + width; }
+
+        bool TryGetGap(int worldCellX, out int first, out int width)
+        {
+            int join = WorldChunkCoord.FloorDiv(worldCellX + _blockLengthCells / 2, _blockLengthCells);
+            int center = join * _blockLengthCells;
+            var rng = new DeterministicRng(WorldHash.Combine(WorldHash.Combine(_seed, join), Salt.Stamps));
+            width = rng.Range(2, WorldConstants.MaxGapWidthCells + 1);
+            first = center - width / 2;
+            if (System.Math.Abs((long)join) < _spawnSafeBlocks || !rng.ChancePercent(_gapChancePercent)) return false;
+            // A join must leave four clear columns on each side and the existing building pads intact.
+            int runway = width / 2 + _gapApproachCells;
+            int height = _baseSurface.SurfaceHeightAt(center);
+            int leftLot = CitySurfaceHeightAt(center - _blockLengthCells / 2);
+            int rightLot = CitySurfaceHeightAt(center + _blockLengthCells / 2);
+            int availableRise = _blockLengthCells / 2 - _flatHalfWidthCells - runway;
+            return availableRise >= 0 && System.Math.Abs(height - leftLot) <= availableRise &&
+                System.Math.Abs(height - rightLot) <= availableRise;
+        }
 
         /// <summary>Returns the tile meaning at a world coordinate.</summary>
         public TileId GetTileAtCell(int worldCellX, int worldCellY)
         {
             if (worldCellY <= _worldFloor) return TileId.Void;
-            return worldCellY <= SurfaceHeightAt(worldCellX) ? TileId.Ground : TileId.Sky;
+            return IsFilled(worldCellX, worldCellY) ? TileId.Ground : TileId.Sky;
         }
 
         /// <summary>Classifies a chunk from its stamped surface and the configured world floor.</summary>
@@ -93,7 +142,7 @@ namespace EscapeThe90s.WorldGen
             int maximumSurface = int.MinValue;
             for (int x = coordinate.MinCellX; x <= coordinate.MaxCellX; x++)
             {
-                int height = SurfaceHeightAt(x);
+                int height = IsGapColumn(x) ? _worldFloor : SurfaceHeightAt(x);
                 if (height < minimumSurface) minimumSurface = height;
                 if (height > maximumSurface) maximumSurface = height;
             }
@@ -110,8 +159,24 @@ namespace EscapeThe90s.WorldGen
         {
             ulong hash = WorldHash.Combine(WorldHash.Combine(seed, coordinate.X), coordinate.Y);
             for (int x = coordinate.MinCellX; x <= coordinate.MaxCellX; x++)
+            {
                 hash = WorldHash.Combine(hash, SurfaceHeightAt(x));
+                if (IsGapColumn(x)) hash = WorldHash.Combine(hash, x);
+            }
             return hash;
+        }
+
+        /// <summary>Chooses the existing runtime chunk behavior from the final, world-addressed terrain.</summary>
+        public EscapeThe90s.Contracts.ChunkKind GetTerrainKind(WorldChunkCoord coordinate)
+        {
+            int firstHeight = SurfaceHeightAt(coordinate.MinCellX);
+            bool ramp = false;
+            for (int x = coordinate.MinCellX; x <= coordinate.MaxCellX; x++)
+            {
+                if (IsGapColumn(x)) return EscapeThe90s.Contracts.ChunkKind.Gap;
+                if (SurfaceHeightAt(x) != firstHeight) ramp = true;
+            }
+            return ramp ? EscapeThe90s.Contracts.ChunkKind.Ramp : EscapeThe90s.Contracts.ChunkKind.Ground;
         }
 
         static int Interpolate(int from, int to, int offset, int length)

@@ -124,6 +124,83 @@ namespace EscapeThe90s.WorldGen.Tests
             Assert.IsTrue(retainedEnemies[0] != null, Context("after recycle", "(1,0)", "neighbor's enemy was incorrectly retired"));
         }
 
+        [UnityTest]
+        public IEnumerator GeneratedWorld_PlayerDiesAndRestarts_BeginsFreshRun()
+        {
+            _scene = EditorSceneManager.LoadSceneInPlayMode(
+                "Assets/Scenes/GeneratedWorldGameDemo.unity", new LoadSceneParameters(LoadSceneMode.Single));
+            yield return WaitFor(() =>
+            {
+                foreach (MonoBehaviour component in Object.FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include))
+                {
+                    if (component is IGameState state && state.CurrentStateType == GameStateType.Menu)
+                    {
+                        _gameStateComponent = component;
+                        return true;
+                    }
+                }
+                return false;
+            }, "The playable scene did not reach the menu.");
+            var gameState = (IGameState)_gameStateComponent;
+            gameState.RequestStart();
+            CoordinateWorldStreamer streamer = null;
+            yield return WaitFor(() =>
+            {
+                streamer = Object.FindAnyObjectByType<CoordinateWorldStreamer>();
+                return streamer != null && streamer.Progress != null;
+            }, "The first run did not initialize its streamer.");
+
+            var demo = streamer.GetComponent<WorldNetworkDemo>();
+            Transform player = demo.player;
+            IPlayerHealth health = player.GetComponent<IPlayerHealth>();
+            Assert.IsNotNull(health);
+            ILevelProgress firstRun = streamer.Progress;
+            Vector3 origin = player.position;
+            player.position = origin + Vector3.right * 32f;
+            streamer.StreamOnce();
+            float furthest = firstRun.GetCurrentDistance();
+            Assert.GreaterOrEqual(furthest, 31.9f);
+            player.position = origin;
+            streamer.StreamOnce();
+            Assert.AreEqual(furthest, firstRun.GetCurrentDistance());
+            firstRun.SetDifficulty(5f);
+            Assert.AreEqual(5f, firstRun.GetCurrentDifficulty());
+
+            health.TakeDamage(health.CurrentHealth);
+            Assert.AreEqual(GameStateType.GameOver, gameState.CurrentStateType);
+            Scene firstScene = _scene;
+            string firstScenePath = firstScene.path;
+            gameState.RequestRestart();
+            yield return WaitFor(() =>
+            {
+                var active = SceneManager.GetActiveScene();
+                if (active.handle == firstScene.handle || active.path != firstScenePath) return false;
+                _scene = active;
+                var fresh = Object.FindAnyObjectByType<CoordinateWorldStreamer>();
+                if (fresh == null || fresh.gameObject.scene != active || fresh.Progress == null) return false;
+                streamer = fresh;
+                return true;
+            }, "Restart did not reload the scene and initialize a new streamer.");
+            _scene = streamer.gameObject.scene;
+            Assert.AreEqual(GameStateType.Playing, gameState.CurrentStateType);
+            Assert.AreNotSame(firstRun, streamer.Progress);
+            Assert.AreEqual(0f, streamer.Progress.GetCurrentDistance(), 0.01f);
+            Assert.AreEqual(0f, streamer.Progress.GetCurrentDifficulty(), 0.01f);
+            IPlayerHealth newHealth = streamer.GetComponent<WorldNetworkDemo>().player.GetComponent<IPlayerHealth>();
+            Assert.AreNotSame(health, newHealth);
+            Assert.Greater(newHealth.CurrentHealth, 0);
+        }
+
+        private static IEnumerator WaitFor(System.Func<bool> condition, string failure)
+        {
+            float deadline = Time.realtimeSinceStartup + 10f;
+            while (!condition())
+            {
+                Assert.Less(Time.realtimeSinceStartup, deadline, failure);
+                yield return null;
+            }
+        }
+
         private static void AssertEnemyInstruction(ChunkSpawnedInfo info, EnemyType expected)
         {
             int count = 0;

@@ -8,6 +8,22 @@ namespace EscapeThe90s.WorldGen.Tests
     public sealed class WorldProfileTests
     {
         [Test]
+        public void GeneratedSnapshot_AfterSubsequentLoads_RetainsTilesAndSpawnSlots()
+        {
+            var profile = new SideScrollerWorldProfile(431);
+            var coord = new WorldChunkCoord(-2, 0);
+            WorldChunkData retained = profile.GenerateChunk(coord);
+            Assert.Greater(retained.SpawnLocations.Count, 0);
+            SpawnLocation first = retained.SpawnLocations[0];
+            for (int x = 0; x < 32; x++) profile.GenerateChunk(new WorldChunkCoord(x, 0));
+            for (int y = 0; y < WorldChunkCoord.Size; y++)
+                for (int x = 0; x < WorldChunkCoord.Size; x++)
+                    Assert.AreEqual(profile.GetTileAtCell(coord.MinCellX + x, coord.MinCellY + y),
+                        retained.GetTile(x, y));
+            Assert.AreEqual(first, retained.SpawnLocations[0]);
+        }
+
+        [Test]
         public void WorldChunkData_CallerMutatesSpawnArray_RetainsCopiedLocations()
         {
             var tiles = new TileId[256];

@@ -62,7 +62,8 @@ namespace EscapeThe90s.WorldGen
             _profile = new SideScrollerWorldProfile(settings.SeedValue, settings.WorldSurfaceBaseline,
                 settings.WorldSurfaceVariation, settings.WorldSurfaceAnchorSpan, settings.WorldFloorCellY,
                 settings.DistancePerDifficulty, settings.BiomeCount, settings.WorldBiomeRegionSpanChunks,
-                settings.WorldCityBlockLengthCells, settings.WorldCityBlockFlatHalfWidthCells);
+                settings.WorldCityBlockLengthCells, settings.WorldCityBlockFlatHalfWidthCells,
+                settings.WorldGapChancePercent, settings.WorldGapApproachCells, settings.WorldSpawnSafeBlocks);
             _policy = new SideScrollerStreamPolicy(settings.StreamBehindChunks,
                 settings.StreamBaseAheadChunks, settings.StreamMaxAheadChunks,
                 settings.StreamVerticalRadius, settings.StreamLookaheadSeconds);

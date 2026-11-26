@@ -22,6 +22,9 @@ namespace EscapeThe90s.WorldGen
         [SerializeField, Min(WorldConstants.WorldBuildingFootprintHalfWidthCells)]
         private int _worldCityBlockFlatHalfWidthCells = WorldConstants.WorldCityBlockFlatHalfWidthCells;
         [SerializeField] int _worldFloorCellY = WorldConstants.WorldFloorCellY;
+        [SerializeField, Range(0, 100)] private int _worldGapChancePercent = WorldConstants.WorldGapChancePercent;
+        [SerializeField, Min(WorldConstants.WorldGapApproachCells)] private int _worldGapApproachCells = WorldConstants.WorldGapApproachCells;
+        [SerializeField, Min(WorldConstants.WorldSpawnSafeBlocks)] private int _worldSpawnSafeBlocks = WorldConstants.WorldSpawnSafeBlocks;
         [SerializeField, Min(1)] int _distancePerDifficulty = WorldConstants.WorldDistancePerDifficulty;
 
         [Header("Coordinate world streaming")]
@@ -59,6 +62,9 @@ namespace EscapeThe90s.WorldGen
             }
         }
         public int WorldFloorCellY { get { return _worldFloorCellY; } }
+        public int WorldGapChancePercent => Mathf.Clamp(_worldGapChancePercent, 0, 100);
+        public int WorldGapApproachCells => Mathf.Max(WorldConstants.WorldGapApproachCells, _worldGapApproachCells);
+        public int WorldSpawnSafeBlocks => Mathf.Max(WorldConstants.WorldSpawnSafeBlocks, _worldSpawnSafeBlocks);
         public int DistancePerDifficulty { get { return Mathf.Max(1, _distancePerDifficulty); } }
         public int StreamBehindChunks { get { return Mathf.Clamp(_streamBehindChunks, 0, 64); } }
         public int StreamBaseAheadChunks { get { return Mathf.Clamp(_streamBaseAheadChunks, 1, 64); } }

@@ -22,6 +22,8 @@ namespace EscapeThe90s.WorldGen
         readonly int _surfaceBaseline;
         readonly int _worldFloor;
         readonly int _distancePerDifficulty;
+        readonly int _leftOpeningAccent;
+        readonly int _rightOpeningAccent;
 
         public SideScrollerWorldProfile(ulong seed, int surfaceBaseline = WorldConstants.WorldSurfaceBaseline,
             int surfaceVariation = WorldConstants.WorldSurfaceVariationCells,
@@ -31,7 +33,10 @@ namespace EscapeThe90s.WorldGen
             int biomeCount = WorldConstants.BiomeCount,
             int biomeRegionSpanChunks = WorldConstants.WorldBiomeRegionSpanChunks,
             int cityBlockLengthCells = WorldConstants.WorldCityBlockLengthChunks * WorldChunkCoord.Size,
-            int cityBlockFlatHalfWidthCells = WorldConstants.WorldCityBlockFlatHalfWidthCells)
+            int cityBlockFlatHalfWidthCells = WorldConstants.WorldCityBlockFlatHalfWidthCells,
+            int gapChancePercent = WorldConstants.WorldGapChancePercent,
+            int gapApproachCells = WorldConstants.WorldGapApproachCells,
+            int spawnSafeBlocks = WorldConstants.WorldSpawnSafeBlocks)
         {
             _seed = seed;
             _surfaceBaseline = surfaceBaseline;
@@ -39,24 +44,26 @@ namespace EscapeThe90s.WorldGen
             _distancePerDifficulty = distancePerDifficulty <= 0 ? WorldConstants.WorldDistancePerDifficulty : distancePerDifficulty;
             _generator = new CoordinateWorldGenerator(seed, surfaceBaseline, surfaceVariation, anchorSpan, worldFloor);
             _terrainStamps = new CoordinateTerrainStampField(_generator, worldFloor,
-                cityBlockLengthCells, cityBlockFlatHalfWidthCells);
+                cityBlockLengthCells, cityBlockFlatHalfWidthCells, seed: seed,
+                gapChancePercent: gapChancePercent, gapApproachCells: gapApproachCells, spawnSafeBlocks: spawnSafeBlocks);
             _biomeField = new WorldBiomeField(seed, biomeCount, biomeRegionSpanChunks);
+            _leftOpeningAccent = GetOriginalLotAccent(-WorldConstants.WorldSpawnSafeBlocks);
+            _rightOpeningAccent = GetOriginalLotAccent(WorldConstants.WorldSpawnSafeBlocks - 1);
         }
 
         public WorldChunkData GenerateChunk(WorldChunkCoord coordinate)
         {
             WorldChunkKind kind = _terrainStamps.GetChunkKind(coordinate);
-            var tiles = new TileId[WorldChunkCoord.Size * WorldChunkCoord.Size];
-            for (int localY = 0; localY < WorldChunkCoord.Size; localY++)
-                for (int localX = 0; localX < WorldChunkCoord.Size; localX++)
-                {
-                    int worldX = coordinate.MinCellX + localX;
-                    int worldY = coordinate.MinCellY + localY;
-                    TileId tile = worldY <= _worldFloor
-                        ? TileId.Void
-                        : worldY <= _terrainStamps.SurfaceHeightAt(worldX) ? TileId.Ground : TileId.Sky;
-                    tiles[localY * WorldChunkCoord.Size + localX] = tile;
-                }
+            var groundEnds = new byte[WorldChunkCoord.Size];
+            for (int localX = 0; localX < groundEnds.Length; localX++)
+            {
+                int x = coordinate.MinCellX + localX;
+                if (_terrainStamps.IsGapColumn(x)) continue;
+                int surface = _terrainStamps.SurfaceHeightAt(x);
+                if (surface >= coordinate.MinCellY)
+                    groundEnds[localX] = surface >= coordinate.MaxCellY
+                        ? (byte)WorldChunkCoord.Size : (byte)(surface - coordinate.MinCellY + 1);
+            }
 
             int biome = _biomeField.GetBiome(coordinate.X);
             ulong hash = WorldHash.Combine(_terrainStamps.ContentHash(_seed, coordinate), biome);
@@ -71,7 +78,8 @@ namespace EscapeThe90s.WorldGen
                 hash = WorldHash.Combine(hash, spawn.ContentKindIndex);
                 hash = WorldHash.Combine(hash, (int)(spawn.NormalizedX * 65535f));
             }
-            return WorldChunkData.FromOwnedArrays(coordinate, kind, biome, _worldFloor, difficulty, hash, tiles, spawns);
+            return new WorldChunkData(coordinate, kind, biome, _worldFloor, difficulty, hash, groundEnds, spawns,
+                _terrainStamps.GetTerrainKind(coordinate));
         }
 
         public TileId GetTileAtCell(int worldCellX, int worldCellY)
@@ -82,6 +90,8 @@ namespace EscapeThe90s.WorldGen
         { return GetTileAtCell(x, y) == TileId.Ground; }
 
         public int GetSurfaceHeight(int worldCellX) { return _terrainStamps.SurfaceHeightAt(worldCellX); }
+        /// <summary>Returns whether a column is a gap; surface height remains the nominal takeoff/landing elevation.</summary>
+        public bool IsGapColumn(int worldCellX) { return _terrainStamps.IsGapColumn(worldCellX); }
         /// <summary>Validates the selected artwork's entire horizontal extent against the owning biome.</summary>
         public bool CanPlaceBuilding(int biome, float minimumWorldX, float maximumWorldX)
         { return CoordinateBuildingPlacement.FitsBiome(_biomeField, biome, minimumWorldX, maximumWorldX); }
@@ -118,6 +128,21 @@ namespace EscapeThe90s.WorldGen
                     ? (int)BuildingType.PizzaParlor
                     : (int)BuildingType.Generic;
                 int accent = (int)(hash % WorldConstants.AccentsPerBiome);
+                int block = _terrainStamps.GetCityBlockIndex(buildingCenterX);
+                // Preserve the original opening lots. Beyond them, each group of four lots
+                // has one restaurant in a seeded interior slot, spaced away from its neighbors.
+                if (block < -WorldConstants.WorldSpawnSafeBlocks || block >= WorldConstants.WorldSpawnSafeBlocks)
+                {
+                    const int lotsPerGroup = 4;
+                    int group = WorldChunkCoord.FloorDiv(block, lotsPerGroup);
+                    ulong placement = WorldHash.Combine(WorldHash.Combine(_seed, Salt.Placement), group);
+                    int restaurantSlot = 1 + (int)(placement % 2UL);
+                    buildingKind = PositiveMod(block, lotsPerGroup) == restaurantSlot
+                        ? (int)BuildingType.PizzaParlor : (int)BuildingType.Generic;
+                    int openingBlock = block < 0 ? -WorldConstants.WorldSpawnSafeBlocks : WorldConstants.WorldSpawnSafeBlocks - 1;
+                    int openingAccent = block < 0 ? _leftOpeningAccent : _rightOpeningAccent;
+                    accent = PositiveMod(block - openingBlock + openingAccent, WorldConstants.AccentsPerBiome);
+                }
                 float buildingNormalizedX = (coordinate.LocalIndexX(buildingCenterX) + 0.5f) / WorldChunkCoord.Size;
                 spawns[index] = new SpawnLocation(SpawnLocationKind.BuildingAnchor,
                     buildingNormalizedX, accent, buildingKind, -1);
@@ -125,16 +150,24 @@ namespace EscapeThe90s.WorldGen
             return spawns;
         }
 
+        private int GetOriginalLotAccent(int block)
+        {
+            int center = _terrainStamps.GetCityBlockCenter(block);
+            var coordinate = WorldChunkCoord.AtCell(center, _terrainStamps.SurfaceHeightAt(center));
+            ulong hash = WorldHash.Combine(_terrainStamps.ContentHash(_seed, coordinate), _biomeField.GetBiome(coordinate.X));
+            return (int)(hash % WorldConstants.AccentsPerBiome);
+        }
+
         bool TryChooseSurfaceCell(WorldChunkCoord coordinate, ulong hash, out int surfaceCellX)
         {
             int count = 0;
             for (int x = coordinate.MinCellX; x <= coordinate.MaxCellX; x++)
-                if (WorldChunkCoord.FloorDiv(_terrainStamps.SurfaceHeightAt(x), WorldChunkCoord.Size) == coordinate.Y) count++;
+                if (!_terrainStamps.IsGapColumn(x) && WorldChunkCoord.FloorDiv(_terrainStamps.SurfaceHeightAt(x), WorldChunkCoord.Size) == coordinate.Y) count++;
             surfaceCellX = coordinate.MinCellX;
             if (count == 0) return false;
             int selected = (int)(hash % (ulong)count);
             for (int x = coordinate.MinCellX; x <= coordinate.MaxCellX; x++)
-                if (WorldChunkCoord.FloorDiv(_terrainStamps.SurfaceHeightAt(x), WorldChunkCoord.Size) == coordinate.Y && selected-- == 0)
+                if (!_terrainStamps.IsGapColumn(x) && WorldChunkCoord.FloorDiv(_terrainStamps.SurfaceHeightAt(x), WorldChunkCoord.Size) == coordinate.Y && selected-- == 0)
                 { surfaceCellX = x; return true; }
             return false;
         }

@@ -18,6 +18,13 @@ namespace EscapeThe90s.WorldGen
 
         public abstract ChunkKind Kind { get; }
 
+        /// <summary>Uses the same runtime kind contract for coordinate terrain with its shared pooled renderer.</summary>
+        public void PopulateCoordinate(CoordinateChunkView view, WorldChunkData data, IWorldProfile profile, WorldArt art)
+        {
+            if (data.TerrainKind != Kind) throw new InvalidOperationException("Coordinate terrain behavior does not match its data.");
+            view.RenderTerrain(data, profile, art);
+        }
+
         public void Initialize()
         {
             if (_tilemap != null) return;
@@ -34,6 +41,8 @@ namespace EscapeThe90s.WorldGen
             building.transform.SetParent(transform, false);
             _buildingRenderer = building.AddComponent<SpriteRenderer>();
             _buildingRenderer.sortingOrder = 1;
+            int groundLayer = LayerMask.NameToLayer("Ground");
+            if (groundLayer >= 0) gameObject.layer = groundLayer;
             EnsureColliderCapacity(InitialColliderCapacity);
             ResetForPool();
         }

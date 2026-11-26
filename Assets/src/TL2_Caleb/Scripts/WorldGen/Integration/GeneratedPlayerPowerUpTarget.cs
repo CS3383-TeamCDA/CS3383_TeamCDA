@@ -1,4 +1,3 @@
-using System.Reflection;
 using EscapeThe90s.PowerUps;
 using UnityEngine;
 
@@ -12,8 +11,6 @@ namespace EscapeThe90s.WorldGen.Integration
 
         PlayerControllerTL6 _controller;
         PlayerHealth _health;
-        FieldInfo _speedField;
-        float _baseSpeed;
 
         public float SpeedMultiplier { get; private set; } = 1f;
         public float PickupRadius { get; private set; }
@@ -24,16 +21,12 @@ namespace EscapeThe90s.WorldGen.Integration
             _controller = GetComponent<PlayerControllerTL6>();
             _health = GetComponent<PlayerHealth>();
             PickupRadius = basePickupRadius;
-            if (_controller == null) return;
-            _baseSpeed = _controller.MaxSpeedX;
-            _speedField = _controller.GetType().GetField("_maxSpeedX", BindingFlags.Instance | BindingFlags.NonPublic);
         }
 
         public void SetSpeedMultiplier(float multiplier)
         {
             SpeedMultiplier = Mathf.Max(0f, multiplier);
-            if (_controller == null || _speedField == null || _speedField.FieldType != typeof(float)) return;
-            _speedField.SetValue(_controller, _baseSpeed * SpeedMultiplier);
+            if (_controller != null) _controller.SetTemporarySpeedMultiplier(SpeedMultiplier);
         }
 
         public void Heal(int amount)
@@ -48,8 +41,7 @@ namespace EscapeThe90s.WorldGen.Integration
 
         void OnDisable()
         {
-            if (_controller != null && _speedField != null && _speedField.FieldType == typeof(float))
-                _speedField.SetValue(_controller, _baseSpeed);
+            if (_controller != null) _controller.ResetTemporarySpeedMultiplier();
             SpeedMultiplier = 1f;
             PickupRadius = basePickupRadius;
         }

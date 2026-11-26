@@ -77,7 +77,7 @@ namespace EscapeThe90s.WorldGen
             root.transform.SetParent(owner, false);
             _viewRoot = root.transform;
             _pool = new ChunkPool<CoordinateChunkView>(CreateView);
-            if (prewarmCount > 0) _pool.Prewarm(ChunkKind.Ground, prewarmCount);
+            if (prewarmCount > 0) _pool.Prewarm(ChunkKind.Ground, Mathf.Max(prewarmCount, maximumWindowSize));
         }
 
         public void Stream(WorldStreamWindow window, float originX)
@@ -93,7 +93,8 @@ namespace EscapeThe90s.WorldGen
                     var coordinate = new WorldChunkCoord(x, y);
                     if (_loaded.ContainsKey(coordinate)) continue;
                     WorldChunkKind kind = _profile.GetChunkKind(coordinate);
-                    if (kind == WorldChunkKind.Surface)
+                    if (kind == WorldChunkKind.Surface || kind == WorldChunkKind.Solid ||
+                        (kind == WorldChunkKind.Sky && HasGroundAtRenderEdge(coordinate)))
                         _pending.Add(new PendingChunk(coordinate, Priority(coordinate, window)));
                     else
                         _loaded.Add(coordinate, null);
@@ -101,15 +102,27 @@ namespace EscapeThe90s.WorldGen
 
             _pending.Sort(PendingComparer);
             int count = Mathf.Min(_buildBudget, _pending.Count);
-            for (int i = 0; i < count; i++) LoadSurfaceChunk(_pending[i].Coordinate, originX);
+            for (int i = 0; i < count; i++) LoadVisibleChunk(_pending[i].Coordinate, originX);
         }
 
-        void LoadSurfaceChunk(WorldChunkCoord coordinate, float originX)
+        // The first row/column of dual-grid artwork also samples the chunk below/left.
+        bool HasGroundAtRenderEdge(WorldChunkCoord coordinate)
+        {
+            int left = coordinate.MinCellX - 1;
+            int bottom = coordinate.MinCellY - 1;
+            if (_profile.IsFilled(left, coordinate.MinCellY)) return true;
+            for (int x = left; x <= coordinate.MaxCellX; x++)
+                if (_profile.IsFilled(x, bottom)) return true;
+            return false;
+        }
+
+        void LoadVisibleChunk(WorldChunkCoord coordinate, float originX)
         {
             WorldChunkData data = _profile.GenerateChunk(coordinate);
             CoordinateChunkView view = _pool.Rent(ChunkKind.Ground);
             view.Populate(data, _profile, _art);
             _loaded.Add(coordinate, view);
+            if (data.Kind != WorldChunkKind.Surface) return;
             float minX = coordinate.MinCellX - 0.5f;
             float minY = coordinate.MinCellY - 0.5f;
             var bounds = new ChunkBounds(minX, minY,
@@ -119,7 +132,7 @@ namespace EscapeThe90s.WorldGen
             var id = ChunkId.ForWorldCoordinate(coordinate.X, coordinate.Y);
             var info = new ChunkSpawnedInfo(id, bounds, difficulty,
                 DifficultyProgression.TierAtDifficulty(difficulty), data.Biome,
-                ChunkKind.Ground, data.SpawnLocations);
+                data.TerrainKind, data.SpawnLocations);
             if (MeasureCallbacks) _callbackAllocations.Begin();
             long ticks = MeasureCallbacks ? System.Diagnostics.Stopwatch.GetTimestamp() : 0;
             _progress.NotifyChunkSpawned(info);
@@ -148,13 +161,16 @@ namespace EscapeThe90s.WorldGen
             if (!_loaded.TryGetValue(coordinate, out CoordinateChunkView view)) return;
             _loaded.Remove(coordinate);
             if (view == null) return;
-            if (MeasureCallbacks) _callbackAllocations.Begin();
-            long ticks = MeasureCallbacks ? System.Diagnostics.Stopwatch.GetTimestamp() : 0;
-            _progress.NotifyChunkRecycled(ChunkId.ForWorldCoordinate(coordinate.X, coordinate.Y));
-            if (MeasureCallbacks)
+            if (view.FillKind == WorldChunkKind.Surface)
             {
-                ContentTicks += System.Diagnostics.Stopwatch.GetTimestamp() - ticks;
-                ContentAllocationEvents += _callbackAllocations.End();
+                if (MeasureCallbacks) _callbackAllocations.Begin();
+                long ticks = MeasureCallbacks ? System.Diagnostics.Stopwatch.GetTimestamp() : 0;
+                _progress.NotifyChunkRecycled(ChunkId.ForWorldCoordinate(coordinate.X, coordinate.Y));
+                if (MeasureCallbacks)
+                {
+                    ContentTicks += System.Diagnostics.Stopwatch.GetTimestamp() - ticks;
+                    ContentAllocationEvents += _callbackAllocations.End();
+                }
             }
             view.ResetForPool();
             _pool.Return(view);

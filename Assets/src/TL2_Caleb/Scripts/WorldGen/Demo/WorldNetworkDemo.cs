@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using EscapeThe90s.Contracts;
 using EscapeThe90s.WorldGen;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -7,7 +8,7 @@ namespace EscapeThe90s.WorldGen.Demo
 {
 /// <summary>Playable generated world. Coordinate streaming is the default; graph mode remains available for compatibility.</summary>
 [DefaultExecutionOrder(-1000)]
-public class WorldNetworkDemo : MonoBehaviour
+public class WorldNetworkDemo : MonoBehaviour, IDependent<IGameplaySessionState>
 {
     public WorldGenSettings settings;
     public WorldArt art;
@@ -33,6 +34,10 @@ public class WorldNetworkDemo : MonoBehaviour
     StreetView _streetView;
     Transform _player;
     Rigidbody2D _playerBody;
+    IGameplaySessionState _sessionState;
+    Collider2D _playerCollider;
+    int _safeColumn;
+    int _groundMask;
     CameraFollow _cameraFollow;
     WorldStreet _currentStreet;
     RunPath _runPath;
@@ -77,11 +82,13 @@ public class WorldNetworkDemo : MonoBehaviour
         }
     }
 
+    public void Inject(IGameplaySessionState sessionState) { _sessionState = sessionState; }
+
     void Start() { TryInitializeAfterGameStarts(); }
 
     void TryInitializeAfterGameStarts()
     {
-        if (_demoInitialized || !EscapeThe90s.WorldGen.Integration.GeneratedWorldComposition.IsGameplayStarted()) return;
+        if (_demoInitialized || (_sessionState != null && !_sessionState.IsGameplayStarted)) return;
         if (settings == null || art == null)
         {
             Debug.LogWarning("WorldNetworkDemo: assign World Gen Settings and World Art. Use Escape the 90s > Create World Network Demo to set up the scene.");
@@ -113,6 +120,9 @@ public class WorldNetworkDemo : MonoBehaviour
             _coordinateWorld.Initialize(settings, art, _player, _playerBody);
             _coordinateWorld.SetChunkDebugEnabled(_showChunkDebug);
             _generatedCoordinateContent.Initialize(_coordinateWorld, art, _player, enemyPrefabsByKind);
+            _safeColumn = 0;
+            _groundMask = LayerMask.GetMask("Ground");
+            _playerCollider = _player.GetComponent<CapsuleCollider2D>();
             _cameraFollow = _cameraRig.Attach(_player, null);
             if (_streetView != null) _streetView.enabled = false;
             _player.gameObject.SetActive(true);
@@ -163,6 +173,7 @@ public class WorldNetworkDemo : MonoBehaviour
         if (coordinateWorldMode && _coordinateWorld != null)
         {
             _coordinateWorld.SetChunkDebugEnabled(_showChunkDebug);
+            UpdatePitRecovery();
             return;
         }
         if (_world == null || _currentStreet == null || _player == null) return;
@@ -197,6 +208,30 @@ public class WorldNetworkDemo : MonoBehaviour
                 _intersectionController.Exits[_intersectionController.SelectedExit]);
     }
 
+    void UpdatePitRecovery()
+    {
+        if (_playerBody == null || !_playerBody.simulated || !_player.gameObject.activeInHierarchy) return;
+        Vector2 position = _playerBody.position;
+        int column = Mathf.RoundToInt(position.x);
+        var profile = _coordinateWorld.Profile;
+        float surface = CoordinateTerrainGeometry.SurfaceTopAtCell(profile, column);
+        if (position.y < surface - WorldChunkCoord.Size)
+        {
+            // The last grounded column has support on both sides, away from the lip.
+            float spawnY = CoordinateTerrainGeometry.SurfaceTopAtCell(profile, _safeColumn);
+            float feetOffset = _playerCollider == null ? 0f : _player.position.y - _playerCollider.bounds.min.y;
+            _playerBody.position = new Vector2(_safeColumn, spawnY + feetOffset + 0.5f);
+            _player.position = new Vector3(_playerBody.position.x, _playerBody.position.y, _player.position.z);
+            StopPlayer();
+            _coordinateWorld.StreamOnce();
+            return;
+        }
+        if (column == _safeColumn || _playerCollider == null ||
+            Mathf.Abs(_playerCollider.bounds.min.y - surface) > 0.35f ||
+            !_playerCollider.IsTouchingLayers(_groundMask)) return;
+        if (!profile.IsGapColumn(column) && !profile.IsGapColumn(column - 1) && !profile.IsGapColumn(column + 1))
+            _safeColumn = column;
+    }
     void TravelExit(Int2 from, IntersectionExit exit)
     {
         if (_intersectionController.IsVirtualIntersection)

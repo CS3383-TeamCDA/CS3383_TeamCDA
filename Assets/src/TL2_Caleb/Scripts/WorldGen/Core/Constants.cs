@@ -16,7 +16,7 @@ namespace EscapeThe90s.WorldGen
         public const int AccentsPerBiome = 3;      // palette rows per biome (palette.png has BiomeCount*AccentsPerBiome rows)
         public const int GroundDepthCells = 3;     // visible ground rows below the street surface
         public const int MaxBumpHeight = 2;        // tallest curb/step, in cells
-        public const int MaxGapWidthCells = 4;     // conservative placeholder pending a shared player-capabilities contract
+        public const int MaxGapWidthCells = 4;     // below 80% of the shipped 8 cells/s, 13.5 jump, 3x gravity full-jump range
         public const int SlabDepthCells = 8;       // collider depth under the street surface (visible ground is shallower)
         public const int RegionSizeNodes = 12;     // one coarse cell is RegionSizeNodes x RegionSizeNodes street-grid nodes (about one region)
         public const int MinConnectionSpacing = 3; // surface connections between two regions are at least this far apart (Manhattan, in nodes)
@@ -32,6 +32,9 @@ namespace EscapeThe90s.WorldGen
         public const int WorldCityBlockLengthChunks = 3;
         public const int WorldCityBlockFlatHalfWidthCells = 12;
         public const int WorldBuildingFootprintHalfWidthCells = 11;
+        public const int WorldGapChancePercent = 35;
+        public const int WorldGapApproachCells = 4;
+        public const int WorldSpawnSafeBlocks = 2;
 
         public static int ChunkWidthPixels { get { return CellPixels * ChunkWidthCells; } }
     }

@@ -10,7 +10,7 @@ namespace EscapeThe90s.WorldGen.Demo
         public Rigidbody2D Body { get; private set; }
         public bool OwnsPlayer { get; private set; }
 
-        public static DemoPlayerRig Create(Transform owner, Transform assignedPlayer, GameObject prefab, float teamPlayerSpeed)
+        public static DemoPlayerRig Create(Transform owner, Transform assignedPlayer, GameObject prefab, float demoPlayerSpeed)
         {
             GameObject playerObject;
             bool ownsPlayer = false;
@@ -44,13 +44,13 @@ namespace EscapeThe90s.WorldGen.Demo
             if (walker == null && !teamPlayer) walker = playerObject.AddComponent<DemoWalker>();
             if (walker != null)
             {
-                walker.moveSpeed = 18f;
+                if (demoPlayerSpeed > 0f) walker.moveSpeed = demoPlayerSpeed;
                 capsule.size = new Vector2(0.75f, 1.25f);
                 capsule.offset = new Vector2(0f, 0.625f);
                 capsule.sharedMaterial = new PhysicsMaterial2D("WorldNetworkDemoNoFriction") { friction = 0f, bounciness = 0f };
             }
             playerObject.tag = "Player";
-            GeneratedWorldComposition.ConfigurePlayer(playerObject, teamPlayerSpeed);
+            GeneratedWorldComposition.ConfigurePlayer(playerObject);
             SpriteRenderer renderer = playerObject.GetComponent<SpriteRenderer>();
             if (renderer != null) renderer.sortingOrder = 5;
             return new DemoPlayerRig { Player = playerObject.transform, Body = body, OwnsPlayer = ownsPlayer };
