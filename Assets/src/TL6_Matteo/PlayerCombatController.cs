@@ -7,6 +7,10 @@ public class PlayerCombatController : MonoBehaviour
     [SerializeField] private float _secondsBetweenShots = 0.18f;
     [SerializeField] private PlayerProjectile _projectilePrefab;
 
+    [Header("Audio")]
+    [SerializeField] private AudioSource _audioSource;
+    [SerializeField] private AudioClip _gunshotSound;
+
     private IPlayerCombatInput _combatInput;
     private FireCooldown _fireCooldown;
     private int _permanentAttackBonus = 0;
@@ -53,5 +57,7 @@ public class PlayerCombatController : MonoBehaviour
         );
 
         projectile.Initialize(_visualController.AimDirection, _permanentAttackBonus);
+        _audioSource.pitch = Random.Range(0.95f, 1.05f);
+        _audioSource.PlayOneShot(_gunshotSound);
     }
 }
