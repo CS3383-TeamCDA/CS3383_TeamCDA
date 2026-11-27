@@ -5,7 +5,7 @@ using EscapeThe90s.Contracts;
 public class PlayerControllerTL6 : MonoBehaviour, IPlayerControllerTL6
 {
     [SerializeField] private Rigidbody2D _rb;
-    [SerializeField] private Collider2D _collider;
+    [SerializeField] private CapsuleCollider2D _collider;
     [SerializeField] private PlayerMovementInputHandler _inputHandler;
 
     [Header("Horizontal")]
@@ -25,6 +25,15 @@ public class PlayerControllerTL6 : MonoBehaviour, IPlayerControllerTL6
     [SerializeField] private float _dashDuration = 0.2f;
     [SerializeField] private bool _disableGravityDuringDash = true;
 
+    [Header("Crouch")]
+    [SerializeField, Range(0f, 1f)]
+    private float _crouchSpeedMultiplier = 0.4f;
+    [SerializeField, Range(0.5f, 1f)]
+    private float _crouchHeightMultiplier = 0.5f;
+
+    private Vector2 _standingColliderSize;
+    private Vector2 _standingColliderOffset;
+
     private float _permanentSpeedBonus = 0f;
     private float _temporarySpeedMultiplier = 1f;
     // Give our states access to the player's components/settings.
@@ -38,6 +47,7 @@ public class PlayerControllerTL6 : MonoBehaviour, IPlayerControllerTL6
     public float FallGravityMultiplier => _fallGravityMultiplier;
     public float LowJumpGravityMultiplier => _lowJumpGravityMultiplier;
     public bool DisableGravityDuringDash => _disableGravityDuringDash;
+    public float CrouchSpeedMultiplier => _crouchSpeedMultiplier;
     public float MaxSpeedX
     {
         get
@@ -53,6 +63,7 @@ public class PlayerControllerTL6 : MonoBehaviour, IPlayerControllerTL6
 
     public bool AirDashAvailable { get; private set; } = true;
     public bool IsDashing { get; private set; }
+    public bool IsCrouching { get; private set; }
     public float BaseGravityScale { get; private set; }
 
     private PlayerStateManager _stateManager;
@@ -62,12 +73,15 @@ public class PlayerControllerTL6 : MonoBehaviour, IPlayerControllerTL6
     void Awake()
     {
         if (_rb == null) _rb = GetComponent<Rigidbody2D>();
-        if (_collider == null) _collider = GetComponent<Collider2D>();
+        if (_collider == null) _collider = GetComponent<CapsuleCollider2D>();
         if (_inputHandler == null) _inputHandler = GetComponent<PlayerMovementInputHandler>();
 
         _stateManager = new PlayerStateManager(this);
         Input = GetComponent<IPlayerMovementInput>();
         BaseGravityScale = Rb.gravityScale;
+
+        _standingColliderSize = _collider.size;
+        _standingColliderOffset = _collider.offset;
     }
 
     void Start()
@@ -141,5 +155,35 @@ public class PlayerControllerTL6 : MonoBehaviour, IPlayerControllerTL6
     public void SetDashing(bool isDashing)
     {
         IsDashing = isDashing;
+    }
+
+    //CROUCHING
+    public void SetCrouching(bool isCrouching)
+    {
+        IsCrouching = isCrouching;
+
+        if (isCrouching)
+        {
+            float crouchHeight =
+                _standingColliderSize.y * _crouchHeightMultiplier;
+
+            float heightDifference =
+                _standingColliderSize.y - crouchHeight;
+
+            _collider.size = new Vector2(
+                _standingColliderSize.x,
+                crouchHeight
+            );
+
+            _collider.offset = new Vector2(
+                _standingColliderOffset.x,
+                _standingColliderOffset.y - heightDifference / 2f
+            );
+        }
+        else
+        {
+            _collider.size = _standingColliderSize;
+            _collider.offset = _standingColliderOffset;
+        }
     }
 }

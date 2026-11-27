@@ -7,4 +7,5 @@ public interface IPlayerMovementInput
     bool JumpBeingHeld { get; }
     bool JumpReleased { get; }
     bool DashJustPressed { get; }
+    bool CrouchBeingHeld => false;
 }

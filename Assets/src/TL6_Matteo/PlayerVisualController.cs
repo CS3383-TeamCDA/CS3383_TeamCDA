@@ -43,7 +43,7 @@ public class PlayerVisualController : MonoBehaviour
             grounded: controller.IsGrounded(),
             horizontalSpeed: velocity.x,
             verticalSpeed: velocity.y,
-            crouching: false,
+            crouching: controller.IsCrouching,
             sliding: false,
             dashing: controller.IsDashing
         );

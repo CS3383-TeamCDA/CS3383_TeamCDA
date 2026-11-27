@@ -8,12 +8,14 @@ public class PlayerMovementInputHandler : MonoBehaviour, IPlayerMovementInput
     private InputAction _moveAction;
     private InputAction _jumpAction;
     private InputAction _dashAction;
+    private InputAction _crouchAction;
 
     public Vector2 Movement { get; private set; }
     public bool JumpJustPressed { get; private set; }
     public bool JumpBeingHeld { get; private set; }
     public bool JumpReleased { get; private set; }
     public bool DashJustPressed { get; private set; }
+    public bool CrouchBeingHeld { get; private set; }
 
 
 
@@ -24,6 +26,7 @@ public class PlayerMovementInputHandler : MonoBehaviour, IPlayerMovementInput
         _moveAction = _playerInput.actions.FindAction("Move");
         _jumpAction = _playerInput.actions.FindAction("Jump");
         _dashAction = _playerInput.actions.FindAction("Dash");
+        _crouchAction = _playerInput.actions.FindAction("Crouch");
     }
 
     private void Update()
@@ -46,6 +49,11 @@ public class PlayerMovementInputHandler : MonoBehaviour, IPlayerMovementInput
         if (_dashAction != null)
         {
             DashJustPressed = _dashAction.WasPressedThisFrame();
+        }
+
+        if (_crouchAction != null)
+        {
+            CrouchBeingHeld = _crouchAction.IsPressed();
         }
     }
 }
