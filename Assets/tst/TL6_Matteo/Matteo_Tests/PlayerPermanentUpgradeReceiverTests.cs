@@ -18,7 +18,7 @@ public class PlayerPermanentUpgradeReceiverTests
         _player = new GameObject("TestPlayer");
 
         _player.AddComponent<Rigidbody2D>();
-        _player.AddComponent<BoxCollider2D>();
+        _player.AddComponent<CapsuleCollider2D>();
 
         _movementController =
             _player.AddComponent<PlayerControllerTL6>();

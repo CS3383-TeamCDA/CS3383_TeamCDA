@@ -16,7 +16,7 @@ public class DashingStateTests
         _rb = _player.AddComponent<Rigidbody2D>();
         _rb.gravityScale = 1f;
 
-        _player.AddComponent<BoxCollider2D>();
+        _player.AddComponent<CapsuleCollider2D>();
 
         _controller = _player.AddComponent<PlayerControllerTL6>();
         _manager = new PlayerStateManager(_controller);

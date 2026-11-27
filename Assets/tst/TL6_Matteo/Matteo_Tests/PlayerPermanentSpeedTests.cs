@@ -12,7 +12,7 @@ public class PlayerPermanentSpeedTests
         _player = new GameObject("TestPlayer");
 
         _player.AddComponent<Rigidbody2D>();
-        _player.AddComponent<BoxCollider2D>();
+        _player.AddComponent<CapsuleCollider2D>();
 
         _controller = _player.AddComponent<PlayerControllerTL6>();
     }

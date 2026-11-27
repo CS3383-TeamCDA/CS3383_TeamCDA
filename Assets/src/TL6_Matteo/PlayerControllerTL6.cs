@@ -2,6 +2,8 @@ using UnityEngine;
 using EscapeThe90s.Contracts;
 
 [DefaultExecutionOrder(100)]
+[RequireComponent(typeof(Rigidbody2D))]
+[RequireComponent(typeof(CapsuleCollider2D))]
 public class PlayerControllerTL6 : MonoBehaviour, IPlayerControllerTL6
 {
     [SerializeField] private Rigidbody2D _rb;
